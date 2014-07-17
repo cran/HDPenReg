@@ -36,9 +36,9 @@
 #ifndef STK_ALLOCATORBASE_H
 #define STK_ALLOCATORBASE_H
 
-#include "../../STKernel/include/STK_Range.h"
-#include "../../STKernel/include/STK_Exceptions.h"
-#include "../../STKernel/include/STK_Macros.h"
+#include "STKernel/include/STK_Range.h"
+
+#include "Sdk/include/STK_Macros.h"
 
 #include "STK_IContainerRef.h"
 
@@ -102,7 +102,7 @@ class AllocatorBase : public IContainerRef
      *  @param size of the data to wrap
      *  @param ref is this a wrapper ?
      **/
-    inline AllocatorBase( Type* const& q, int const& size, bool ref)
+    inline AllocatorBase( Type* const& q, int size, bool ref)
                         : IContainerRef(ref)
                         , p_data_(ref ? q : 0)
                         , rangeData_(Range(0,size-1))
@@ -112,11 +112,11 @@ class AllocatorBase : public IContainerRef
     ~AllocatorBase() { freeData(); }
 
     /** @return the first index of the data. */
-    inline int const& firstData() const { return rangeData_.firstIdx();}
+    inline int firstData() const { return rangeData_.begin();}
    /**@return the last index of the data */
-    inline int const& lastData() const { return rangeData_.lastIdx();}
+    inline int lastData() const { return rangeData_.lastIdx();}
     /** @return the size of the data */
-    inline int const& sizeData() const { return rangeData_.size();}
+    inline int sizeData() const { return rangeData_.size();}
     /** @return the range of the data*/
     inline Range const& rangeData() const { return rangeData_;}
     /** @return a pointer on the constant data set*/
@@ -217,8 +217,8 @@ class AllocatorBase : public IContainerRef
     }
     /** @brief main ptr memory allocation.
      *
-     *  if @code I.firstIdx() != 0 @endcode the allocated memory have to be
-     *  addressed using the formula @code p_data_[I.firstIdx()+i] @endcode.
+     *  if @code I.begin() != 0 @endcode the allocated memory have to be
+     *  addressed using the formula @code p_data_[I.begin()+i] @endcode.
      *
      *  @param I range of the data allocated
      **/
@@ -241,7 +241,7 @@ class AllocatorBase : public IContainerRef
         Type* p = new Type[size];
         freeData(); // no error: free any allocated memory
         setPtrData(p, Range(0, size-1, 0), false);
-        decPtrData(I.firstIdx());
+        decPtrData(I.begin());
       }
       catch (std::bad_alloc const& error)  // if an alloc error occur
       {
@@ -262,7 +262,7 @@ class AllocatorBase : public IContainerRef
     void realloc( Range const& I)
     {
       if ((this->rangeData() == I)&&(p_data_)&&(!this->isRef())) return;
-      const int size = I.size(), inc= I.firstIdx();
+      const int size = I.size(), inc= I.begin();
       // check size
       if (size <= 0)
       {
@@ -276,7 +276,7 @@ class AllocatorBase : public IContainerRef
         Type* p  = new Type[size];
          p -= inc;
         // no error: copy data
-        const int firstData = std::max(rangeData_.firstIdx(), I.firstIdx())
+        const int firstData = std::max(rangeData_.begin(), I.begin())
                     , lastData  = std::min(rangeData_.lastIdx(), I.lastIdx());
         for (int i = firstData; i<=lastData; ++i) { p[i] = p_data_[i];}
         // liberate old memory

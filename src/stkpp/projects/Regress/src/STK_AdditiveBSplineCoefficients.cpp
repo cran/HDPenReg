@@ -37,8 +37,8 @@
 
 #include "../include/STK_AdditiveBSplineCoefficients.h"
 
-#ifdef STK_VERBOSE
-#include "../../Arrays/include/STK_Display.h"
+#ifdef STK_REGRESS_VERBOSE
+#include "Arrays/include/STK_Display.h"
 #endif
 
 namespace STK
@@ -89,7 +89,7 @@ AdditiveBSplineCoefficients::~AdditiveBSplineCoefficients() {}
 /* run the computations. */
 bool AdditiveBSplineCoefficients::run()
 {
-#ifdef STK_VERBOSE
+#ifdef STK_REGRESS_VERBOSE
   stk_cout << _T("in AdditiveBSplineCoefficients::run()\n");
 #endif
   // check if there exists data
@@ -129,7 +129,7 @@ bool AdditiveBSplineCoefficients::run()
     msg_error_ = e.error();
     return false;
   }
-#ifdef STK_VERBOSE
+#ifdef STK_REGRESS_VERBOSE
   stk_cout << _T("AdditiveBSplineCoefficients::run() done\n");
 #endif
   return true;
@@ -138,16 +138,16 @@ bool AdditiveBSplineCoefficients::run()
 /* run the computations. */
 Matrix AdditiveBSplineCoefficients::extrapolate(Matrix const& x) const
 {
-#ifdef STK_VERBOSE
+#ifdef STK_REGRESS_VERBOSE
   stk_cout << _T("in AdditiveBSplineCoefficients::extrapolate()\n");
 #endif
   if (x.cols() != coefs_.range())
   { STKRUNTIME_ERROR_NO_ARG(AdditiveBSplineBSplineCoefficients::extrapolate(x),x.cols() != coefs_.range());}
     // resize the matrix of coefficient
     Matrix coefficients(x.rows(), Range());
-    for (int j= coefs_.firstIdx(); j<=coefs_.lastIdx(); j++)
+    for (int j= coefs_.begin(); j<=coefs_.lastIdx(); j++)
     { coefficients.merge(coefs_[j].extrapolate(x.col(j)));}
-#ifdef STK_VERBOSE
+#ifdef STK_REGRESS_VERBOSE
   stk_cout << _T("AdditiveBSplineCoefficients::run() done\n");
 #endif
   return coefficients;

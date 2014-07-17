@@ -76,7 +76,7 @@ Real Uniform::lpdf( Real const& x) const
   if ((x < a_)||(x > b_)) return -Arithmetic<Real>::infinity();
   return -std::log(range_);
 }
-/** The cumulative distribution function is
+/* The cumulative distribution function is
  * \f[
  *  F(t; a,b)= \frac{t - a}{b-a}
  * \f]
@@ -90,7 +90,7 @@ Real Uniform::cdf( Real const& t) const
   return (b_ - t)/range_;
 }
 
-/** The inverse cumulative distribution function is
+/* The inverse cumulative distribution function is
  * \f[
  * F^{-1}(p; \lambda) = p (b-a) + a.
  * \f]
@@ -108,7 +108,7 @@ Real Uniform::icdf( Real const& p) const
   return a_ + p * range_;
 }
 
-/** Generate a pseudo Uniform random variate with the specified
+/* Generate a pseudo Uniform random variate with the specified
  *  parameter.
  *  @param scale the scale of the distribution
  **/
@@ -117,7 +117,7 @@ Real Uniform::rand( Real a, Real b)
   return (b-a <= 1.) ? a + (b-a) * generator.randUnif()
                      : a + generator.randDiscreteUnif()*((b-a)/4294967296.0) ;
 }
-/** Give the value of the pdf at x.
+/* Give the value of the pdf at x.
  *  @param x a real value
  *  @param scale the scale of the distribution
  **/
@@ -127,7 +127,7 @@ Real Uniform::pdf( Real const& x, Real a, Real b)
   if ((x < a)||(x > b)) return 0.;
   return 1./(b-a);
 }
-/** Give the value of the log-pdf at x.
+/* Give the value of the log-pdf at x.
  *  @param x a real value
  *  @param scale the scale of the distribution
  **/

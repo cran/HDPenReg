@@ -30,8 +30,8 @@
  **/
 
 /** @file STK_IArray2DBase.h
- *  @brief This is an internal header file, included by other
- *  Containers library headers.
+ *  @brief Interface base class for the Array2D classes, this is an internal
+ *  header file, included by other containers library headers.
  *
  *  You should not attempt to use it directly but rather used one of the
  *  derived class like Array2D, except if you want to create your own
@@ -41,14 +41,15 @@
 #ifndef STK_IARRAY2DBASE_H
 #define STK_IARRAY2DBASE_H
 
-#include "STK_ArrayBase.h"
-#include "STK_ArrayBaseVisitor.h"
-#include "STK_ArrayBaseAssign.h"
-#include "STK_ArrayBaseProduct.h"
+#include "STK_ExprBaseVisitor.h"
+#include "STK_ExprBaseDot.h"
+#include "STK_ExprBaseProduct.h"
+
 #include "STK_ArrayBaseInitializer.h"
+#include "STK_ArrayBaseApplier.h"
+#include "STK_ArrayBaseAssign.h"
 
 #include "STK_Array1D.h"
-#include "STK_AllocatorBase.h"
 
 namespace STK
 {
@@ -128,24 +129,12 @@ class IArray2DBase : public ITArrayBase<Derived>
     IArray2DBase( IArray2DBase<PTRCOL, Rhs> const& T, Range const& I, Range const& J)
                 : Base(I, J)
                 , allocator_(T.allocator(), true)
-                , capacityCols_(J)
+                , capacityCols_(T.capacityCols(), J)
                 , rangeCols_(J)
                 , capacityHo_(J.size())
     {
-      if (I.firstIdx() < T.firstIdxRows())
-      { STKOUT_OF_RANGE_2ARG(IArray2DBase::IArray2DBase T, I, J,I.firstIdx() < T.firstIdxRows());}
-      if (I.lastIdx() > T.lastIdxRows())
-      { STKOUT_OF_RANGE_2ARG(IArray2DBase::IArray2DBase T, I, J,I.lastIdx() > T.lastIdxRows());}
-      if (J.firstIdx() < T.firstIdxCols())
-      { STKOUT_OF_RANGE_2ARG(IArray2DBase::IArray2DBase T, I, J,J.firstIdx() < T.firstIdxCols());}
-      if (J.lastIdx() > T.lastIdxCols())
-      {STKOUT_OF_RANGE_2ARG(IArray2DBase::IArray2DBase T, I, J,J.lastIdx() > T.lastIdxCols());}
-      // adjust capacity and range of each Cols
-      for (int j=J.firstIdx(); j<=J.lastIdx(); j++)
-      {
-        // copy capacity of the column j (is it necessary ?)
-        capacityCols_[j] = T.capacityCols()[j];
-        // compute available wrapped range of the column j
+      for (int j=J.begin(); j<=J.lastIdx(); j++)
+      { // compute available wrapped range of the column j
         rangeCols_[j] = Range::inf(I, T.rangeCols()[j]);
       }
     }
@@ -498,7 +487,7 @@ class IArray2DBase : public ITArrayBase<Derived>
         // initialize this->rangeCols_
         rangeCols_.resize(J);
         // allocate memory for the columns
-        allocator_.malloc(Range(J.firstIdx(), size));
+        allocator_.malloc(Range(J.begin(), size));
       }
       catch (runtime_error & error)   // if an error occur
       {
@@ -530,7 +519,7 @@ class IArray2DBase : public ITArrayBase<Derived>
       try
       {
         // allocate memory for the columns
-        allocator_.realloc(Range(J.firstIdx(), size));
+        allocator_.realloc(Range(J.begin(), size));
         // initialize this->capacityCols_
         capacityCols_.resize(J);
         // initialize this->rangeCols_

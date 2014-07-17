@@ -35,12 +35,10 @@
  *  This class allow to handle csv files in various ways.
  **/
 
-#ifndef READWRITECSV_H
-#define READWRITECSV_H
+#ifndef STK_READWRITECSV_H
+#define STK_READWRITECSV_H
 
 #include <iomanip>
-#include "../../STKernel/include/STK_Stream.h"
-#include "STK_DManager_Util.h"
 #include "STK_Variable.h"
 
 namespace STK
@@ -114,6 +112,9 @@ class TReadWriteCsv
                            , delimiters_(Csv::DEFAULT_DELIMITER)
                            , reserve_(Csv::DEFAULT_RESERVE)
                            , msg_error_()
+                           , nbVars_(0)
+                           , nbRows_(0)
+
     {}
     /** Constructor with a specified file name.
      *  Instantiates an instance of TReadWriteCsv with the specified read flags.
@@ -133,6 +134,8 @@ class TReadWriteCsv
                         , delimiters_(delimiters)
                         , reserve_(Csv::DEFAULT_RESERVE)
                         , msg_error_()
+                        , nbVars_(0)
+                        , nbRows_(0)
     {}
     /** Copy constructor. Instantiates an instance of TReadWriteCsv with
      *  the contents of another TReadWriteCsv.
@@ -151,14 +154,14 @@ class TReadWriteCsv
       delimiters_   = Csv::DEFAULT_DELIMITER;
       reserve_      = Csv::DEFAULT_RESERVE;
     }
-    /**  @return the index of the first variable (should be STKBASEARRAYS). */
-    inline int firstIdx() const { return str_data_.firstIdx(); }
+    /**  @return the index of the first variable (should be baseIdx). */
+    inline int begin() const { return str_data_.begin(); }
     /** @return the index of the last variable */
     inline int lastIdx() const { return str_data_.lastIdx(); }
     /**@return The current number of variables of the TReadWriteCsv */
     inline int size() const { return str_data_.size(); }
-    /**  @return the index of the first variable (should be STKBASEARRAYS). */
-    inline int firstIdxCols() const { return str_data_.firstIdx(); }
+    /**  @return the index of the first variable (should be baseIdx). */
+    inline int firstIdxCols() const { return str_data_.begin(); }
     /** @return the index of the last variable */
     inline int lastIdxCols() const { return str_data_.lastIdx(); }
     /**@return The current number of variables of the TReadWriteCsv */
@@ -168,7 +171,7 @@ class TReadWriteCsv
     /** @param icol index of the variable
      *  @return the first index in the column @c icol
      **/
-    inline int firstRow( int const& icol) const { return str_data_.at(icol).firstIdx();}
+    inline int firstRow( int const& icol) const { return str_data_.at(icol).begin();}
     /** @param icol index of the column
      *  @return the last index in the column @c icol
      **/
@@ -180,18 +183,18 @@ class TReadWriteCsv
     /** @return the first index of the samples. */
     int firstIdxRows() const
     {
-      if (size()<= 0) return STKBASEARRAYS;
-      int retVal = firstRow(firstIdx());
-      for (int i=firstIdx()+1; i<=lastIdx(); i++)
+      if (size()<= 0) return baseIdx;
+      int retVal = firstRow(begin());
+      for (int i=begin()+1; i<=lastIdx(); i++)
       { retVal = std::min(retVal, firstRow(i));}
       return retVal;
     }
-    /** @return the last index of samples. */
+    /** @return the last index of the samples. */
     int lastIdxRows() const
     {
-      if (size()<= 0) return STKBASEARRAYS-1;
-      int retVal = firstRow(firstIdx());
-      for (int i=firstIdx()+1; i<=lastIdx(); i++)
+      if (size()<= 0) return baseIdx-1;
+      int retVal = lastRow(begin());
+      for (int i=begin()+1; i<=lastIdx(); i++)
       { retVal = std::max(retVal, lastRow(i));}
       return retVal;
     }
@@ -283,9 +286,9 @@ class TReadWriteCsv
      **/
     inline Var const operator[](int const& icol) const { return str_data_[icol]; }
    /** @return the first variable. */
-    inline Var& front() { return str_data_.at(firstIdx());}
+    inline Var& front() { return str_data_.at(begin());}
     /** @return the first variable (const). */
-    inline Var const& front() const { return str_data_.at(firstIdx());}
+    inline Var const& front() const { return str_data_.at(begin());}
     /** @return the last variable. */
     inline Var& back() { return str_data_.at(lastIdx());}
     /** @return the last variable (const). */
@@ -294,7 +297,7 @@ class TReadWriteCsv
      *  @param data the column to push back
      *  @return @c true if successful, @c false if an error is encountered.
      **/
-    bool push_back( Var const& data)
+    bool push_back( Var const& data = Var())
     {
       try
       {
@@ -310,7 +313,7 @@ class TReadWriteCsv
      *  @param data the column to push front
      *  @return @c true if successful, @c false if an error is encountered.
      **/
-    bool push_front( Var const& data)
+    bool push_front( Var const& data = Var())
     {
       try
       {
@@ -384,7 +387,7 @@ class TReadWriteCsv
      **/
     TReadWriteCsv& operator+=( TReadWriteCsv const& rw)
     {
-      for ( int i=rw.firstIdx(); i<=rw.lastIdx(); i++)
+      for ( int i=rw.begin(); i<=rw.lastIdx(); i++)
       { str_data_.push_back(rw.str_data_[i]);}
       return *this;
     }
@@ -455,7 +458,7 @@ class TReadWriteCsv
       try
       {
         ofstream os(file_name.c_str());
-        writeSelection( os, firstIdxRows(), lastIdxRows(), firstIdx(), lastIdx());
+        writeSelection( os, firstIdxRows(), lastIdxRows(), begin(), lastIdx());
         os.close();
         return true;
       }
@@ -467,7 +470,7 @@ class TReadWriteCsv
      *  @param os the output stream
      **/
     void write( ostream& os) const
-    { writeSelection(os, firstIdxRows(), lastIdxRows(), firstIdx(), lastIdx());}
+    { writeSelection(os, firstIdxRows(), lastIdxRows(), begin(), lastIdx());}
     /** Write to output stream a selection based on the coordinates
      *  passed (Think of it as highlighting cells in Excel).
      *  @param os the output stream
@@ -488,7 +491,7 @@ class TReadWriteCsv
     friend ostream& operator<<( ostream& os, TReadWriteCsv const& rw)
     {
       try
-      { rw.writeSelection( os, rw.firstIdxRows(), rw.lastIdxRows(), rw.firstIdx(), rw.lastIdx());}
+      { rw.writeSelection( os, rw.firstIdxRows(), rw.lastIdxRows(), rw.begin(), rw.lastIdx());}
       // catch and re-throw any Exceptions
       catch(const Exception& e) { throw e; }
       catch(...) { throw Exception(Csv::ERRORCODES[1]); }
@@ -553,13 +556,19 @@ class TReadWriteCsv
      **/
     int readCurrentLine(istream& inBuffer, String& currentLine, Array1D<Char>& listDelimiters)
     {
-      int nbField;
+      if (inBuffer.eof()) return 0;
+      int nbField =0;
       do
       {
+        currentLine.clear();
         std::getline(inBuffer, currentLine);
-        DManager::removeCharBeforeAndAfter(currentLine, CHAR_BLANK);
-        nbField = (currentLine.size() == 0)
-                ? 0 : countFields( currentLine, listDelimiters);
+        if (currentLine.size() == 0) {nbField = 0;}
+        else
+        {
+          DManager::removeCharBeforeAndAfter(currentLine, CHAR_BLANK);
+          nbField = (currentLine.size() == 0)
+                  ? 0 : countFields( currentLine, listDelimiters);
+        }
       }
       while ((nbField == 0)&&(!inBuffer.eof()));
       return nbField;
@@ -626,7 +635,7 @@ class TReadWriteCsv
      **/
     inline void resizeRows( Range const& rows)
     {
-      for (int iVar=firstIdx(); iVar<=lastIdx(); iVar++ )
+      for (int iVar=begin(); iVar<=lastIdx(); iVar++ )
       { str_data_.elt(iVar).resize(rows);}
     }
     /** resize the @c TReadWriteCsv to the given range of columns.
@@ -651,7 +660,7 @@ bool TReadWriteCsv<Type>::read( istream& inBuffer)
     resizeCols(nbVars_);
     resizeRows(nbRows_);
     // Read data : loop for all rows
-    int currentRow=firstIdxRows()-1;
+    int currentRow=firstIdxRows()-1, countRows = 0;
     for (; !inBuffer.eof();)
     {
       int nbField = readCurrentLine(inBuffer, currentLine, listDelimiters);
@@ -662,9 +671,9 @@ bool TReadWriteCsv<Type>::read( istream& inBuffer)
         nbVars_++;
       }
       // first loop on the existing columns with data
-      currentRow++;
+      currentRow++; countRows++;
       istringstream instream(currentLine);
-      int icol=firstIdx();
+      int icol=begin();
       for (int iField=1 ; iField<=nbField; iField++, icol++)
       {
         String field;
@@ -678,7 +687,7 @@ bool TReadWriteCsv<Type>::read( istream& inBuffer)
       for (; icol<=lastIdx(); icol++) { fastSetData(icol, currentRow, Arithmetic<Type>::NA());}
     }
     // resize in case there exists too much rows
-    resizeRows(Range(STKBASEARRAYS, currentRow, 0));
+    resizeRows(Range(countRows));
     return true;
   }
   catch( Exception const& e) { msg_error_ = e.error(); }
@@ -735,4 +744,4 @@ void TReadWriteCsv<Type>::writeSelection( ostream& os, int top, int bottom, int 
 
 } // namespace STK
 
-#endif // READWRITECSV_H
+#endif // STK_READWRITECSV_H

@@ -36,9 +36,8 @@
 
 #include "../include/STK_Gaussian2BlocksModel.h"
 
-#include "../../STatistiK/include/STK_Stat_UnivariateReal.h"
-#include "../../STatistiK/include/STK_Stat_BivariateRealReal.h"
-#include "../../STatistiK/include/STK_Law_MultiNormal.h"
+#include "STatistiK/include/STK_Stat_BivariateRealReal.h"
+#include "STatistiK/include/STK_Law_MultiNormal.h"
 
 namespace STK
 {

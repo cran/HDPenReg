@@ -69,10 +69,6 @@
  * data. Nonparametric regression refers to techniques that allow the regression
  * function to lie in a specified set of functions, which may be
  * infinite-dimensional.
- *
- * * @namespace Regress This is the namespace for the regression project.
- * It will enclose all variables and constant specific to the Regress project.
- *
  **/
 
 
@@ -81,8 +77,6 @@
 #define REGRESS_H
 
 #include "../projects/Regress/include/STK_Regress_Util.h"
-
-#include "../projects/Regress/include/STK_IRegression.h"
 
 #include "../projects/Regress/include/STK_MultidimRegression.h"
 

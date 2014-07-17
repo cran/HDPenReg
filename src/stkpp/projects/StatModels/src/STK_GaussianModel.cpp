@@ -36,9 +36,9 @@
 
 #include "../include/STK_GaussianModel.h"
 
-#include "../../STatistiK/include/STK_Stat_BivariateRealReal.h"
+#include "STatistiK/include/STK_Stat_BivariateRealReal.h"
 
-#include "../../STatistiK/include/STK_Law_MultiNormal.h"
+#include "STatistiK/include/STK_Law_MultiNormal.h"
 
 namespace STK
 {
@@ -48,7 +48,7 @@ GaussianModel::GaussianModel( Matrix const* p_data)
                             : IGaussianModel<Matrix>(p_data)
                             , cov_(p_data_->cols())
 {
-  setNbFreeParameters(nbVar() + (nbVar()* (nbVar()-1))/2);
+  setNbFreeParameter(nbVariable() + (nbVariable()* (nbVariable()-1))/2);
 }
 
 /* constructor */
@@ -56,7 +56,7 @@ GaussianModel::GaussianModel( Matrix const& data)
                             : IGaussianModel<Matrix>(data)
                             , cov_(data.cols())
 {
-  setNbFreeParameters(nbVar() + (nbVar()* (nbVar()-1))/2);
+  setNbFreeParameter(nbVariable() + (nbVariable()* (nbVariable()-1))/2);
 }
 
 /* destructor */

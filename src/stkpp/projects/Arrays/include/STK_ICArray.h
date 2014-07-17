@@ -29,16 +29,23 @@
  **/
 
 /** @file STK_ICArray.h
- *  @brief In this file we define the ICArray templated class.
+ *  @brief Interface base class for the CArray, this is an internal header file,
+ *  included by other Containers library headers.
+ *
+ *  You should not attempt to use it directly but rather used one of the
+ *  derived class like CArray, except if you want to create your own
+ *  Container Class.
  **/
 
 #ifndef STK_DENSEARRAYBASE_H
 #define STK_DENSEARRAYBASE_H
 
-#include "STK_ArrayBase.h"
-#include "STK_ArrayBaseVisitor.h"
+#include "STK_ExprBaseVisitor.h"
+#include "STK_ExprBaseDot.h"
+#include "STK_ExprBaseProduct.h"
+
+#include "STK_ArrayBaseApplier.h"
 #include "STK_ArrayBaseAssign.h"
-#include "STK_ArrayBaseProduct.h"
 #include "STK_ArrayBaseInitializer.h"
 
 namespace STK
@@ -110,6 +117,14 @@ class ICArray : public ArrayBase<Derived>
     inline ICArray( ICArray const& T, bool ref = false)
                   : Base(), allocator_(T.allocator_, ref)
     {}
+    /** wrapper constructor for 0 based C-Array.
+     *  @param q pointer on the array
+     *  @param nbRow number of rows
+     *  @param nbCol number of columns
+     **/
+    inline ICArray( Type* const& q, int nbRow, int nbCol)
+                  : Base(), allocator_(q, nbRow, nbCol)
+    {}
     /** constructor by reference, ref_=1.
      *  @param allocator with the data
      **/
@@ -180,6 +195,28 @@ class ICArray : public ArrayBase<Derived>
      *  @param T the array to move
      **/
     inline void move(Derived const& T) { allocator_.move(T.allocator_);}
+    /** shift the Array.
+     *  @param firstIdxRows,firstIdxCols  first indexes of the rows and columns
+     **/
+    Derived& shift(int firstIdxRows, int firstIdxCols)
+    {
+      if((this->firstIdxRows() == firstIdxRows) && (this->firstIdxCols()==firstIdxCols)) return this->asDerived();
+      if (this->isRef())
+      { STKRUNTIME_ERROR_2ARG(ICArray::shift,firstIdxRows,firstIdxCols,cannot operate on reference);}
+      allocator_.shift(firstIdxRows, firstIdxCols);
+      return this->asDerived();
+    }
+    /** shift the Array.
+     *  @param firstIdx first index of the vector/point
+     **/
+    Derived& shift(int firstIdx)
+    {
+      if((this->begin() == firstIdx)) return this->asDerived();
+      if (this->isRef())
+      { STKRUNTIME_ERROR_1ARG(ICArray::shift,firstIdx,cannot operate on reference);}
+      allocator_.shift(firstIdx);
+      return this->asDerived();
+    }
     /** resize the Array.
      *  @param I range of the rows
      *  @param J range of the columns
@@ -190,7 +227,7 @@ class ICArray : public ArrayBase<Derived>
       if (this->isRef())
       { STKRUNTIME_ERROR_2ARG(ICArray::resize,I,J,cannot operate on reference);}
       allocator_.resize(I.size(), J.size());
-      allocator_.shift(I.firstIdx(), J.firstIdx());
+      allocator_.shift(I.begin(), J.begin());
       return this->asDerived();
     }
     /** Resize the vector.
@@ -202,7 +239,7 @@ class ICArray : public ArrayBase<Derived>
       if (this->isRef())
       { STKRUNTIME_ERROR_1ARG(ICArray::resize,I,cannot operate on reference);}
       allocator_.resize(I.size());
-      allocator_.shift(I.firstIdx());
+      allocator_.shift(I.begin());
       return this->asDerived();
     }
   private:

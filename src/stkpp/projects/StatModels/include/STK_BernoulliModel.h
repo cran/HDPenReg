@@ -40,8 +40,8 @@
 #include <cmath>
 
 #include "STK_IUnivStatModel.h"
-#include "../../STatistiK/include/STK_Law_Bernoulli.h"
-#include "../../Arrays/include/STK_CArrayVector.h"
+#include "STatistiK/include/STK_Law_Bernoulli.h"
+#include "Arrays/include/STK_CArrayVector.h"
 
 namespace STK
 {
@@ -86,7 +86,7 @@ class BernoulliModel : public IUnivStatModel<Array, WColVector, Law::Bernoulli>
     {
         Real sum=0.;
         int nbObs=p_data()->size();
-        for (int i=p_data()->firstIdx(); i<=p_data()->lastIdx(); ++i)
+        for (int i=p_data()->begin(); i<=p_data()->lastIdx(); ++i)
         { (p_data()->elt(i) == binaryNA_) ? --nbObs : sum += p_data()->elt(i);}
         if (nbObs != 0) { this->law_.setProb(sum/nbObs);}
                   else  { this->law_.setProb(0.);}
@@ -98,7 +98,7 @@ class BernoulliModel : public IUnivStatModel<Array, WColVector, Law::Bernoulli>
     {
         Real sum=0.;
         int nbObs=p_data()->size();
-        for (int i=p_data()->firstIdx(); i<=p_data()->lastIdx(); ++i)
+        for (int i=p_data()->begin(); i<=p_data()->lastIdx(); ++i)
         { (p_data()->elt(i) == binaryNA_) ? --nbObs : sum += weights[i]*p_data()->elt(i);}
         if (nbObs != 0) { this->law_.setProb(sum/nbObs);}
                   else { this->law_.setProb(0.);}

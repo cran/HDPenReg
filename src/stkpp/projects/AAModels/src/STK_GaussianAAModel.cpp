@@ -36,18 +36,16 @@
 
 #include "../include/STK_GaussianAAModel.h"
 
-#include "../../Algebra/include/STK_LinAlgebra1D.h"
+#include "Reduct/include/STK_IReduct.h"
+#include "Regress/include/STK_IRegression.h"
 
-#include "../../Reduct/include/STK_IReduct.h"
-#include "../../Regress/include/STK_IRegression.h"
+#include "STatistiK/include/STK_Stat_Transform.h"
+#include "STatistiK/include/STK_Stat_MultivariateReal.h"
 
-#include "../../STatistiK/include/STK_Stat_Transform.h"
-#include "../../STatistiK/include/STK_Stat_MultivariateReal.h"
+#include "STatistiK/include/STK_Law_MultiNormal.h"
 
-#include "../../STatistiK/include/STK_Law_MultiNormal.h"
-
-#ifdef STK_VERBOSE
-#include "../../Arrays/include/STK_Display.h"
+#ifdef STK_AAMODELS_VERBOSE
+#include "Arrays/include/STK_Display.h"
 #endif
 
 namespace STK
@@ -93,7 +91,7 @@ void GaussianAAModel::setWorkData(Matrix& workData)
 /* compute the ln-likelihood of the model */
 void GaussianAAModel::computeModelParameters()
 {
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("GaussianAAModel::computeModelParameters().\n");
 #endif
   // compute the number of free parameters
@@ -107,7 +105,7 @@ void GaussianAAModel::computeModelParameters()
   // compute complete nLikelihood
   setLnLikelihood(projectedLnLikelihood_ + residualLnLikelihood_);
 
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("GaussianAAModel::computeModelParameters() done.\n");
 #endif
 }
@@ -117,13 +115,13 @@ void GaussianAAModel::computeModelParameters()
 void GaussianAAModel::computeNbFreeParameters()
 {
   // get number of free parameters
-  setNbFreeParameters(p_regressor_->nbParameter() + dim() * (dim()+1)/2 + 1);
+  setNbFreeParameter(p_regressor_->nbParameter() + dim() * (dim()+1)/2 + 1);
 }
 
 /* compute the ln-likelihood of the model */
 void GaussianAAModel::computeProjectedLnLikelihood()
 {
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("GaussianAAModel::computeProjectedLnLikelihood().\n");
 #endif
 
@@ -141,7 +139,7 @@ void GaussianAAModel::computeProjectedLnLikelihood()
   Law::MultiNormal<Point> normalP(mean, reducedCovariance);
   projectedLnLikelihood_ = normalP.lnLikelihood(reducedData);
 
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("GaussianAAModel::computeProjectedLnLikelihood() done.\n");
   stk_cout << _T("projectedLnLikelihood_ = ") << projectedLnLikelihood_ << _T("\n");
 #endif
@@ -150,18 +148,18 @@ void GaussianAAModel::computeProjectedLnLikelihood()
 /* compute the ln-likelihood of the model */
 void GaussianAAModel::computeResidualLnLikelihood()
 {
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("GaussianAAModel::computeResidualsLnLikelihood().\n");
 #endif
   // compute constant part and determinant part of the log-likelihood
   residualLnLikelihood_ = ( Const::_LNSQRT2PI_ + 0.5*std::log(residualVariance_ ))
-                          * (dim() - nbVar()) * nbSample();
+                          * (dim() - nbVariable()) * nbSample();
   // compute second part of the log-likelihood
   const int firstSample = p_residuals_->firstIdxRows(), lastSample= p_residuals_->lastIdxRows();
   for (int i=firstSample; i<=lastSample; i++)
-  { residualLnLikelihood_ -= normTwo2<Point>(p_residuals_->row(i))/(2.*residualVariance_);}
+  { residualLnLikelihood_ -= p_residuals_->row(i).norm2()/(2.*residualVariance_);}
 
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("GaussianAAModel::computeResidualsLnLikelihood() done.\n");
   stk_cout << _T("residualLnLikelihood_ = ") << residualLnLikelihood_ << _T("\n");
 #endif
@@ -173,11 +171,11 @@ void GaussianAAModel::computeProjectedCovariance()
   if (!p_reduced_)
     throw runtime_error(_T("Error in GaussianAAModel::computeProjectedCovariance(): "
                            "projected data have not been computed."));
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("GaussianAAModel::computeProjectedCovariance().\n");
 #endif
   Stat::covariance(*p_reduced_, projectedCovariance_);
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("GaussianAAModel::computeProjectedCovariance() done.\n");
 #endif
 }
@@ -187,12 +185,12 @@ void GaussianAAModel::computeResidualCovariance()
   if (!p_residuals_)
     throw runtime_error(_T("Error in IAAModel::computeResidualCovariance(): "
                            "residuals have not been computed."));
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("in GaussianAAModel::computeResidualCovariance().\n");
 #endif
   Stat::covariance(*p_residuals_, residualCovariance_);
-  residualVariance_ = trace(residualCovariance_)/Real(nbVar()-dim());
-#ifdef STK_VERBOSE
+  residualVariance_ = trace(residualCovariance_)/Real(nbVariable()-dim());
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("GaussianAAModel::computeResidualCovariance() done.\n");
   stk_cout << _T("residualVariance_ = ") << residualVariance_ << _T("\n");
 #endif

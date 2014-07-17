@@ -83,7 +83,7 @@ struct Traits< DotProduct < Lhs, Rhs> >
   * don't have to name DotProduct types explicitly.
   **/
 template<typename Lhs, typename Rhs>
-class DotProduct : public ArrayBase< DotProduct<Lhs, Rhs> >
+class DotProduct : public ExprBase< DotProduct<Lhs, Rhs> >
                  , public TRef<1>
 {
   public:

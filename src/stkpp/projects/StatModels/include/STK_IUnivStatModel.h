@@ -38,7 +38,7 @@
 #define STK_IUNIVSTATMODEL_H
 
 #include "STK_IModelBase.h"
-#include "../../Sdk/include/STK_IRunner.h"
+#include "Sdk/include/STK_IRunner.h"
 
 namespace STK
 {
@@ -112,7 +112,7 @@ class IUnivStatModel : public IModelBase, public IRunnerUnsupervised<ColVector, 
     Real computeLnLikelihood() const
     {
       Real sum = 0.0;
-      for (int i= p_data()->firstIdx(); i<= p_data()->lastIdx(); i++)
+      for (int i= p_data()->begin(); i<= p_data()->lastIdx(); i++)
       { if (!Arithmetic<Type>::isNA(p_data()->elt(i))) sum += law_.lpdf(p_data()->elt(i));}
       return sum;
     }
@@ -135,7 +135,7 @@ class IUnivStatModel : public IModelBase, public IRunnerUnsupervised<ColVector, 
         // compute log-likelihood
         this->setLnLikelihood(computeLnLikelihood());
         // set the number of free parameters
-        this->setNbFreeParameters(computeNbFreeParameters());
+        this->setNbFreeParameter(computeNbFreeParameters());
       }
       catch (Exception const& e)
       { this->msg_error_ = e.error(); return false;}
@@ -158,7 +158,7 @@ class IUnivStatModel : public IModelBase, public IRunnerUnsupervised<ColVector, 
         // compute log-likelihood
         this->setLnLikelihood(computeLnLikelihood());
         // set the number of free parameters
-        this->setNbFreeParameters(computeNbFreeParameters());
+        this->setNbFreeParameter(computeNbFreeParameters());
       }
       catch (Exception const& e)
       { this->msg_error_ = e.error(); return false;}

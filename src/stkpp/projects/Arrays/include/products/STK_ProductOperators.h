@@ -44,14 +44,9 @@
 namespace STK
 {
 
-// forward declarations
-//template<typename> class Array2D;
-//template<typename> class Array2DSquare;
+// forward declarations (needed because there is no CAllocator with this structure)
 template<typename> class Array2DUpperTriangular;
 template<typename> class Array2DLowerTriangular;
-//template<typename> class Array2DDiagonal;
-//template<typename> class Array2DPoint;
-//template<typename> class Array2DVector;
 
 namespace hidden
 {
@@ -98,8 +93,6 @@ struct ProductTraits<Lhs, Rhs, Arrays::array2D_, RStructure_>
 {
   typedef ProductTraitsBase<Lhs, Rhs> Base;
   typedef typename hidden::Promote< typename Lhs::Type, typename Rhs::Type>::result_type Type;
-//  typedef typename ProductArray2DReturnType<Type, Lhs::structure_, Rhs::structure_>::result_type Result2D;
-//  typedef CArray<Type, Base::sizeRows_, Base::sizeCols_, Base::orient_> CResult;
   typedef CAllocator<Type, Arrays::array2D_, Base::sizeRows_, Base::sizeCols_, Base::orient_> Allocator;
   enum
   {
@@ -235,7 +228,7 @@ template<typename Lhs, typename Rhs>
 struct ProductTraits<Lhs, Rhs, Arrays::lower_triangular_, Arrays::vector_>
         : public ProductTraitsBase<Lhs, Rhs>
 {
-    typedef ProductTraitsBase<Lhs, Rhs> Base;
+  typedef ProductTraitsBase<Lhs, Rhs> Base;
   enum { structure_ = Arrays::vector_};
   typedef typename hidden::Promote< typename Lhs::Type, typename Rhs::Type>::result_type Type;
   typedef CAllocator<Type, Arrays::vector_,Base::sizeRows_ , 1, Base::orient_> Allocator;
@@ -247,7 +240,7 @@ template<typename Lhs, typename Rhs, int RStructure_>
 struct ProductTraits<Lhs, Rhs, Arrays::upper_triangular_, RStructure_>
         : public ProductTraitsBase<Lhs, Rhs>
 {
-    typedef ProductTraitsBase<Lhs, Rhs> Base;
+  typedef ProductTraitsBase<Lhs, Rhs> Base;
   enum { structure_ = Arrays::array2D_};
   typedef typename hidden::Promote< typename Lhs::Type, typename Rhs::Type>::result_type Type;
   typedef CAllocator<Type, Arrays::array2D_,Base::sizeRows_ , Base::sizeCols_, Base::orient_> Allocator;
@@ -256,7 +249,7 @@ template<typename Lhs, typename Rhs>
 struct ProductTraits<Lhs, Rhs, Arrays::upper_triangular_, Arrays::upper_triangular_>
         : public ProductTraitsBase<Lhs, Rhs>
 {
-    typedef ProductTraitsBase<Lhs, Rhs> Base;
+  typedef ProductTraitsBase<Lhs, Rhs> Base;
   enum { structure_ = Arrays::upper_triangular_};
   typedef typename hidden::Promote< typename Lhs::Type, typename Rhs::Type>::result_type Type;
   typedef Array2DUpperTriangular<Type> Allocator;  // no CAllocator
@@ -342,11 +335,11 @@ struct Traits< PointByMatrixProduct < Lhs, Rhs> >  : public ProductTraits<Lhs, R
 
 
 template<typename Lhs, typename Rhs>
-class PointByMatrixProduct : public ArrayBase< PointByMatrixProduct<Lhs, Rhs> >
+class PointByMatrixProduct : public ExprBase< PointByMatrixProduct<Lhs, Rhs> >
                             , public TRef<1>
 {
   public:
-    typedef ArrayBase< PointByMatrixProduct<Lhs, Rhs> > Base;
+    typedef ExprBase< PointByMatrixProduct<Lhs, Rhs> > Base;
     typedef typename hidden::Traits<PointByMatrixProduct>::Type Type;
     typedef typename hidden::Traits<PointByMatrixProduct>::Allocator Allocator;
 
@@ -375,7 +368,7 @@ class PointByMatrixProduct : public ArrayBase< PointByMatrixProduct<Lhs, Rhs> >
     /** @return the range of the columns */
     inline Range cols() const { return result_.cols();}
     /** @return the size of the vector */
-    inline int const sizeRowsImpl() const { return int(1);}
+    inline int const sizeRowsImpl() const { return 1;}
     /** @return the fixed size type if available to enable compile time optimizations */
     inline int const sizeColsImpl() const { return result_.sizeCols();}
 
@@ -427,11 +420,11 @@ struct Traits< MatrixByVectorProduct < Lhs, Rhs> >  : public ProductTraits<Lhs, 
 
 
 template<typename Lhs, typename Rhs>
-class MatrixByVectorProduct : public ArrayBase< MatrixByVectorProduct<Lhs, Rhs> >
+class MatrixByVectorProduct : public ExprBase< MatrixByVectorProduct<Lhs, Rhs> >
                             , public TRef<1>
 {
   public:
-    typedef ArrayBase< MatrixByVectorProduct<Lhs, Rhs> > Base;
+    typedef ExprBase< MatrixByVectorProduct<Lhs, Rhs> > Base;
     typedef typename hidden::Traits<MatrixByVectorProduct>::Type Type;
     typedef typename hidden::Traits<MatrixByVectorProduct>::Allocator Allocator;
     enum
@@ -519,11 +512,11 @@ struct Traits< MatrixByDiagonalProduct < Lhs, Rhs> >
 
 
 template<typename Lhs, typename Rhs>
-class MatrixByDiagonalProduct : public ArrayBase< MatrixByDiagonalProduct<Lhs, Rhs> >
+class MatrixByDiagonalProduct : public ExprBase< MatrixByDiagonalProduct<Lhs, Rhs> >
                               , public TRef<1>
 {
   public:
-    typedef ArrayBase< MatrixByDiagonalProduct<Lhs, Rhs> > Base;
+    typedef ExprBase< MatrixByDiagonalProduct<Lhs, Rhs> > Base;
     typedef typename hidden::Traits<MatrixByDiagonalProduct>::Type Type;
 
     enum
@@ -601,11 +594,11 @@ struct Traits< PointByDiagonalProduct < Lhs, Rhs> >  : public ProductTraits<Lhs,
 
 
 template<typename Lhs, typename Rhs>
-class PointByDiagonalProduct : public ArrayBase< PointByDiagonalProduct<Lhs, Rhs> >
+class PointByDiagonalProduct : public ExprBase< PointByDiagonalProduct<Lhs, Rhs> >
                             , public TRef<1>
 {
   public:
-    typedef ArrayBase< PointByDiagonalProduct<Lhs, Rhs> > Base;
+    typedef ExprBase< PointByDiagonalProduct<Lhs, Rhs> > Base;
     typedef typename hidden::Traits<PointByDiagonalProduct>::Type Type;
     typedef typename hidden::Traits<PointByDiagonalProduct>::Allocator Allocator;
 
@@ -684,11 +677,11 @@ struct Traits< DiagonalByVectorProduct < Lhs, Rhs> >
 
 
 template<typename Lhs, typename Rhs>
-class DiagonalByVectorProduct : public ArrayBase< DiagonalByVectorProduct<Lhs, Rhs> >
+class DiagonalByVectorProduct : public ExprBase< DiagonalByVectorProduct<Lhs, Rhs> >
                               , public TRef<1>
 {
   public:
-    typedef ArrayBase< DiagonalByVectorProduct<Lhs, Rhs> > Base;
+    typedef ExprBase< DiagonalByVectorProduct<Lhs, Rhs> > Base;
     typedef typename hidden::Traits<DiagonalByVectorProduct>::Type Type;
 
     enum
@@ -709,7 +702,7 @@ class DiagonalByVectorProduct : public ArrayBase< DiagonalByVectorProduct<Lhs, R
     /**  @return the range of the rows */
     inline Range const rows() const { return lhs_.rows();}
     /** @return the range of the columns */
-    inline Range const cols() const { return lhs_.cols();}
+    inline Range const cols() const { return rhs_.cols();}
     /** @return the fixed size type if available to enable compile time optimizations */
     inline int sizeRowsImpl() const { return lhs_.sizeRows();}
     /** @return the fixed size type if available to enable compile time optimizations */
@@ -721,6 +714,83 @@ class DiagonalByVectorProduct : public ArrayBase< DiagonalByVectorProduct<Lhs, R
     /** access to the element (i,j) */
     inline Type const elt1Impl(int i) const
     { return lhs_.elt(i)*rhs_.elt(i);}
+
+  protected:
+    Lhs const& lhs_;
+    Rhs const& rhs_;
+};
+
+/** @ingroup Arrays
+  * @class VectorByPointProduct
+  * @brief Generic expression where a product operator is
+  * applied to two expressions.
+  *
+  * @tparam Lhs the type of the left-hand side, a vector expression
+  * @tparam Rhs the type of the right-hand side, a row-vector expression
+  *
+  * This class represents an expression  where a product operator is applied to
+  * two expressions. The left hand Side is a vector expression,
+  * the Right Hand Side is a row-vector expression.
+  **/
+template<typename Lhs, typename Rhs> class VectorByPointProduct;
+
+namespace hidden {
+
+/** @ingroup hidden
+ *  @brief Traits class for the DiagonalByVectorProduct class
+ */
+template< typename Lhs, typename Rhs>
+struct Traits< VectorByPointProduct < Lhs, Rhs> >
+{
+  enum
+  {
+    structure_ = Arrays::array2D_,
+    sizeRows_  = Lhs::sizeRows_,
+    sizeCols_  = Rhs::sizeCols_,
+    // preserve the Lhs storage orientation
+    orient_    = Arrays::by_col_,
+    storage_   = Arrays::dense_
+  };
+  typedef typename Lhs::Type Type;
+};
+
+} // end namespace hidden
+
+template<typename Lhs, typename Rhs>
+class VectorByPointProduct : public ExprBase< VectorByPointProduct<Lhs, Rhs> >
+                            , public TRef<1>
+{
+  public:
+    typedef ExprBase< VectorByPointProduct<Lhs, Rhs> > Base;
+    typedef typename hidden::Traits<VectorByPointProduct>::Type Type;
+
+    enum
+    {
+      structure_ = hidden::Traits<VectorByPointProduct>::structure_,
+      orient_    = hidden::Traits<VectorByPointProduct>::orient_,
+      sizeRows_  = hidden::Traits<VectorByPointProduct>::sizeRows_,
+      sizeCols_  = hidden::Traits<VectorByPointProduct>::sizeCols_,
+      storage_   = hidden::Traits<VectorByPointProduct>::storage_
+    };
+
+    inline VectorByPointProduct( const Lhs& lhs, const Rhs& rhs)
+                               : Base(), lhs_(lhs), rhs_(rhs)
+    {}
+    /**  @return the range of the rows */
+    inline Range const rows() const { return lhs_.rows();}
+    /** @return the range of the columns */
+    inline Range const cols() const { return rhs_.cols();}
+    /** @return the fixed size type if available to enable compile time optimizations */
+    inline int sizeRowsImpl() const { return lhs_.sizeRows();}
+    /** @return the fixed size type if available to enable compile time optimizations */
+    inline int sizeColsImpl() const { return rhs_.sizeCols();}
+    /** @return the left hand side expression */
+    inline Lhs const& lhs() const { return lhs_; }
+    /** @return the right hand side nested expression */
+    inline Rhs const& rhs() const { return rhs_; }
+    /** access to the element (i,j) */
+    inline Type const elt2Impl(int i, int j) const
+    { return lhs_.elt(i)*rhs_.elt(j);}
 
   protected:
     Lhs const& lhs_;
@@ -765,11 +835,11 @@ struct Traits< DiagonalByMatrixProduct < Lhs, Rhs> >
 
 
 template<typename Lhs, typename Rhs>
-class DiagonalByMatrixProduct : public ArrayBase< DiagonalByMatrixProduct<Lhs, Rhs> >
+class DiagonalByMatrixProduct : public ExprBase< DiagonalByMatrixProduct<Lhs, Rhs> >
                               , public TRef<1>
 {
   public:
-    typedef ArrayBase< DiagonalByMatrixProduct<Lhs, Rhs> > Base;
+    typedef ExprBase< DiagonalByMatrixProduct<Lhs, Rhs> > Base;
     typedef typename hidden::Traits<DiagonalByMatrixProduct>::Type Type;
 
     enum
@@ -913,10 +983,10 @@ class MatrixByMatrixProduct : public ProductBase< Lhs, Rhs >
   * @brief implement the access to the elements in the (2D) general case.
   **/
 template< typename Lhs, typename Rhs, int LhsStructure_, int RhsStructure_>
-class ProductBase : public ArrayBase< MatrixByMatrixProduct<Lhs, Rhs> >
+class ProductBase : public ExprBase< MatrixByMatrixProduct<Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< MatrixByMatrixProduct< Lhs, Rhs> > Base;
+    typedef ExprBase< MatrixByMatrixProduct< Lhs, Rhs> > Base;
     typedef typename Base::Type Type;
 
     /** constructor. */

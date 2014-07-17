@@ -72,11 +72,11 @@ class AdditiveBSplineRegression : public IRegression<Matrix, Matrix, Vector>
     /** give the degree of the B-Spline curves.
      *  @return the degree of the B-Spline curves
      * */
-    inline int const& degree() const { return degree_;}
+    inline int degree() const { return degree_;}
     /** give the number of control points of the B-Spline curves.
      *  @return the number of control points of the B-Spline curves
      **/
-    inline int const& nbControlPoints() const
+    inline int nbControlPoints() const
     { return nbControlPoints_;}
     /** give the control points.
      *  @return the control points of the B-Spline curves

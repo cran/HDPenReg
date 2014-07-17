@@ -27,48 +27,44 @@
 #
 #-----------------------------------------------------------------------
 # Macro definitions
-#
 ifeq ($(MAKEVARS),)
-	include ../../../makevars
+	include ../../../$(RELATIVEMAKEVARS)
 else
 	include $(MAKEVARS)
 endif
 
+ifneq ($(wildcard makevars.local),)
+	include makevars.local
+endif
 
 #-----------------------------------------------------------------------
 # Paths
-#
 INC_DIR = ../include/
 BIN_DIR = ../../../bin/
+PROJECTS_DIR = ../..
 
 #-----------------------------------------------------------------------
 # header files
-#
 CXX_INCS	= $(wildcard $(INC_DIR)*.h)
 
 #-----------------------------------------------------------------------
 # source files
-#
 CPP_SRCS = $(wildcard *.cpp)
 
 #-----------------------------------------------------------------------
 # binary files
-#
 CPP_OBJS = $(CPP_SRCS:%.cpp=$(BIN_DIR)%.o)
 
 #-----------------------------------------------------------------------
 # Compilation rules
-#
 $(BIN_DIR)%.o: $(INC_DIR)%.h makefile
 $(BIN_DIR)%.o: %.cpp
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(STK_FLAGS) $< -c -o $@
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -I$(PROJECTS_DIR) $(STK_FLAGS) $< -c -o $@
 
 #-----------------------------------------------------------------------
 # creating objects files
-#
 obj: $(CPP_OBJS)
 
 #-----------------------------------------------------------------------
 # Targets
-#
 all: obj

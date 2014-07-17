@@ -36,7 +36,7 @@
 #ifndef STK_ADDITIVEBSPLINECOEFFICIENTS_H
 #define STK_ADDITIVEBSPLINECOEFFICIENTS_H
 
-#include "../../Sdk/include/STK_IRunner.h"
+#include "Sdk/include/STK_IRunner.h"
 #include "STK_BSplineCoefficients.h"
 
 namespace STK
@@ -104,11 +104,11 @@ class AdditiveBSplineCoefficients : public IRunnerBase
     bool run();
 
     /** give the degree of the B-Spline curves. */
-    inline int const& degree() const { return degree_;}
+    inline int degree() const { return degree_;}
     /** give the number of knots of the B-Spline curves. */
-    inline int const& nbKnots() const { return nbKnots_;}
+    inline int nbKnots() const { return nbKnots_;}
     /** give the number of control points of the B-Spline curves. */
-    inline int const& nbControlPoints() const { return nbControlPoints_;}
+    inline int nbControlPoints() const { return nbControlPoints_;}
     /** give the computed coefficients of the B-Spline curves.
      * This is a matrix of size (p_data_->range(), 0:lastControlPoints).
      **/

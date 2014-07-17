@@ -38,8 +38,7 @@
 #define STK_GRAMSCHMIDT_H
 
 // Container classes
-#include "../../Arrays/include/STK_ArrayBase.h"
-#include "STK_LinAlgebra1D.h"
+#include "Arrays/include/STK_ArrayBase.h"
 
 namespace STK
 {
@@ -61,7 +60,7 @@ void gramSchmidt( ArrayBase<TContainer2D>& A)
       A.asDerived().col(j) -= A.asDerived().col(i) * dotij;
     }
     // normalize
-    const Real norm = normTwo(A.asDerived().col(j));
+    const Real norm = A.asDerived().col(j).norm();
     if (norm)
     {
       A.asDerived().col(j)/=norm;

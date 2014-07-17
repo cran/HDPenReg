@@ -167,7 +167,7 @@ struct ProductImpl
     for (int j=res.firstIdxCols(); j<=res.lastIdxCols(); j++)
     {
       Integer const last = res.rangeRowsInCol(j).lastIdx();
-      for (int i=res.rangeRowsInCol(j).firstIdx(); i<=last; i++)
+      for (int i=res.rangeRowsInCol(j).begin(); i<=last; i++)
       { MultCoeff::dot(lhs, rhs, res, i, j);}
     }
   }
@@ -176,7 +176,7 @@ struct ProductImpl
     for (int i=res.firstIdxRows(); i<=res.lastIdxRows(); i++)
     {
       Integer const last = res.rangeColsInRow(i).lastIdx();
-      for (int j=res.rangeColsInRow(i).firstIdx(); j<=last; j++)
+      for (int j=res.rangeColsInRow(i).begin(); j<=last; j++)
       { MultCoeff::dot(lhs, rhs, res, i, j);}
     }
   }

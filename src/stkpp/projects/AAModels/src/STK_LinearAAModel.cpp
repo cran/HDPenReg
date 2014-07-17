@@ -28,21 +28,21 @@
  *
  **/
 
-#include "../../Arrays/include/STK_Array2D.h"
-#include "../../Arrays/include/STK_Array2DSquare.h"
-#include "../../Arrays/include/STK_Array2DLowerTriangular.h"
-#include "../../Arrays/include/STK_Array2DUpperTriangular.h"
-#include "../../Arrays/include/STK_Array2D_Functors.h"
+#include "Arrays/include/STK_Array2D.h"
+#include "Arrays/include/STK_Array2DSquare.h"
+#include "Arrays/include/STK_Array2DLowerTriangular.h"
+#include "Arrays/include/STK_Array2DUpperTriangular.h"
+#include "Arrays/include/STK_Array2D_Functors.h"
 
-#include "../../Arrays/include/STK_Display.h"
+#include "Arrays/include/STK_Display.h"
 
-#include "../../Algebra/include/STK_LinAlgebra2D.h"
-#include "../../Algebra/include/STK_GramSchmidt.h"
+#include "Algebra/include/STK_LinAlgebra2D.h"
+#include "Algebra/include/STK_GramSchmidt.h"
 
-#include "../../STatistiK/include/STK_Law_IUnivLaw.h"
-#include "../../STatistiK/include/STK_Law_Normal.h"
+#include "STatistiK/include/STK_Law_IUnivLaw.h"
+#include "STatistiK/include/STK_Law_Normal.h"
 
-#include "../../Regress/include/STK_MultidimRegression.h"
+#include "Regress/include/STK_MultidimRegression.h"
 
 #include "../include/STK_LinearAAModel.h"
 
@@ -115,7 +115,7 @@ bool LinearAAModel::run()
     reduction();
     // compute the projected covariance
     computeProjectedCovariance();
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
     stk_cout << _T("In LinearAAModel::run(), reduction done.\n");
 #endif
     // set data
@@ -123,7 +123,7 @@ bool LinearAAModel::run()
     p_regressor_->setX(p_reduced_);
     // compute the regression function
     regression();
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
     stk_cout << _T("In LinearAAModel::run(), regression done.\n");
 #endif
     computeModelParameters();
@@ -160,7 +160,7 @@ bool LinearAAModel::run( Vector const& weights)
     reduction(weights);
     // compute the projected covariance
     computeProjectedCovariance();
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
     stk_cout << _T("In LinearAAModel::run(weights), reduction done.\n");
 #endif
     // set data
@@ -206,25 +206,25 @@ void LinearAAModel::simul( const Law::IUnivLaw<Real>& law
     STKRUNTIME_ERROR_NO_ARG(LinearAAModel::simul,data.cols()!=mu.range());
   // simul AA model
   law.randArray(data);
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("data simulated\n");
 #endif
   // choose arbitrary coefficients for proj
   proj.randGauss();
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("proj simulated\n");
 #endif
   // orthonormalize proj
   gramSchmidt(proj);
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("proj orthonormalized\n");
 #endif
 
-#ifdef STK_DEBUG
+#ifdef STK_AAMODELS_DEBUG
   stk_cout << _T("proj =") << proj;
 #endif
   // compute data
-  data.move(mult(data, multRightTranspose(proj)));
+  data = data * (proj * proj.transpose());
 
   // add noise to the model
   for (int j= data.firstIdxCols(); j<= data.lastIdxCols(); j++)

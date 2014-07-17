@@ -35,12 +35,14 @@
 #ifndef STK_ALGO_FINDZERO_H
 #define STK_ALGO_FINDZERO_H
 
-#include "../../STKernel/include/STK_Integer.h"
-#include "../../STKernel/include/STK_Real.h"
-#include "../../STKernel/include/STK_Macros.h"
+#include "Sdk/include/STK_Macros.h"
+
+#include "STKernel/include/STK_Integer.h"
+#include "STKernel/include/STK_Real.h"
+
 #include "STK_IFunction.h"
 
-#define MAX_ITER 1000000
+#define MAX_ITER 1000
 
 namespace STK
 {

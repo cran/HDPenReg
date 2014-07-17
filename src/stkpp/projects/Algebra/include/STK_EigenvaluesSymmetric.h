@@ -36,10 +36,10 @@
 #ifndef STK_EIGENVALUESSYMMETRIC_H
 #define STK_EIGENVALUESSYMMETRIC_H
 
-#include "../../Sdk/include/STK_IRunner.h"
+#include "Sdk/include/STK_IRunner.h"
 
-#include "../../Arrays/include/STK_Array2DSquare.h"
-#include "../../Arrays/include/STK_Array2DDiagonal.h"
+#include "Arrays/include/STK_Array2DSquare.h"
+#include "Arrays/include/STK_Array2DDiagonal.h"
 
 namespace STK
 {
@@ -106,7 +106,7 @@ class EigenvaluesSymmetric : public IRunnerUnsupervised<MatrixSquare, Vector>
     /** rank of the matrix
      *  @return the rank of the matrix
      **/
-    inline int const& rank()  const { return rank_;}
+    inline int rank()  const { return rank_;}
     /** determinant of the Matrix
      * @return the determinant of the Matrix
      **/
@@ -122,11 +122,11 @@ class EigenvaluesSymmetric : public IRunnerUnsupervised<MatrixSquare, Vector>
     /** get the first index of the rows/columns
      *  @return the index of the first row/column
      **/
-    inline int const& firstIdx() const{ return first_;}
+    inline int begin() const{ return begin_;}
     /** get last index of the rows/columns
      *  @return the index of the last row/column
      **/
-    inline int const& lastIdx() const { return last_;}
+    inline int lastIdx() const { return last_;}
     /** Compute the general ized inverse of the symmetric matrix.
      * The result is allocated dynamically and is not liberated by this
      * class.
@@ -149,7 +149,7 @@ class EigenvaluesSymmetric : public IRunnerUnsupervised<MatrixSquare, Vector>
     /// Array of the eigenvalues
     MatrixDiagonal D_;
     /// first row/col of P_
-    int first_;
+    int begin_;
     /// last row/col of P_
     int last_;
     /// norm of the matrix

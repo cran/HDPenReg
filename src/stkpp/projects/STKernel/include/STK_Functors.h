@@ -29,7 +29,7 @@
  **/
 
 /** @file STK_Functors.h
- *  @brief In this file we implement the functors .
+ *  @brief In this file we implement the functors.
  **/
 
 
@@ -37,8 +37,6 @@
 #define STK_FUNCTORS_H
 
 #include <cmath>
-#include "STK_MetaTemplate.h"
-#include "STK_Char.h"
 #include "STK_Integer.h"
 
 namespace STK
@@ -96,11 +94,11 @@ struct TestEndOfLineOp
   enum { NbParam_ = 1 };
   typedef bool result_type;
   typedef Char param1_type ;
-
-  Char last_;
+  inline TestEndOfLineOp(char* c) : last_(c) {}
+  Char* last_;
   inline result_type const operator()(Char c)
   {
-    last_ = c;
+    *last_ = c;
     return (c == _T('\n'));
   }
 };
@@ -108,7 +106,7 @@ struct TestEndOfLineOp
 /** @ingroup Functors
   * @brief Template functor testing if a number is equal to an other
   */
-template<class Type1, class Type2>
+template<class Type1, class Type2 = Type1>
 struct EqualOp
 {
   enum { NbParam_ = 2 };
@@ -122,7 +120,7 @@ struct EqualOp
 /** @ingroup Functors
   * @brief Template functor testing if a number is not equal to an other
   */
-template<class Type1, class Type2>
+template<class Type1, class Type2 = Type1>
 struct NotEqualOp
 {
   enum { NbParam_ = 2 };
@@ -136,7 +134,7 @@ struct NotEqualOp
 /** @ingroup Functors
   * @brief Template functor testing if a number is less than an other
   */
-template<class Type1, class Type2>
+template<class Type1, class Type2 = Type1>
 struct LessOp
 {
   enum { NbParam_ = 2 };
@@ -150,7 +148,7 @@ struct LessOp
 /** @ingroup Functors
   * @brief Template functor testing if a number is less or equal than an other
   */
-template<class Type1, class Type2>
+template<class Type1, class Type2 = Type1>
 struct LeqOp
 {
   enum { NbParam_ = 2 };
@@ -164,7 +162,7 @@ struct LeqOp
 /** @ingroup Functors
   * @brief Template functor testing if a number is greater than an other
   */
-template<class Type1, class Type2>
+template<class Type1, class Type2 = Type1>
 struct GreaterOp
 {
   enum { NbParam_ = 2 };
@@ -178,7 +176,7 @@ struct GreaterOp
 /** @ingroup Functors
   * @brief Template functor testing if a number is greater or equal than an other
   */
-template<class Type1, class Type2>
+template<class Type1, class Type2 = Type1>
 struct GeqOp
 {
   enum { NbParam_ = 2 };
@@ -192,7 +190,7 @@ struct GeqOp
 /** @ingroup Functors
   * @brief Template functor which compute the maximum of two numbers
   */
-template<class Type1, class Type2>
+template<class Type1, class Type2 = Type1>
 struct MaxOp
 {
   enum { NbParam_ = 2 };
@@ -206,7 +204,7 @@ struct MaxOp
 /** @ingroup Functors
   * @brief Template functor which compute the minimum of two numbers
   */
-template<class Type1, class Type2>
+template<class Type1, class Type2 = Type1>
 struct MinOp
 {
   enum { NbParam_ = 2 };
@@ -220,7 +218,7 @@ struct MinOp
 /** @ingroup Functors
   * @brief Template functor which compute the sum of two numbers
   */
-template<class Type1, class Type2>
+template<class Type1, class Type2 = Type1>
 struct SumOp
 {
   enum { NbParam_ = 2 };
@@ -234,7 +232,7 @@ struct SumOp
 /** @ingroup Functors
   * @brief Template functor which compute the product of two numbers
   */
-template<class Type1, class Type2>
+template<class Type1, class Type2 = Type1>
 struct ProductOp
 {
   enum { NbParam_ = 2 };
@@ -248,7 +246,7 @@ struct ProductOp
 /** @ingroup Functors
   * @brief Template functor which compute the difference of two numbers
   */
-template<class Type1, class Type2>
+template<class Type1, class Type2 = Type1>
 struct DifferenceOp
 {
   enum { NbParam_ = 2 };
@@ -262,7 +260,7 @@ struct DifferenceOp
 /** @ingroup Functors
   * @brief Template functor which compute the division of two numbers
   */
-template<class Type1, class Type2>
+template<class Type1, class Type2 = Type1>
 struct DivOp
 {
   enum { NbParam_ = 2 };
@@ -275,6 +273,99 @@ struct DivOp
 };
 
 // unary functors:
+/** @ingroup Functors
+  * @brief Template functor to test if a number is less than a fixed number
+  */
+template<typename Type>
+struct LessThanOp
+{
+  enum { NbParam_ = 1 };
+  typedef bool result_type;
+  typedef Type param1_type ;
+
+  inline LessThanOp(const LessThanOp& other) : other_(other.other_) { }
+  inline LessThanOp(Type other) : other_(other) { }
+  inline result_type const operator() (param1_type a) const { return a < other_; }
+  const Type other_;
+};
+/** @ingroup Functors
+  * @brief Template functor to test if a number is less or equal than a fixed number
+  */
+template<typename Type>
+struct LeqThanOp
+{
+  enum { NbParam_ = 1 };
+  typedef bool result_type;
+  typedef Type param1_type ;
+
+  inline LeqThanOp(LeqThanOp const& other) : other_(other.other_)
+  {}
+  inline LeqThanOp(Type other) : other_(other)
+  {}
+  inline result_type const operator() (param1_type a) const
+  { return (a <= other_); }
+  const Type other_;
+};
+/** @ingroup Functors
+  * @brief Template functor to test if a number is greater than a fixed number
+  */
+template<typename Type>
+struct GreaterThanOp
+{
+  enum { NbParam_ = 1 };
+  typedef bool result_type;
+  typedef Type param1_type ;
+
+  inline GreaterThanOp(const GreaterThanOp& other) : other_(other.other_) { }
+  inline GreaterThanOp(Type other) : other_(other) { }
+  inline result_type const operator() (param1_type a) const { return a > other_; }
+  const Type other_;
+};
+/** @ingroup Functors
+  * @brief Template functor to test if a number is greater or equal than a fixed number
+  */
+template<typename Type>
+struct GeqThanOp
+{
+  enum { NbParam_ = 1 };
+  typedef bool result_type;
+  typedef Type param1_type ;
+
+  inline GeqThanOp(const GeqThanOp& other) : other_(other.other_) { }
+  inline GeqThanOp(Type other) : other_(other) { }
+  inline result_type const operator() (param1_type a) const { return a >= other_; }
+  const Type other_;
+};
+/** @ingroup Functors
+  * @brief Template functor to test if a number is equal to a fixed number
+  */
+template<typename Type>
+struct EqualThanOp
+{
+  enum { NbParam_ = 1 };
+  typedef bool result_type;
+  typedef Type param1_type ;
+
+  inline EqualThanOp(const EqualThanOp& other) : other_(other.other_) { }
+  inline EqualThanOp(Type other) : other_(other) { }
+  inline result_type const operator() (param1_type a) const { return a == other_; }
+  const Type other_;
+};
+/** @ingroup Functors
+  * @brief Template functor to test if a number is different than a fixed number
+  */
+template<typename Type>
+struct NotEqualThanOp
+{
+  enum { NbParam_ = 1 };
+  typedef bool result_type;
+  typedef Type param1_type ;
+
+  inline NotEqualThanOp(const NotEqualThanOp& other) : other_(other.other_) { }
+  inline NotEqualThanOp(Type other) : other_(other) { }
+  inline result_type const operator() (param1_type a) const { return a != other_; }
+  const Type other_;
+};
 /** @ingroup Functors
   * @brief Template functor testing if a number is a NA value
   */
@@ -388,13 +479,30 @@ struct MultipleOp
   typedef Type const result_type;
   typedef Type const param1_type ;
 
+  inline MultipleOp(Type const other) : other_(other) {}
   inline MultipleOp( MultipleOp const& other) : other_(other.other_) {}
-  inline MultipleOp(Type const other) : other_(other)
-  {}
   inline result_type const operator() (param1_type a) const
   {return a * other_; }
   Type const other_;
 };
+
+/** @ingroup Functors
+  * @brief Template functor which return a default value if the value is NA
+  */
+template<class Type>
+struct SafeOp
+{
+  enum { NbParam_ = 1 };
+  typedef Type result_type;
+  typedef Type param1_type ;
+
+  inline SafeOp(Type const other = Type()) : other_(other) {}
+  inline SafeOp( SafeOp const& other) : other_(other.other_) {}
+  inline result_type const operator()(param1_type a) const
+  { return Arithmetic<Type>::isFinite(a) ? a : other_; }
+  Type const other_;
+};
+
 
 template<typename Type, bool isInt>
 struct QuotientBaseOp;

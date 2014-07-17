@@ -35,14 +35,8 @@
 #ifndef STK_CARRAYSQUARE_H
 #define STK_CARRAYSQUARE_H
 
-#include "../../STKernel/include/STK_Constants.h"
-#include "../../STKernel/include/STK_MetaTemplate.h"
-#include "../../STKernel/include/STK_StaticAssert.h"
+#include "STKernel/include/STK_Constants.h"
 
-#include "../../Sdk/include/STK_Traits.h"
-
-#include "STK_Arrays_Util.h"
-#include "STK_CAllocator.h"
 #include "STK_ICArray.h"
 
 namespace STK
@@ -139,11 +133,11 @@ struct Traits< CArraySquare<Type_, Size_, Orient_> >
  */
 template <typename Type_, int Size_, bool Orient_>
 class CArraySquare
-      : public ICArray < CArray<Type_, Size_, Size_, Orient_> >
+      : public ICArray < CArraySquare<Type_, Size_, Orient_> >
 {
   public:
-    typedef ICArray < CArray<Type_, Size_, Size_, Orient_> > Base;
-    typedef ArrayBase < CArray<Type_, Size_, Size_, Orient_> > LowBase;
+    typedef ICArray < CArraySquare<Type_, Size_, Orient_> > Base;
+    typedef ArrayBase < CArraySquare<Type_, Size_, Orient_> > LowBase;
 
     typedef typename hidden::Traits< CArraySquare <Type_, Size_> >::Type Type;
     enum
@@ -171,6 +165,11 @@ class CArraySquare
      *  @param ref true if T is wrapped
      **/
     inline CArraySquare( CArraySquare const& T, bool ref=false) : Base(T, ref) {}
+    /** wrapper constructor for 0 based C-Array.
+     *  @param q pointer on the array
+     *  @param size number of rows/columns
+     **/
+    inline CArraySquare( Type* const& q, int size): Base(q, size, size) {}
     /** constructor by reference.
      *  @param allocator the allocator to wrap
      **/

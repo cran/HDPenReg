@@ -36,7 +36,7 @@
 #ifndef STK_BSPLINEREGRESSION_H
 #define STK_BSPLINEREGRESSION_H
 
-#include "../../Arrays/include/STK_Array2D.h"
+#include "Arrays/include/STK_Array2D.h"
 
 #include "STK_BSplineCoefficients.h"
 #include "STK_IRegression.h"
@@ -74,12 +74,12 @@ class BSplineRegression : public IRegression<Matrix, Vector, Vector>
     /** give the degree of the B-Spline curve.
      *  @return the degree of the B-Spline curve
      * */
-    inline int const& degree() const
+    inline int degree() const
     { return degree_;}
     /** give the number of control points of the B-Spline curves.
      *  @return the number of control points of the B-Spline curve
      **/
-    inline int const& nbControlPoints() const
+    inline int nbControlPoints() const
     { return nbControlPoints_;}
     /** give the control points.
      *  @return the control points of the B-Spline curve

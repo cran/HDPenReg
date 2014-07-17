@@ -29,50 +29,39 @@
  **/
 
 /** @file STK_Gamma_ajk_bjk.h
- *  @brief In this file we define the Gamma_pk_ajk_bjk and Gamma_p_ajk_bjk models.
+ *  @brief In this file we define the Gamma_ajk_bjk and Gamma_p_ajk_bjk models.
  **/
 
 #ifndef STK_GAMMA_AJK_BJK_H
 #define STK_GAMMA_AJK_BJK_H
 
-#include "../STK_IMixtureModel.h"
+#include "STK_GammaBase.h"
 
-#include "STK_GammaComponent.h"
+#include "../../../STatistiK/include/STK_Law_Exponential.h"
+
 #include "STK_Gamma_ajk_bjkImpl.h"
 
 namespace STK
 {
-template<class Array>class Gamma_pk_ajk_bjk;
-template<class Array>class Gamma_p_ajk_bjk;
+template<class Array>class Gamma_ajk_bjk;
 
-namespace hidden
+namespace Clust
 {
 /** @ingroup hidden
- * Traits class for the Gamma_pk_ajk_bjk traits policy
+ * Traits class for the Gamma_ajk_bjk traits policy
  **/
 template<class _Array>
-struct MixtureTraits< Gamma_pk_ajk_bjk<_Array> >
+struct MixtureModelTraits< Gamma_ajk_bjk<_Array> >
 {
   typedef _Array Array;
-  typedef GammaComponent<_Array, Gamma_ajk_bjk_Parameters> Component;
-  typedef Gamma_ajk_bjk_Parameters        Parameters;
-};
-
-/** @ingroup hidden
- *  Traits class for the Gamma_p_ajk_bjk traits policy
- **/
-template<class _Array>
-struct MixtureTraits< Gamma_p_ajk_bjk<_Array> >
-{
-  typedef _Array Array;
-  typedef GammaComponent<_Array, Gamma_ajk_bjk_Parameters> Component;
+  typedef MixtureComponent<_Array, Gamma_ajk_bjk_Parameters> Component;
   typedef Gamma_ajk_bjk_Parameters        Parameters;
 };
 
 } // namespace hidden
 
 /** @ingroup Clustering
- *  Gamma_pk_ajk_bjk is a mixture model of the following form
+ *  Gamma_ajk_bjk is a mixture model of the following form
  * \f[
  *     f(\mathbf{x}_i|\theta) = \sum_{k=1}^K p_k
  *     \prod_{j=1}^p\left(\frac{x_i^j}{b_{jk}}\right)^{a_{jk}-1}
@@ -81,125 +70,106 @@ struct MixtureTraits< Gamma_p_ajk_bjk<_Array> >
  * \f]
  **/
 template<class Array>
-class Gamma_pk_ajk_bjk : public IMixtureModel< Gamma_pk_ajk_bjk<Array> >
+class Gamma_ajk_bjk : public GammaBase< Gamma_ajk_bjk<Array> >
 {
   public:
-    typedef typename hidden::MixtureTraits< Gamma_pk_ajk_bjk<Array> >::Component Component;
-    typedef typename hidden::MixtureTraits< Gamma_pk_ajk_bjk<Array> >::Parameters Parameters;
-    typedef IMixtureModel< Gamma_pk_ajk_bjk<Array> > Base;
+    typedef typename Clust::MixtureModelTraits< Gamma_ajk_bjk<Array> >::Component Component;
+    typedef typename Clust::MixtureModelTraits< Gamma_ajk_bjk<Array> >::Parameters Parameters;
+    typedef GammaBase< Gamma_ajk_bjk<Array> > Base;
+
+    using Base::p_tik;
     using Base::p_data;
-    using Base::components_;
+    using Base::p_param;
+    using Base::components;
 
     /** default constructor
      * @param nbCluster number of cluster in the model
      **/
-    Gamma_pk_ajk_bjk( int nbCluster) : Base(nbCluster) {}
-    /** constructor. Create a model with a data set.
-     *  @param nbCluster number of cluster in the model
-     *  @param data the data set to process
-     **/
-    Gamma_pk_ajk_bjk( int nbCluster, Array const& data) : Base(nbCluster, data)
-    {}
-    /** constructor with a pointer on the data set
-     *  @param p_data a pointer on the data set to process
-     *  @param nbCluster number of cluster in the model
-     **/
-    Gamma_pk_ajk_bjk( int nbCluster, Array const* p_data) : Base(nbCluster, p_data)
-    {}
+    inline Gamma_ajk_bjk( int nbCluster) : Base(nbCluster) {}
     /** copy constructor
      *  @param model The model to copy
      **/
-    Gamma_pk_ajk_bjk( Gamma_pk_ajk_bjk const& model) : Base(model) {}
+    inline Gamma_ajk_bjk( Gamma_ajk_bjk const& model) : Base(model) {}
     /** destructor */
-    virtual ~Gamma_pk_ajk_bjk() {}
-    /** use the default static method initializeStep() for a first initialization
-     *  of the parameters using tik values.
-     **/
-    virtual void initializeStep()
-    { MixtureModelImpl< Array, Parameters, Component >::initializeStep(components_,  this->p_tik());}
-    /** Write the parameters*/
-    virtual void writeParameters(ostream& os) const
-    {
-      stk_cout << "lnLikelihood = " << this->lnLikelihood() << _T("\n";);
-      stk_cout << "proportions = " << *(this->p_prop());
-      for (int k= components_.firstIdx(); k <= components_.lastIdx(); ++k)
-      {
-        stk_cout << "---> Component " << k << _T("\n";);
-        stk_cout << "shape_ = "
-                 << components_[k]->p_param()->shape_;
-        stk_cout << "scale_ = "
-                 << components_[k]->p_param()->scale_;
-      }
-    }
+    inline ~Gamma_ajk_bjk() {}
+    /** initialize shape and scale parameters using weighted moment estimators.*/
+    void initializeStep();
+    /** Initialize randomly the parameters of the Gaussian mixture. The centers
+     *  will be selected randomly among the data set and the standard-deviation
+     *  will be set to 1.
+     */
+    void randomInit();
+    /** Compute the weighted mean and the common variance. */
+    void mStep();
     /** @return the number of free parameters of the model */
-    inline virtual int computeNbFreeParameters() const
-    { return 2*this->nbCluster()*this->nbVar() + this->nbCluster()-1;}
+    inline int computeNbFreeParameters() const
+    { return 2*this->nbCluster()*this->nbVariable();}
 };
 
-/** @ingroup Clustering
- *  Gamma_p_ajk_bjk is a mixture model of the following form
- * \f[
- *     f(\mathbf{x}_i|\theta) = \sum_{k=1}^K \frac{1}{K}
- *     \prod_{j=1}^p \left( \frac{x_i^j}{b_{jk}}\right)^{a_{jk}-1}
- *                   \frac{e^{-x_i^j/b_{jk}}} {b_{jk} \, \Gamma(a_{jk})},
- *      \quad x_i^j>0, \quad j=1,\ldots,p, \quad i=1,\ldots,n.
- * \f]
- **/
+/* Initialize the parameters using moment estimators. */
 template<class Array>
-class Gamma_p_ajk_bjk : public IMixtureModelFixedProp< Gamma_p_ajk_bjk<Array> >
+void Gamma_ajk_bjk<Array>::initializeStep()
 {
-  public:
-    typedef typename hidden::MixtureTraits< Gamma_p_ajk_bjk<Array> >::Component Component;
-    typedef typename hidden::MixtureTraits< Gamma_p_ajk_bjk<Array> >::Parameters Parameters;
-    typedef IMixtureModelFixedProp< Gamma_p_ajk_bjk<Array> > Base;
-    using Base::p_data;
-    using Base::components_;
-
-    /** default constructor
-     * @param nbCluster number of cluster in the model
-     **/
-    Gamma_p_ajk_bjk( int nbCluster) : Base(nbCluster) {}
-    /** constructor. Create a model with a data set.
-     *  @param data the data set to process
-     *  @param nbCluster number of cluster in the model
-     **/
-    Gamma_p_ajk_bjk( int nbCluster, Array const& data) : Base(nbCluster, data)
-    {}
-    /** constructor with a pointer on the data set
-     *  @param p_data a pointer on the data set to process
-     *  @param nbCluster number of cluster in the model
-     **/
-    Gamma_p_ajk_bjk( int nbCluster, Array const* p_data) : Base(nbCluster, p_data)
-    {}
-    /** copy constructor
-     *  @param model The model to copy
-     **/
-    Gamma_p_ajk_bjk( Gamma_p_ajk_bjk const& model) : Base(model) {}
-    /** destructor */
-    virtual ~Gamma_p_ajk_bjk() {}
-    /** use the default static method initializeStep() for a first initialization
-     *  of the parameters using tik values.
-     **/
-    virtual void initializeStep()
-    { MixtureModelImpl< Array, Parameters, Component >::initializeStep(components_,  this->p_tik());}
-    /** Write the parameters*/
-    virtual void writeParameters(ostream& os) const
+    try
+    { this->initialMoments();}
+    catch (Clust::exceptions const & e)
+    { throw e;}
+    // estimate a and b
+    for (int k= baseIdx; k <= p_tik()->lastIdxCols(); ++k)
     {
-      stk_cout << "lnLikelihood = " << this->lnLikelihood() << _T("\n";);
-      stk_cout << "proportions = " << *this->p_prop() << _T("\n";);
-      for (int k= components_.firstIdx(); k <= components_.lastIdx(); ++k)
+      for (int j=p_data()->firstIdxCols(); j<=p_data()->lastIdxCols(); ++j)
       {
-        stk_cout << "---> Component " << k << _T("\n";);
-        stk_cout << "shape_ = "
-                 << components_[k]->p_param()->shape_;
-        stk_cout << "scale_ = "
-                 << components_[k]->p_param()->scale_;
+        Real a = p_param(k)->mean_[j]*p_param(k)->mean_[j]/p_param(k)->variance_[j];
+        if ((a<=0)||Arithmetic<Real>::isNA(a)) throw Clust::initializeStepFail_;
+
+        p_param(k)->shape_[j] = a;
+        p_param(k)->scale_[j] = p_param(k)->mean_[j]/a;
       }
     }
-    /** @return the number of free parameters of the model */
-    inline virtual int computeNbFreeParameters() const
-    { return 2*this->nbCluster()*this->nbVar();}
-};
+}
+
+/* Initialize randomly the parameters of the Gaussian mixture. The centers
+ *  will be selected randomly among the data set and the standard-deviation
+ *  will be set to 1.
+ */
+template<class Array>
+void Gamma_ajk_bjk<Array>::randomInit()
+{
+  for (int j=p_data()->firstIdxCols(); j<=p_data()->lastIdxCols(); ++j)
+  {
+    Real mean = p_data()->col(j).mean();
+    Real variance = p_data()->col(j).variance();
+    for (int k= baseIdx; k <= components().lastIdx(); ++k)
+    {
+      // generate values
+      Real a = STK::Law::Exponential::rand(mean*mean/variance);
+      Real b = STK::Law::Exponential::rand(variance/mean);
+      p_param(k)->shape_[j] = a;
+      p_param(k)->scale_[j] = b;
+    }
+  }
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("Gamma_ajk_bjk<Array>::randomInit() done\n");
+  for (int k= baseIdx; k <= components().lastIdx(); ++k)
+  {
+    stk_cout << _T("Component no ") << k << _T("\n");
+    stk_cout << p_param(k)->shape_ << _T("\n");
+    stk_cout << p_param(k)->scale_ << _T("\n");
+  }
+#endif
+}
+
+/* Compute the weighted mean and the common variance. */
+template<class Array>
+void Gamma_ajk_bjk<Array>::mStep()
+{
+    try
+    { this->moments();}
+    catch (Clust::exceptions const & e)
+    { throw Clust::mStepFail_;}
+    // call mStep implementation
+    MixtureModelImpl<  Array, Gamma_ajk_bjk_Parameters >::mStep(components(), p_tik(), p_data());
+}
 
 }  // namespace STK
 

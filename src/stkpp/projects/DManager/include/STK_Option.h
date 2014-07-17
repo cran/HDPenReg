@@ -41,11 +41,10 @@
 #include <list>
 
 // STK+ headers
-#include "../../STKernel/include/STK_String.h"
-#include "../../STKernel/include/STK_Integer.h"
-#include "../../STKernel/include/STK_Real.h"
-#include "../../STKernel/include/STK_Range.h"
-#include "../../STKernel/include/STK_Stream.h"
+#include "STKernel/include/STK_String.h"
+#include "STKernel/include/STK_Real.h"
+#include "STKernel/include/STK_Range.h"
+#include "STKernel/include/STK_Stream.h"
 
 #include "../include/STK_DManager_Util.h"
 
@@ -175,7 +174,7 @@ class Option
     /** get the option as an int
      *  @param value any int (will not be used)
      **/
-    inline int const& get( int const& value) const
+    inline int get( int const& value) const
     { return *p_int_;}
     /** get the option as a Range
      *  @param value any Range (will not be used)

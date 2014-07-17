@@ -38,33 +38,10 @@
 #define STK_LINALGEBRA2D_H
 
 // Point and Vector classes
-#include "../../Arrays/include/STK_Array2DPoint.h"
-#include "../../Arrays/include/STK_Array2DVector.h"
-#include "../../Arrays/include/STK_Array2D.h"
-#include "../../Arrays/include/STK_Array2DSquare.h"
-
-#include "STK_LinAlgebra1D.h"
+#include "Arrays/include/STK_Array2DSquare.h"
 
 namespace STK
 {
-/** @ingroup Algebra
- *  @brief sum f the column of a matrix
- *
- *  Compute the sum of the column of a Matrix.
- *
- *  @param[in] A the Matrix
- *  @return the sum of the columns elements
- **/
-template < class TContainer2D>
-typename ArrayBase<TContainer2D>::Row colSum( ArrayBase<TContainer2D> const& A)
-{
-  typename ArrayBase<TContainer2D>::Row sum(A.cols());
-  // indexes
-  for (int j=A.firstIdxCols(); j<=A.lastIdxCols(); ++j)
-  { sum[j] = A.col(j).sum();}
-  return sum;
-}
-
 /** @ingroup Algebra
  *  @brief transpose a matrix
  * 
@@ -94,7 +71,7 @@ template < class TContainer2D >
 typename TContainer2D::Type trace( ITContainer<TContainer2D> const& A)
 {
   typename TContainer2D::Type sum = 0.0;
-  for (int k = A.firstIdx(); k<= A.lastIdx(); k++) sum += A(k, k);
+  for (int k = A.begin(); k<= A.lastIdx(); k++) sum += A(k, k);
   return sum;
 }
 

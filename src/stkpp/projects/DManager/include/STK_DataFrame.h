@@ -36,7 +36,7 @@
 #ifndef STK_DATAFRAME_H
 #define STK_DATAFRAME_H
 
-#include "../../Arrays/include/STK_IContainer2D.h"
+#include "Arrays/include/STK_IContainer2D.h"
 
 #include "STK_List1D.h"
 #include "STK_IVariable.h"
@@ -76,7 +76,7 @@ class DataFrame : protected List1D<IVariable* >, public IContainer2D
     /**@return the Horizontal range */
     inline Range cols() const { return IContainer2D::cols();}
     /** @return the index of the first column */
-    inline int const& firstIdxCols() const { return IContainer2D::firstIdxCols();}
+    inline int firstIdxCols() const { return IContainer2D::firstIdxCols();}
     /**  @return the index of the last column */
     inline int lastIdxCols() const { return IContainer2D::lastIdxCols();}
     /** @return the Horizontal size (the number of column) */
@@ -84,7 +84,7 @@ class DataFrame : protected List1D<IVariable* >, public IContainer2D
     /** @return the Vertical range */
     inline Range rows() const { return IContainer2D::rows();}
     /** @return the index of the first row */
-    inline int const& firstIdxRows() const { return IContainer2D::firstIdxRows();}
+    inline int firstIdxRows() const { return IContainer2D::firstIdxRows();}
     /** @return the index of the last row */
     inline int lastIdxRows() const { return IContainer2D::lastIdxRows();}
     /** @return the Vertical size (the number of rows) */
@@ -100,7 +100,7 @@ class DataFrame : protected List1D<IVariable* >, public IContainer2D
     DataFrame& operator=(DataFrame const& T);
 
     /** resize the container:
-     * - call @c shift(I.firstIdx(), J.firstIdx()
+     * - call @c shift(I.begin(), J.begin()
      * - call @c popBackCols() (@c insertRows()) and/or @c popBackCols()
      *  (@c popBackRows()).
      *  The implicit assumption made by this method is that it is easier and

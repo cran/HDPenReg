@@ -23,18 +23,19 @@
 */
 
 /*
- * Project:  stkpp::
+ * Project:  stkpp::Clustering
  * created on: 7 sept. 2013
  * Author:   iovleff, serge.iovleff@stkpp.org
  **/
 
-/** @file STK_MixtureTraits.h
- *  @brief In this file .we defien the MixtureModelImpl class and the MixtureTraits class.
+/** @file STK_Clust_Traits.h
+ *  @brief In this file we define the MixtureModelImpl, the MixtureModelTraits
+ *  and the BridgeTraits classes.
  **/
 
 
-#ifndef STK_MIXTURETRAITS_H
-#define STK_MIXTURETRAITS_H
+#ifndef STK_CLUST_TRAITS_H
+#define STK_CLUST_TRAITS_H
 
 namespace STK
 {
@@ -43,28 +44,33 @@ namespace STK
  *  Main class for the maximization step implementation and for
  *  the random initialization of the parameters.
  *
- *  The MixtureModelImpl struct must be specialized for any
- *  models deriving from the IMixtureModel and IMixtureModelFixedProp
- *  interfaces by implementing the following methods:
+ *  The MixtureModelImpl struct can be specialized for any
+ *  models deriving from the IMixtureModel. Typically, it can be used
+ *  for implementing the following method
  *  @code
- *    static void mStep(Array1D< Components* >& components, Array2D<Real> const* p_tik);
- *    static void randomInit(Array1D< Components* >& components);
+ *    static void mStep(Array1D< Component* >& components, Array2D<Real> const* p_tik);
  *  @endcode
- *
  **/
-template<class Array, class Parameter, class Component >
-class MixtureModelImpl;
+template<class Array, class Parameter>
+struct MixtureModelImpl;
 
-namespace hidden
+namespace Clust
 {
 /** Main class for the mixtures traits policy.
- *  The traits struct MixtureTraits must be specialized for any
- *  components deriving from the Interface IMixtureComponents.
+ *  The traits struct MixtureModelTraits must be specialized for any
+ *  Mixture deriving from the Interface IMixtureModel.
  **/
-template <class Mixture> class MixtureTraits;
+template <class Mixture> struct MixtureModelTraits;
 
-} // namespace hidden
+/** Given the Id of a mixture model, the struct Traits allow to get
+ *  type of the input and output data of the parameters. This Traits class is
+ *  used by the Bridge classes.
+ *  @sa MixtureBridge
+ *   **/
+template<int id> struct BridgeTraits;
+
+} // namespace Clust
 
 
 }  // namespace STK
-#endif /* STK_MIXTURETRAITS_H */
+#endif /* STK_BridgeTraits_H */

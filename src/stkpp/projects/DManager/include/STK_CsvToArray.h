@@ -50,13 +50,36 @@ namespace hidden
  * CsvToArrayImpl */
 template<class Type, class Array> struct CsvToArrayImpl;
 
+template<class OtherType>
+struct CsvToArrayImpl<String, Array2D<OtherType> >
+{
+  static void run(TReadWriteCsv<String> const& rw, Array2D<OtherType>* p_data, Real const propMiss)
+  {
+    int jSize = 0;
+    for(int jVar = rw.begin(); jVar<=rw.lastIdx(); jVar++)
+    {
+      if ( (rw.var(jVar).nbMiss()/Real(rw.var(jVar).size())) <= propMiss)
+      {  jSize++;}
+    }
+    // resize
+    p_data->resize(rw.rows(), Range(rw.begin(), jSize));
+    for(int jVar = rw.begin(), jCol=rw.begin(); jVar<=rw.lastIdx(); jVar++)
+    {
+      if ( (rw.var(jVar).nbMiss()/Real(rw.var(jVar).size())) <= propMiss)
+      for (int i =p_data->firstIdxRows(); i<= p_data->lastIdxRows(); ++i)
+      { p_data->elt(i, jCol) = stringToType<OtherType>(rw(i,jVar));}
+      jCol++;
+    }
+  }
+};
+
 template<class Type>
 struct CsvToArrayImpl<Type, Array2D<Type> >
 {
   static void run(TReadWriteCsv<Type> const& rw, Array2D<Type>* p_data, Real const propMiss)
   {
     p_data->reserveCols(rw.size());
-    for(int jVar = rw.firstIdx(); jVar<=rw.lastIdx(); jVar++)
+    for(int jVar = rw.begin(); jVar<=rw.lastIdx(); jVar++)
     {
       if ( (rw.var(jVar).nbMiss()/Real(rw.var(jVar).size())) <= propMiss)
        p_data->merge(rw.var(jVar));
@@ -70,14 +93,14 @@ struct CsvToArrayImpl<Type, CArray<Type > >
   static void run(TReadWriteCsv<Type> const& rw, CArray<Type >* p_data, Real const propMiss)
   {
     int jSize = 0;
-    for(int jVar = rw.firstIdx(); jVar<=rw.lastIdx(); jVar++)
+    for(int jVar = rw.begin(); jVar<=rw.lastIdx(); jVar++)
     {
       if ( (rw.var(jVar).nbMiss()/Real(rw.var(jVar).size())) <= propMiss)
       {  jSize++;}
     }
     // resize
-    p_data->resize(rw.rows(), Range(rw.firstIdx(), jSize));
-    for(int jVar = rw.firstIdx(), jCol=rw.firstIdx(); jVar<=rw.lastIdx(); jVar++)
+    p_data->resize(rw.rows(), Range(rw.begin(), jSize));
+    for(int jVar = rw.begin(), jCol=rw.begin(); jVar<=rw.lastIdx(); jVar++)
     {
       if ( (rw.var(jVar).nbMiss()/Real(rw.var(jVar).size())) <= propMiss)
       {
@@ -107,11 +130,10 @@ struct CsvToArrayImpl<Type, CArray<Type > >
  *  maximal proportion of missing value (0 by default). Each column having
  *  more missing value will be discarded.
  */
-template<class Array>
+template<class Array, class Type = typename Array::Type>
 class CsvToArray : public IRunnerBase
 {
   public:
-    typedef typename Array::Type Type;
     typedef TReadWriteCsv<Type>  Rw;
     /** Constructor
      *  @param rw the TReadWriteCsv to import

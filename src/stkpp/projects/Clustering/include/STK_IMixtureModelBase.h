@@ -30,234 +30,98 @@
  **/
 
 /** @file STK_IMixtureModelBase.h
- *  @brief In this file we define the abstract base class for mixture models.
+ *  @brief In this file we define the interface base class for mixture models.
  **/
 
-#ifndef STK_IMODELMIXTUREBASE_H
-#define STK_IMODELMIXTUREBASE_H
+#ifndef STK_IMIXTUREMODELBASE_H
+#define STK_IMIXTUREMODELBASE_H
 
-#include "../../STKernel/include/STK_Range.h"
-#include "../../StatModels/include/STK_IModelBase.h"
+#include "STKernel/include/STK_Range.h"
 #include "STK_Clust_Util.h"
-#include "../../Arrays/include/STK_CArrayPoint.h"
-#include "../../Arrays/include/STK_CArrayVector.h"
+#include "Arrays/include/STK_CArrayPoint.h"
+#include "Arrays/include/STK_CArrayVector.h"
+#include "Arrays/include/STK_Array2D.h"
 
 namespace STK
 {
 
-template<typename> class Array2D;
-template<typename> class Array2DVector;
-template<typename> class Array2DPoint;
-
 /** @ingroup Clustering
  *  @brief Base class for Mixture model.
  *
- * In statistics, a mixture model is a probabilistic model for representing
- * the presence of sub-populations within an overall population, without
- * requiring that an observed data-set should identify the sub-population to
- * which an individual observation belongs. Formally a mixture model
- * corresponds to the mixture distribution that represents the probability
- * distribution of observations in the overall population. However, while
- * problems associated with "mixture distributions" relate to deriving the
- * properties of the overall population from those of the sub-populations,
- * "mixture models" are used to make statistical inferences about the
- * properties of the sub-populations given only observations on the pooled
- * population, without sub-population-identity information.
- *
- * Some ways of implementing mixture models involve steps that attribute
- * postulated sub-population-identities to individual observations (or weights
- * towards such sub-populations), in which case these can be regarded as types
- * unsupervised learning or clustering procedures. However not all inference
- * procedures involve such steps.
- *
- * In this interface we assume there is an underline generative model that will
- * be estimated using either an EM, SEM or CEM algorithm.
- *
- * All mixture parameters: proportions, Tik, Zi and components are accessed by
- * pointer and can be set to this class  using the method
+ * All the mixture parameters: pk, tik and zi are accessed by pointer and set
+ * to this class using the method
  * @code
- *   void setMixtureParameters(CArray2DPoint<Real>* p_prop, Array2D<Real>* p_tik, CArrayVector<int>* p_zi);
+ *   void setMixtureParameters(CArrayPoint<Real>* p_pk, Array2D<Real>* p_tik, CArrayVector<int>* p_zi);
  * @endcode
  * so that they can be used in a composed model.
- *
- * The mixture parameters also can be created using the method
- * @code
- *   void createMixtureParameters();
- * @endcode
- *
- * The pure virtual function to implement in derived class are
- * @code
- *   virtual IMixtureModelBase* create() const = 0;
- *   virtual IMixtureModelBase* clone() const = 0;
- *   virtual bool randomInit() =0;
- *   virtual void mStep() = 0;
- *   virtual Real lnComponentProbability(int i, int k) = 0;
- * @endcode
- *
- * The virtual function that can be re-implemented in derived class for a
- * specific behavior are:
- * @code
- *   virtual void writeParameters(std::ostream& os) const;
- *   virtual void initializeModel();
- *   virtual void initializeStep();
- *   virtual void inputationStep();
- *   virtual void samplingStep();
- *   virtual void computeProportions();
- *   virtual void finalizeStep();
- * @endcode
- *
- * @note the virtual method @c IMixtureModelBase::initializeModel have to be
- * called before any use of the class as it will create/resize the arrays
- * and initialize the constants of the model. If using external arrays, they
- * should be set by using the IMixtureModelBase::setMixtureParameters before
- * the call to IMixtureModelBase::initializeModel.
+ * @sa MixtureComposer
  */
-class IMixtureModelBase : public IModelBase
+class IMixtureModelBase
 {
   protected:
-    /** default constructor */
-    IMixtureModelBase(int nbCluster);
-    /** copy constructor. If the pointer on the mixture parameters are not zero
-     *  then they are cloned.
+    /** default constructor
+     * @param nbCluster number of cluster */
+    IMixtureModelBase( int nbCluster);
+    /** copy constructor.
+     *  @note the pointer are initialized to 0.
      *  @param model the model to clone
      **/
     IMixtureModelBase( IMixtureModelBase const& model);
 
   public:
     /** destructor */
-    virtual ~IMixtureModelBase();
-
+    ~IMixtureModelBase();
     /** @return the number of cluster */
     inline int nbCluster() const { return nbCluster_;}
-    /** state of the model*/
-    inline Clust::modelState state() const { return state_;}
-    /** @return @c true if the mixture parameters have been created by this object,
-     *  @c false otherwise
-     **/
-    inline bool isParametersCreated() const { return isParametersCreated_;}
+    /** @return the total available observations */
+    inline int nbSample() const { return nbSample_;}
+    /** @return the Log of the total available observations */
+    inline Real lnNbSample() const
+    { return (nbSample_ <= 0) ? -Arithmetic<Real>::infinity() : std::log((Real)nbSample_);}
+    /** @return the total available variables */
+    inline int nbVariable() const { return nbVariable_;}
+
     /** @return the proportions of each mixtures */
-    inline CArrayPoint<Real> const* p_prop() const { return p_prop_;};
+    inline CArrayPoint<Real> const* p_pk() const { return p_pk_;};
     /** @return the tik probabilities */
     inline Array2D<Real> const* p_tik() const { return p_tik_;};
     /** @return  the zi class label */
     inline CArrayVector<int> const* p_zi() const { return p_zi_;};
-    /** set the state of the model*/
-    inline void setState(Clust::modelState state) { state_ = state;}
-
-    // pure virtual
-    /** create pattern */
-    virtual IMixtureModelBase* create() const = 0;
-    /** clone pattern */
-    virtual IMixtureModelBase* clone() const = 0;
-    /** initialize randomly the parameters of the components of the model */
-    virtual void randomInit() = 0;
-    /** Compute the proportions and the model parameters given the current tik
-     *  mixture parameters.
-     **/
-    virtual void mStep() = 0;
-    /** @return the value of the probability of the i-th sample in the k-th component.
-     *  @param i index of the sample
-     *  @param k index of the component
-     **/
-    virtual Real lnComponentProbability(int i, int k) = 0;
-
-    // virtual with default implementation
-    /** write the parameters of the model in the stream os. */
-    virtual void writeParameters(ostream& os) const {};
-    /** compute the number of free parameters of the model. */
-    virtual int computeNbFreeParameters() const = 0;
-    /** @brief Initialize the model before at its first use.
-     *  This function can be overloaded in derived class for initialization of
-     *  the specific model parameters. It should be called prior to any used of
-     *  the class. In this interface, the @c initializeModel method
-     *  - check if the mixture parameters have been created and, if not, create them,
-     *  - set the number of free parameters using the pure virtual function @¢ computeNbFreeParameters()
-     **/
-    virtual void initializeModel();
-    /** Compute proportions using the ML estimator, default implementation. Set
-     *  as virtual in case we impose fixed proportions in derived model.
-     **/
-    virtual void computeProportions();
-    /** @brief Finalize the estimation of the model.
-     * The default behavior is "do nothing".
-     **/
-    inline virtual void finalizeStep() {}
-    /** @brief Impute the missing values.
-     *  Default behavior is "do nothing".
-     **/
-    inline virtual void imputationStep() {}
-    /** @brief Simulation of all the latent variables and/or missing data
-     *  excluding class labels. Default behavior is "do nothing".
-     */
-    virtual void samplingStep() {};
-
-    // not virtual
-    /** Initialize randomly the labels zi of the model.
-     *  Initialize the model parameters using initializeStep()
-     *  and compute the tik.
-     **/
-    void randomClassInit();
-    /** Initialize randomly the posterior probabilities tik of the model.
-     *  Initialize the model parameters and compute the tik.
-     **/
-    void randomFuzzyInit();
-    /** replace tik by zik. */
-    void cStep();
-    /** Simulate zi accordingly to tik and replace tik by zik by calling cStep(). */
-    void sStep();
-    /** compute the zi and the lnLikelihodd of the current estimators (pk and paramk)
-     *  and the next value of the tik.
-     **/
-    void eStep();
-    /** Compute zi using the Map estimator. */
-    void mapStep();
-
-    /** set the parameters of the  mixture model using external
-     * proportions, tik and zi.
-     *  @param p_prop pointer on the proportions of the mixture model
+    /** Set the parameters of the  mixture model using external prop, tik and zi.
+     *  @param p_pk pointer on the proportions of the mixture model
      *  @param p_tik pointer on the posterior probabilities
      *  @param p_zi pointer on the class labels
      * */
-    void setMixtureParameters( CArrayPoint<Real> const* p_prop
-                                , Array2D<Real> const* p_tik
-                                , CArrayVector<int> const* p_zi
-                                );
-    /** Create the mixture model parameters. */
-    void createMixtureParameters();
-    /** delete  the mixture model parameters. */
-    void deleteMixtureParameters();
+    void setMixtureParameters( CArrayPoint<Real> const* p_pk
+                             , Array2D<Real> const* p_tik
+                             , CArrayVector<int> const* p_zi
+                             );
 
   protected:
-    /** number of cluster. */
-    int nbCluster_;
     /** The proportions of each mixtures */
-    CArrayPoint<Real>* p_prop_;
+    CArrayPoint<Real> const* p_pk_;
     /** The tik probabilities */
-    Array2D<Real>* p_tik_;
+    Array2D<Real> const* p_tik_;
     /** The zik class label */
-    CArrayVector<int>* p_zi_;
-    /** First initialization of the parameters of the model.
-     *  This method is called in order to initialize the parameters. The
-     *  default implementation compute the proportions and call mStep() but
-     *  this behavior is overloaded in the derived class IMixtureModel.
-     *  @sa IMixtureModel
-     **/
-    inline virtual void initializeStep() { computeProportions(); mStep();}
+    CArrayVector<int> const* p_zi_;
+    /** Set the number of sample of the model
+     *  @param nbSample number of sample of the model
+     * */
+    inline void setNbSample( int nbSample) { nbSample_ = nbSample;}
+    /** Set the number of variables of the model
+     *  @param nbVariable number of variables of the model
+     * */
+    inline void setNbVariable( int nbVariable) { nbVariable_ = nbVariable;}
 
   private:
-    /** Boolean checking if the mixture parameters have been created or set by
-     * the end-user*/
-    bool isParametersCreated_;
-    /** state of the model*/
-    Clust::modelState state_;
-    /** create the proportions and initialize them with equal values*/
-    void createProp();
-    /** create the tik probabilities array and initialize them with equal values*/
-    void createTik();
-    /** create the zi labels array and initialize them with equal values */
-    void createZi();
+    /** number of cluster. */
+    int nbCluster_;
+    /** total available samples */
+    int nbSample_;
+    /** total available variables */
+    int nbVariable_;
 };
 
 } // namespace STK
 
-#endif /* IMODEL_H_ */
+#endif /* STK_IMIXTUREMODELBASE_H */

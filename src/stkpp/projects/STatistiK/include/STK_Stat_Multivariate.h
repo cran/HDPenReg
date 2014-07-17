@@ -35,8 +35,8 @@
 #ifndef STK_STAT_MULTIVARIATE_H
 #define STK_STAT_MULTIVARIATE_H
 
-#include "../../Arrays/include/STK_Array2DVector.h"
-#include "../../Sdk/include/STK_IRunner.h"
+#include "Arrays/include/STK_Array2DVector.h"
+#include "Sdk/include/STK_IRunner.h"
 
 namespace STK
 {
@@ -82,9 +82,9 @@ class Multivariate : public IRunnerUnsupervised< Array, WColVector>
     /** virtual destructor. */
     virtual ~Multivariate() {}
     /** @return the number of samples in the data set (the number of rows) */
-    inline int const& nbSamples() const {return nbSamples_;}
+    inline int nbSamples() const {return nbSamples_;}
     /** @return the number of variables in the data set (the number of columns) */
-    inline int const& nbVar() const {return nbVar_;}
+    inline int nbVariable() const {return nbVar_;}
     /** Number of missing values
      *  @return An array with the number of missing values for each variables
      *  of the data set

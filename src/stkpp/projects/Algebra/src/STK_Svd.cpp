@@ -35,9 +35,9 @@
 
 #include "../include/STK_Svd.h"
 
-#include "../../Arrays/include/STK_Array2DLowerTriangular.h"
-#include "../../Arrays/include/STK_Array2DUpperTriangular.h"
-#include "../../Arrays/include/STK_Array2D_Functors.h"
+#include "Arrays/include/STK_Array2DLowerTriangular.h"
+#include "Arrays/include/STK_Array2DUpperTriangular.h"
+#include "Arrays/include/STK_Array2D_Functors.h"
 
 
 #include "../include/STK_Householder.h"
@@ -211,19 +211,19 @@ Real Svd::bidiag(const Matrix& M, Point& D, Vector& F)
   // norm of the matrix M
   Real norm  = 0.0;
   // compute the number of iteration
-  int first_iter = M.firstIdxCols();
+  int begin_iter = M.firstIdxCols();
   int last_iter  = M.firstIdxCols() + std::min(M.sizeCols(), M.sizeRows()) -1;
   // Diagonal values
-  D.resize(Range(first_iter, last_iter, 0));
+  D.resize(Range(begin_iter, last_iter, 0));
   // Upper diagonal values
-  F.resize(Range(first_iter-1, last_iter, 0));
+  F.resize(Range(begin_iter-1, last_iter, 0));
   F.front() = 0.0;
   // Bidiagonalisation of M
   // loop on the cols and rows
   Range rowRange0(M.rows())
     , rowRange1(Range(M.firstIdxRows()+1, M.lastIdxRows(), 0))
     , colRange1(Range(M.firstIdxCols()+1, M.lastIdxCols(), 0));
-  for ( int iter=first_iter ; iter<=last_iter
+  for ( int iter=begin_iter ; iter<=last_iter
       ; iter++
       , rowRange0.incFirst(1)
       , rowRange1.incFirst(1)
@@ -443,7 +443,7 @@ bool Svd::diag( Point& D
   // result of the diag process
   bool error = false;
   // Diagonalization of A : Reduction of la matrice bidiagonale
-  for (int end=D.lastIdx(); end>=D.firstIdx(); --end)
+  for (int end=D.lastIdx(); end>=D.begin(); --end)
   { // 30 iter max
     int iter;
     for (iter=1; iter<=30; iter++)
@@ -463,7 +463,7 @@ bool Svd::diag( Point& D
       // now D[end] != 0 and F[end-1] != 0
       // look for the greatest matrix such that all the elements
       // of the diagonal and surdiagonal are not zeros
-      for (beg = end-1; beg>D.firstIdx(); --beg)
+      for (beg = end-1; beg>D.begin(); --beg)
       {
         if ((std::abs(D[beg])+tol == tol)||(std::abs(F[beg])+tol == tol))
         break;
@@ -511,7 +511,7 @@ bool Svd::diag( Point& D
         // Output : d1 contient F[k],
         //          d2 contient D[k+1],
         //          y  contient D[k]
-        Real cosinus, sinus;
+        Real cosinus=1., sinus=0.;
         Real d2 = D[k1];
         F[k-1] = (aux = norm(y,z));                            // F[k-1]
        // arbitrary rotation if y = z = 0.0

@@ -28,15 +28,18 @@
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
-/** @file STK_ArrayBaseVisitor.h
- *  @brief In this file we define the ArrayBaseVisitor classes.
+/** @file STK_Visitors.h
+ *  @brief In this file we define the Visitors classes.
  **/
 
 #ifndef STK_VISITORS_H
 #define STK_VISITORS_H
 
-#include "../../../STKernel/include/STK_MetaTemplate.h"
-#include "../STK_Arrays_Util.h"
+#include "../../../STatistiK/include/STK_Law_Util.h"
+
+#include "STK_VisitorsImpl.h"
+#include "STK_VisitorSelector.h"
+
 
 namespace STK
 {
@@ -65,7 +68,7 @@ template <class Visitor> struct GetIdx<Visitor, Arrays::diagonal_>
 template <typename Type>
 struct EltVisitor2DBase
 {
-  EltVisitor2DBase() : row_(STKBASEARRAYS), col_(STKBASEARRAYS), res_(Arithmetic<Type>::NA()) {};
+  EltVisitor2DBase() : row_(baseIdx), col_(baseIdx), res_(Arithmetic<Type>::NA()) {};
   int row_, col_;
   Type res_;
 };
@@ -73,16 +76,16 @@ struct EltVisitor2DBase
 /** @ingroup hidden
   * @brief Visitor computing the min coefficient with its value and coordinates
   *
-  * @sa ArrayBase::minElt(int, int)
+  * @sa ExprBase::minElt(int, int)
   */
 template <typename Type>
 struct MinEltVisitor : EltVisitor2DBase<Type>
 {
   MinEltVisitor() : EltVisitor2DBase<Type>()
   { this->res_ = Arithmetic<Type>::max(); }
-  void operator()( Type const& value, int i, int j)
+  inline void operator()( Type const& value, int i, int j)
   {
-    if(value < this->res_)
+    if (value < this->res_)
     { this->res_ = value; this->row_ = i; this->col_ = j;}
   }
 };
@@ -91,54 +94,46 @@ struct MinEltVisitor : EltVisitor2DBase<Type>
   * @brief Visitor computing safely the min coefficient with its value and
   * coordinates
   *
-  * @sa ArrayBase::minElt(int, int)
+  * @sa ExprBase::minElt(int, int)
   */
 template <typename Type>
 struct MinEltSafeVisitor : EltVisitor2DBase<Type>
 {
   MinEltSafeVisitor() : EltVisitor2DBase<Type>()
   { this->res_ = Arithmetic<Type>::max(); }
-  void operator()( Type const& value, int i, int j)
+  inline void operator()( Type const& value, int i, int j)
   {
-    if (Arithmetic<Type>::isFinite(value))
-      if (value < this->res_)
-      { this->res_ = value; this->row_ = i; this->col_ = j;}
+    if (Arithmetic<Type>::isFinite(value) && (value < this->res_))
+    { this->res_ = value; this->row_ = i; this->col_ = j;}
   }
 };
-
-/** @ingroup hidden
-  * @brief Visitor computing safely the min coefficient with its value and
-  * coordinates
-  *
-  * @sa ArrayBase::minElt(int, int)
-  */
 /** @ingroup hidden
  *  @brief Visitor computing the maximal coefficient of the Array
  *
- * @sa ArrayBase::maxElt(int, int)
+ * @sa ExprBase::maxElt(int, int)
  */
 template <typename Type>
 struct MaxEltVisitor : EltVisitor2DBase<Type>
 {
-  MaxEltVisitor(): EltVisitor2DBase<Type>()
+  inline MaxEltVisitor(): EltVisitor2DBase<Type>()
   { this->res_ = -Arithmetic<Type>::max(); }
-  void operator() ( Type const& value, int i, int j)
+  inline void operator() ( Type const& value, int i, int j)
   {
-    if(value > this->res_)
+    if (value > this->res_)
     { this->res_ = value; this->row_ = i; this->col_ = j;}
   }
 };
 /** @ingroup hidden
  *  @brief Visitor computing safely the maximal coefficient of the Array
  *
- * @sa ArrayBase::maxElt(int, int)
+ * @sa ExprBase::maxElt(int, int)
  */
 template <typename Type>
 struct MaxEltSafeVisitor : EltVisitor2DBase<Type>
 {
-  MaxEltSafeVisitor(): EltVisitor2DBase<Type>()
+  inline MaxEltSafeVisitor(): EltVisitor2DBase<Type>()
   { this->res_ = -Arithmetic<Type>::max(); }
-  void operator() ( Type const& value, int i, int j)
+  inline void operator() ( Type const& value, int i, int j)
   {
     if (Arithmetic<Type>::isFinite(value))
       if(value > this->res_)
@@ -148,61 +143,60 @@ struct MaxEltSafeVisitor : EltVisitor2DBase<Type>
 /** @ingroup hidden
  *  @brief Visitor computing the sum of all the coefficients of the Array
  *
- * @sa ArrayBase::maxElt(int, int)
+ * @sa ExprBase::maxElt(int, int)
  */
 template <typename Type>
 struct SumVisitor
 {
   Type res_;
   SumVisitor(): res_(Type(0)) {}
-  void operator() ( Type const& value, int i, int j)
+  inline void operator() ( Type const& value, int i, int j)
   { res_ += value;}
-  void operator() ( Type const& value, int i)
+  inline void operator() ( Type const& value, int i)
   { res_ += value;}
 };
-
 /** @ingroup hidden
- *  @brief Visitor computing the sum of all the coefficients of the Array
+ *  @brief Visitor counting the number of not-zero element in an array
+ *  This visitor can be used in conjunction with the comparison operators
+ *  in order to get the number of element matching a condition. For example:
+ *  @code
+ *    // get in c the number of element of A equal to 2
+ *    int c = (A == 2).count()
+ *  @endcode
  *
- * @sa ArrayBase::maxElt(int, int)
+ *  @sa ExprBase::sum()
  */
 template <typename Type>
-struct SumSafeVisitor
+struct CountVisitor
 {
-  Type res_;
-  SumSafeVisitor(): res_(Type(0)) {}
-  void operator() ( Type const& value, int i, int j)
-  { if (Arithmetic<Type>::isFinite(value)) res_ += value;}
-  void operator() ( Type const& value, int i)
-  { if (Arithmetic<Type>::isFinite(value)) res_ += value;}
+  int res_;
+  CountVisitor(): res_(0) {}
+  inline void operator() ( Type const& value, int i, int j)
+  { if (value) ++res_;}
+  inline void operator() ( Type const& value, int i)
+  { if (value) ++res_;}
 };
 
 /** @ingroup hidden
  *  @brief Visitor computing the sum of all the coefficients of the Array
  *
- * @sa ArrayBase::maxElt(int, int)
+ * @sa ExprBase::maxElt(int, int)
  */
 template <typename Type>
 struct RandUnifVisitor
 {
-  RandBase ran;
-  RandUnifVisitor() : ran() {}
-  void operator() ( Type& value)
-  { value = Type(ran.randUnif());}
+  inline void operator() ( Type& value)
+  { value = Type(Law::generator.randUnif());}
 };
 
 /** @ingroup hidden
- *  @brief Visitor computing the sum of all the coefficients of the Array
- *
- * @sa ArrayBase::maxElt(int, int)
+ *  @brief Visitor putting a gaussian random variable
  */
 template <typename Type>
 struct RandGaussVisitor
 {
-  RandBase ran;
-  RandGaussVisitor() : ran() {}
-  void operator() ( Type& value)
-  { value = Type(ran.randGauss());}
+  inline void operator() ( Type& value)
+  { value = Type(Law::generator.randGauss());}
 };
 
 /** @ingroup hidden
@@ -212,7 +206,7 @@ template <typename Type>
 struct ValueVisitor
 {
   Type value_;
-  ValueVisitor(Type const& value) : value_(value) {};
+  inline ValueVisitor(Type const& value) : value_(value) {};
   inline void operator() ( Type& value)
   { value = value_;}
 };

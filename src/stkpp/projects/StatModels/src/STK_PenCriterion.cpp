@@ -35,7 +35,7 @@
 
 #include "../include/STK_PenCriterion.h"
 
-#include "../../STKernel/include/STK_Exceptions.h"
+#include "STKernel/include/STK_Exceptions.h"
 
 
 namespace STK
@@ -46,7 +46,7 @@ bool AICCriterion::run()
   try
   {
     // AIC criteria
-    value_  = 2.*(-p_model_->lnLikelihood()+p_model_->nbFreeParameters());
+    value_  = 2.*(-p_model_->lnLikelihood()+p_model_->nbFreeParameter());
   }
   catch( Exception const& e)
   {
@@ -62,7 +62,7 @@ bool BICCriterion::run()
   try
   {
     // BIC criteria
-    value_  = (-2.*p_model_->lnLikelihood())+(p_model_->nbFreeParameters()*p_model_->lnNbSample());
+    value_  = (-2.*p_model_->lnLikelihood())+(p_model_->nbFreeParameter()*p_model_->lnNbSample());
   }
   catch( Exception const& e)
   {

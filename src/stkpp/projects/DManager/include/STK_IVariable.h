@@ -38,10 +38,7 @@
 
 #include "STK_DManager_Util.h"
 
-#include "../../STKernel/include/STK_String.h"
-#include "../../STKernel/include/STK_String_Util.h"
-
-#include "../../Arrays/include/STK_IContainer1D.h"
+#include "Arrays/include/STK_IContainer1D.h"
 
 namespace STK
 {

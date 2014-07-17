@@ -28,12 +28,8 @@
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
-/** @file STK_Arrays_Util.h
- *  @brief In this file we define utilities for the Array classes.
- *
- *  @namespace Arrays the namespace Arrays contain all the internal stuff needed
- *  by The Arrays* classes.
- *
+/** @file STK_Arrays_Util.cpp
+ *  @brief In this file we implment the utilities function of the Arrays* classes.
  **/
 #include "../include/STK_Arrays_Util.h"
 
@@ -61,7 +57,7 @@ Range evalRangeCapacity(STK::Range const& I)
 {
   int n = 0;
   for (int k=1, n=0 ; k <= I.size(); n++, k <<= 1);
-  return Range(I.firstIdx(),I.size() + n);
+  return Range(I.begin(),I.size() + n);
 }
 
 } // namespace Arrays

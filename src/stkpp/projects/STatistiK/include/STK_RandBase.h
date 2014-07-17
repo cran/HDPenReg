@@ -39,11 +39,9 @@
 #ifndef STK_RANDBASE_H
 #define STK_RANDBASE_H
 
-#include "../../STKernel/include/STK_Misc.h"
-#include "../../STKernel/include/STK_Integer.h"
-#include "../../STKernel/include/STK_Real.h"
+#include "STKernel/include/STK_Misc.h"
 
-#include "../../Arrays/include/STK_ArrayBase.h"
+#include "Arrays/include/STK_ArrayBase.h"
 
 // MersenneTwister header.
 #include "MersenneTwister.h"
@@ -115,7 +113,7 @@ class RandBase : protected MTRand
   : gsize_(gsize), glimit_(glimit), gvol_(gvol)
     {
       // dimension
-      int first = bigSeed.firstIdx(), size = bigSeed.size();
+      int first = bigSeed.begin(), size = bigSeed.size();
       uint32* arraySeed = new uint32[size];
       // cast int in uint32
       for (int i=first; i<=bigSeed.lastIdx(); i++)

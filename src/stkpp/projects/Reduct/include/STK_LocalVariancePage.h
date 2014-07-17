@@ -37,7 +37,7 @@
 #ifndef STK_LOCALVARIANCEPAGE_H
 #define STK_LOCALVARIANCEPAGE_H
 
-#include "../../DManager/include/STK_IPage.h"
+#include "DManager/include/STK_IPage.h"
 #include "STK_LocalVariance.h"
 
 namespace STK
@@ -83,7 +83,7 @@ class LocalVariancePage: public IPage
     /** @return the number of neighbors to used in order to construct the
      *  proximity graph
      **/
-    inline int const& nbNeighbor() const { return nbNeighbor_;}
+    inline int nbNeighbor() const { return nbNeighbor_;}
     /** validate the options. Check if the values are coherent.
      *  @return @c true if the options are correct, @c false otherwise.
      **/

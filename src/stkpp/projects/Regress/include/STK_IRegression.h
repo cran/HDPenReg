@@ -167,7 +167,7 @@ class IRegression
     /** Give the number of parameter of the regression function.
      *  @return the number of parameter of the regression function
      **/
-    inline int const& nbParameter() const
+    inline int nbParameter() const
     {  return nbParameter_;}
 
     /** Set the data set the regression method should use.

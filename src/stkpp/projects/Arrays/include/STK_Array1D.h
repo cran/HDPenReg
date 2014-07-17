@@ -35,8 +35,8 @@
 #ifndef STK_ARRAY1D_H
 #define STK_ARRAY1D_H
 
-#include "../../Sdk/include/STK_Traits.h"
-#include "../../Arrays/include/STK_Arrays_Util.h"
+
+#include "Arrays/include/STK_Arrays_Util.h"
 
 #include "STK_IArray1D.h"
 
@@ -129,9 +129,9 @@ class Array1D : public IArray1D< Array1D<Type> >
       // check size
       if (this->size()!=T.size()) this->resize(T.range());
       // copy without ovelapping.
-      const int first = this->firstIdx(), last = this->lastIdx();
-      if (first < T.firstIdx())
-      { for (int i=first, j=T.firstIdx(); i<=last; i++, j++) this->elt(i) = T.elt(j);}
+      const int first = this->begin(), last = this->lastIdx();
+      if (first < T.begin())
+      { for (int i=first, j=T.begin(); i<=last; i++, j++) this->elt(i) = T.elt(j);}
       else
       { for (int i=last, j=T.lastIdx(); i>=first; i--, j--) this->elt(i) = T.elt(j);}
       return *this;
@@ -141,7 +141,7 @@ class Array1D : public IArray1D< Array1D<Type> >
      **/
     inline Array1D& operator=(Type const& v)
     {
-      for (int i=this->firstIdx(); i<=this->lastIdx(); i++) this->elt(i)= v;
+      for (int i=this->begin(); i<=this->lastIdx(); i++) this->elt(i)= v;
       return *this;
     }
 };

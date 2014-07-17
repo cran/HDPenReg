@@ -34,8 +34,8 @@
  **/
 
 
-#include "../../Algebra/include/STK_LinAlgebra2D.h"
-#include "../../Algebra/include/STK_GinvSymmetric.h"
+#include "Algebra/include/STK_LinAlgebra2D.h"
+#include "Algebra/include/STK_GinvSymmetric.h"
 
 #include "../include/STK_BSplineRegression.h"
 
@@ -70,12 +70,8 @@ void BSplineRegression::regression()
   GinvSymmetric inv;
   inv(prod);
 
-  // compute X'Y
-  Matrix temp;
-  temp.move(multLeftTranspose(coefs_.coefficients(), p_y_->asDerived()));
-
   // compute (X'X)^{-1}X'Y
-  controlPoints_.move(mult(prod, temp));
+  controlPoints_ = prod * (coefs_.coefficients().transpose() * p_y_->asDerived());
 }
 
 /* compute the regression function. */

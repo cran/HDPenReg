@@ -36,8 +36,8 @@
 #ifndef STK_IMULTIPARAMETERS_H
 #define STK_IMULTIPARAMETERS_H
 
-#include "../../Sdk/include/STK_IRecursiveTemplate.h"
-#include "../../STKernel/include/STK_Range.h"
+#include "Sdk/include/STK_IRecursiveTemplate.h"
+#include "STKernel/include/STK_Range.h"
 
 namespace STK
 {
@@ -50,23 +50,37 @@ class IMultiParameters : public IRecursiveTemplate<Parameters>
 {
   protected:
     /** default constructor.*/
-    inline IMultiParameters() {}
+    inline IMultiParameters(): range_() {}
+    /** constructor with specified range
+     *  @param range the range of the variables
+     **/
+    inline IMultiParameters( Range const& range): range_(range) {}
+
     /** copy constructor.*/
-    inline IMultiParameters(IMultiParameters const& param) {}
+    inline IMultiParameters(IMultiParameters const& param): range_(param.range_) {}
     /** Destructor */
     inline ~IMultiParameters() {}
 
   public:
-    /** resize the parameters.
+    /** @return the range of the data set */
+    inline Range const& range() const { return range_;}
+    /** resize the parameters only if the range is modified, otherwise, stay
+     *  with the current values.
      *  @param range the range of the parameters (= range of the variables of the model)
      **/
     inline void resize( Range const& range)
-    { this->asDerived().resizeImpl(range);}
+    { if (range != range_)
+      { range_ = range;
+        this->asDerived().resizeImpl(range);
+      }
+    }
     /** print the parameters.
      *  @param os the output stream for the parameters
      **/
-    inline void print(ostream &os)
-    { this->asDerived().printImpl(os);}
+    inline void print(ostream &os) { this->asDerived().printImpl(os);}
+
+  private:
+    Range range_;
 };
 
 } // namespace STK

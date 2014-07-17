@@ -37,10 +37,7 @@
 #define STK_HOUSEHOLDER_H
 
 // Matrix class
-#include "../../Arrays/include/STK_Array2D.h"
-
-// for normInf
-#include "STK_LinAlgebra1D.h"
+#include "Arrays/include/STK_Array2D.h"
 
 namespace STK
 {
@@ -57,12 +54,12 @@ namespace STK
  *  @param x the vector to rotate, it is overwritten by v
  **/
 template <class TContainer1D>
-Real house(ITContainer< TContainer1D>& x)
+Real house(ArrayBase< TContainer1D>& x)
 {
   // compute L^{\infty} norm of X
-  Real scale  = normInf(x);
+  Real scale  = x.normInf();
   // first and last index fo the essential Householder vector
-  int first = x.firstIdx()+1, last = x.lastIdx();
+  int first = x.begin()+1, last = x.lastIdx();
   // result and norm2 of X
   Real v1, norm2 = 0.0;
   // normalize the vector 
@@ -95,15 +92,13 @@ Real house(ITContainer< TContainer1D>& x)
  *  @param x first vector
  *  @param v the Householder vector
  **/
-template< class TContainer1D_1
-        , class TContainer1D_2
-        >
-Real dotHouse( const ITContainer< TContainer1D_1>& x
-             , const ITContainer< TContainer1D_2>& v
+template< class TContainer1D_1, class TContainer1D_2>
+Real dotHouse( ExprBase< TContainer1D_1> const& x
+             , ExprBase< TContainer1D_2> const& v
              )
 {
   // first and last index fo the essential Householder vector
-  const int first = v.firstIdx()+1, last = v.lastIdx();
+  const int first = v.begin()+1, last = v.lastIdx();
   // compute the product
   Real sum = x[first-1] /* *1.0 */;
   for (int i=first; i<=last; i++) sum += x[i] * v[i];
@@ -121,7 +116,7 @@ Real dotHouse( const ITContainer< TContainer1D_1>& x
  **/
 template < class TContainer2D, class TContainer1D>
 void leftHouseholder( ArrayBase<TContainer2D> const& M
-                    , ITContainer<TContainer1D> const& v
+                    , ExprBase<TContainer1D> const& v
                     )
 {
   // get beta
@@ -137,10 +132,10 @@ void leftHouseholder( ArrayBase<TContainer2D> const& M
       typename TContainer2D::Col Mj(M.asDerived(), range_ve, j);
       // Computation of aux=beta* <v,M^j>
       Real aux =  dotHouse( Mj, v) * beta;
-      // updating row X.firstIdx()
+      // updating row X.begin()
       Mj.front() += aux;
       // essential range of v
-      const int first =  v.firstIdx()+1, last = v.lastIdx();
+      const int first =  v.begin()+1, last = v.lastIdx();
       // Computation of M^j + beta <v,M^j>  v = M^j + aux v
       for (int i=first; i<=last; i++)
         Mj[i] +=  v[i] * aux;
@@ -159,7 +154,7 @@ void leftHouseholder( ArrayBase<TContainer2D> const& M
  **/
 template < class TContainer2D, class TContainer1D>
 void rightHouseholder( ArrayBase<TContainer2D> const& M
-                     , ITContainer<TContainer1D> const& v
+                     , ExprBase<TContainer1D> const& v
                      )
 {
   // get beta
@@ -173,10 +168,10 @@ void rightHouseholder( ArrayBase<TContainer2D> const& M
       typename TContainer2D::Row Mi(M.asDerived(), v.range(), i);
       // Computation of aux=beta* <v,M_i>
       Real aux =  dotHouse( Mi, v) * beta;
-      // updating column X.firstIdx()
+      // updating column X.begin()
       Mi.front() += aux;
       // essential range of v
-      const int first =  v.firstIdx()+1, last = v.lastIdx();
+      const int first =  v.begin()+1, last = v.lastIdx();
       // Computation of M_i + beta <v,M_i>  v = M_i + aux v'
       for (int i=first; i<=last; i++)
         Mi[i] +=  v[i] * aux;

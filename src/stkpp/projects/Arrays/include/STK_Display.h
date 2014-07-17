@@ -36,10 +36,9 @@
 #ifndef STK_DISPLAY_H
 #define STK_DISPLAY_H
 
-#include "../../STKernel/include/STK_Integer.h"
-#include "../../STKernel/include/STK_Real.h"
+#include "STKernel/include/STK_Real.h"
 
-#include "../../DManager/include/STK_ExportToCsv.h"
+#include "DManager/include/STK_ExportToCsv.h"
 
 namespace STK
 {
@@ -90,7 +89,7 @@ ostream& out1D( ostream& os, ITContainer1D<Array> const& V)
  *  @param V the Array2D to write
  **/
 template<class Array>
-inline ostream& operator<<(ostream& s, ArrayBase<Array> const& V)
+inline ostream& operator<<(ostream& s, ExprBase<Array> const& V)
 { return out2D<Array>(s,V);}
 
 } // namespace STK

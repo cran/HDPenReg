@@ -41,9 +41,9 @@
 
 #include "STK_IModelBase.h"
 #include "STK_IMultiParameters.h"
-#include "../../Sdk/include/STK_IRunner.h"
-#include "../../STKernel/include/STK_Macros.h"
-#include "../../STatistiK/include/STK_Law_IMultiLaw.h"
+#include "Sdk/include/STK_IRunner.h"
+#include "Sdk/include/STK_Macros.h"
+#include "STatistiK/include/STK_Law_IMultiLaw.h"
 
 namespace STK
 {
@@ -174,7 +174,7 @@ class IMultiStatModel : public IModelBase, public IRunnerUnsupervised<Array, WCo
         // compute log-likelihood
         this->setLnLikelihood(computeLnLikelihood());
         // set the number of free parameters
-        this->setNbFreeParameters(computeNbFreeParameters());
+        this->setNbFreeParameter(computeNbFreeParameters());
       }
       catch (Exception const& e)
       { this->msg_error_ = e.error(); return false;}
@@ -203,7 +203,7 @@ class IMultiStatModel : public IModelBase, public IRunnerUnsupervised<Array, WCo
         // compute log-likelihood
         this->setLnLikelihood(computeLnLikelihood());
         // set the number of free parameters
-        this->setNbFreeParameters(computeNbFreeParameters());
+        this->setNbFreeParameter(computeNbFreeParameters());
       }
       catch (Exception const& e)
       { this->msg_error_ = e.error(); return false;}

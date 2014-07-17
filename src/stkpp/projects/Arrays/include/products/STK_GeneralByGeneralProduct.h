@@ -54,7 +54,7 @@ struct MultCoefImpl
   {
     res.elt(iRow, jCol) = Type(0);
     Range const dotRange = Range::inf(lhs.rangeColsInRow(iRow), rhs.rangeRowsInCol(jCol));
-    for (int k=dotRange.firstIdx(); k<= dotRange.lastIdx(); ++k)
+    for (int k=dotRange.begin(); k<= dotRange.lastIdx(); ++k)
       res.elt(iRow, jCol) += lhs.elt(iRow, k) * rhs.elt(k, jCol);
   }
   /** dot product. general by vector */
@@ -64,7 +64,7 @@ struct MultCoefImpl
   {
     res.elt(iRow) = Type(0);
     Range const dotRange = Range::inf(lhs.rangeColsInRow(iRow), rhs.range());
-    for (int k=dotRange.firstIdx(); k<= dotRange.lastIdx(); ++k)
+    for (int k=dotRange.begin(); k<= dotRange.lastIdx(); ++k)
       res.elt(iRow) += lhs.elt(iRow, k) * rhs.elt(k);
   }
   /** dot product. general by vector */
@@ -75,7 +75,7 @@ struct MultCoefImpl
   {
     res.elt(jCol) = Type(0);
     Range const dotRange = Range::inf(rhs.rangeRowsInCol(jCol), lhs.range());
-    for (int k=dotRange.firstIdx(); k<= dotRange.lastIdx(); ++k)
+    for (int k=dotRange.begin(); k<= dotRange.lastIdx(); ++k)
       res.elt(jCol) += lhs.elt(k) * rhs.elt(k, jCol);
   }
   /** multiplication with one sized vectors */

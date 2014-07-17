@@ -36,14 +36,10 @@
   * It's a one dimensional horizontal container.
  **/
 
-#ifndef STK_ARRAYVE_H
-#define STK_ARRAYVE_H
+#ifndef STK_ARRAY2DVECTOR_H
+#define STK_ARRAY2DVECTOR_H
 
-#include "../../STKernel/include/STK_Real.h"
-#include "../../Sdk/include/STK_Traits.h"
-
-#include "STK_Arrays_Util.h"
-#include "STK_IArray2D.h"
+#include "STK_Display.h"
 
 namespace STK
 {
@@ -166,39 +162,36 @@ class Array2DVector : public IArray2D< Array2DVector<Type> >
     /** @return a constant reference on the ith element
      *  @param i index of the element (const)
      **/
-    inline Type const & elt1Impl(int const& i) const { return this->data(this->firstIdxCols())[i];}
+    inline Type const & elt1Impl( int i) const { return this->data(this->firstIdxCols())[i];}
     /** @return a reference on the ith element
      *  @param i index of the element
      **/
-    inline Type& elt1Impl(int const& i) { return this->data(this->firstIdxCols())[i];}
+    inline Type& elt1Impl( int i) { return this->data(this->firstIdxCols())[i];}
     /** New first index for the object.
      *  @param rbeg the index of the first row to set
      **/
-    void shift1D(int const& rbeg)
-    { Base::shift(rbeg, this->firstIdxCols());}
+    void shift1D( int rbeg) { Base::shift(rbeg, this->firstIdxCols());}
     /**  Resize the container.
      *  @param I the range to set to the container
      **/
-    inline Array2DVector<Type>& resize1D(Range const& I)
+    inline Array2DVector<Type>& resize1D( Range const& I)
     { Base::resize(I, this->cols()); return *this;}
     /** Add n elements to the container.
      *  @param n number of elements to add
      **/
-    void pushBack( int const& n=1)
-    { Base::pushBackRows(n);}
+    void pushBack( int n=1) { Base::pushBackRows(n);}
     /** Delete n elements at the pos index to the container.
      *  @param pos index where to delete elements
      *  @param n number of elements to delete (default 1)
     **/
-    void erase( int const& pos, int const& n=1)
-    { Base::eraseRows(pos, n);}
+    void erase( int pos, int const& n=1) { Base::eraseRows(pos, n);}
     /** Insert n elements at the position pos of the container. The bound
-     *  last_ should be modified at the very end of the insertion as pos
+     *  end_ should be modified at the very end of the insertion as pos
      *  can be a reference to it.
      *  @param pos index where to insert elements
      *  @param n number of elements to insert (default 1)
      **/
-    void insertElt(int const& pos, int const& n =1)
+    void insertElt(int pos, int const& n =1)
     { Base::insertRows(pos, n);}
     /** operator = : overwrite the CArray with the Right hand side T.
      *  @param T the container to copy
@@ -217,4 +210,4 @@ class Array2DVector : public IArray2D< Array2DVector<Type> >
 
 } // namespace STK
 
-#endif // STK_ARRAYVE_H
+#endif // STK_ARRAY2DVECTOR_H

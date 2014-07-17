@@ -36,21 +36,20 @@
 #ifndef STK_REAL_H
 #define STK_REAL_H
 
-#include "STK_Arithmetic.h"
-#include "STK_IdTypeImpl.h"
-#include "STK_Proxy.h"
+#include "STK_String.h"
+#include <map>
 
 namespace STK
 {
 
-#ifdef REALAREFLOAT
+#ifdef STKREALAREFLOAT
 /**  @ingroup Base
   *  @brief STK fundamental type of Real values.
   *
   *  The type Real is defined for the numerical computation and the
   *  internal representation of the continuous variables. By default it is the
-  *  double type, but it can be overridden at compile-time by enabling
-  *  the REALAREFLOAT macro.
+  *  @c double, but it can be overridden at compile-time by enabling
+  *  the STKREALAREFLOAT macro.
   **/
 typedef  float Real;
 
@@ -111,10 +110,59 @@ template<>
 struct IdTypeImpl<Real>
 {
   /** Give the IdType of the type Real.*/
-  static IdType returnType()
-  { return(real_);}
+  static IdType returnType() { return(real_);}
 };
-  
+
+/** @ingroup Base
+ *  @brief Convert a String to a Real.
+ *  @param str the String we want to convert
+ *  @return the Real
+ **/
+Real stringToReal( String const& str);
+
+/** @ingroup Base
+ *  Convert a String to a Real using a map.
+ *  @param str the String we want to convert
+ *  @param mapping the mapping between the string and the real
+ *  @return the real represented by the String @c str. If the string
+ *  does not match any known name, the @c NA value is returned.
+ **/
+Real stringToReal( String const& str, std::map<String, Real> const& mapping);
+
+/** @ingroup Base
+ *  Convert a Real to a String.
+ *  @param value the Real we want to convert
+ *  @param f format, by default write every number in decimal
+ *  @return the string associated to this value.
+ **/
+String realToString( Real const& value, std::ios_base& (*f)(std::ios_base&) = std::dec);
+
+/** @ingroup Base
+ *  Convert an int to a String.
+ *  @param str the String we want to convert
+ *  @param mapping the mapping between the Real and the String
+ *  @return the string associated to this type.
+ **/
+String realToString( Real const& str, std::map<Real, String> const& mapping);
+
+/** @ingroup Base
+ *  @brief specialization for Real
+ *  @param str the String to convert
+ *  @return The value to get from the String
+ **/
+template<>
+inline Real stringToType<Real>( String const& str)
+{ return stringToReal(str);}
+
+/** @ingroup Base
+ *  @brief specialization for Real
+ *  @param value The Real to convert to String
+ *  @param f format, by default write every number in decimal
+ **/
+template<>
+inline String typeToString<Real>( Real const& value, std::ios_base& (*f)(std::ios_base&))
+{ return realToString(value, f);}
+
 } // namespace STK
 
 #endif /*STK_REAL_H*/

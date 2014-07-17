@@ -28,11 +28,12 @@
  **/
 
 /** @file STK_IArray1D.h
-  * @brief Pre-Implementation of the interface IArray1D.
-  * 
-  * An IArray1D is a non-oriented templated one dimensional Array
-  * which is not final and can be used by any sub-class that need to be
-  * a final class.
+ *  @brief Interface base class for the Array1D, this is an internal header file,
+ *  included by other Containers library headers.
+ *
+ *  You should not attempt to use it directly but rather used one of the
+ *  derived class like Array1D, except if you want to create your own
+ *  Container Class.
  **/
 
 #ifndef STK_IARRAY1D_H
@@ -47,8 +48,8 @@ namespace STK
 /** @ingroup Arrays
  *  @brief Templated one dimensional Array.
  * 
- * An IArray1D is a templated non-oriented container implementing the interface
- * base class IArray1D. It contains objects of the type @c Type.
+ * An IArray1D is a templated one column container implementing the interface
+ * base class ITContainer1D.
  **/
 template<class Derived >
 class IArray1D  : public ITContainer1D<Derived>
@@ -76,7 +77,7 @@ class IArray1D  : public ITContainer1D<Derived>
     IArray1D( Range const& I, Type const& v) : Base(I)
             , Allocator(Arrays::evalRangeCapacity(I))
             , capacity_(this->sizeData())
-    { for (int i=this->firstIdx(); i<=this->lastIdx(); i++) this->data(i) = v;}
+    { for (int i=this->begin(); i<=this->lastIdx(); i++) this->data(i) = v;}
     /** Copy constructor
      *  @param T the container to copy
      *  @param ref true if T is wrapped
@@ -87,7 +88,7 @@ class IArray1D  : public ITContainer1D<Derived>
     {
       if (!ref)
       { init1D(T.range());
-        for (int j=this->firstIdx(); j<=this->lastIdx(); j++) this->data(j) = T.data(j);
+        for (int j=this->begin(); j<=this->lastIdx(); j++) this->data(j) = T.data(j);
       }
     }
     /** constructor by reference, ref_=1.
@@ -115,8 +116,8 @@ class IArray1D  : public ITContainer1D<Derived>
      **/
     inline Derived subImpl(Range const& J) const
     {
-      if ((J.firstIdx()<this->firstIdx()))
-      { STKOUT_OF_RANGE_1ARG(IArray1D::sub,J,J.firstIdx()<firstIdx());}
+      if ((J.begin()<this->begin()))
+      { STKOUT_OF_RANGE_1ARG(IArray1D::sub,J,J.begin()<begin());}
       if ((J.lastIdx()>this->lastIdx()))
       { STKOUT_OF_RANGE_1ARG(IArray1D::sub,J,J.lastIdx()>lastIdx());}
       return Derived(this->asDerived(), J);
@@ -127,7 +128,7 @@ class IArray1D  : public ITContainer1D<Derived>
     void shiftImpl(int const& beg =1)
     {
       // compute increment
-      int inc = beg - this->firstIdx();
+      int inc = beg - this->begin();
       if (inc == 0) return;
       // is this structure just a pointer?
       if (this->isRef())
@@ -150,7 +151,7 @@ class IArray1D  : public ITContainer1D<Derived>
       if (this->isRef())
       { STKRUNTIME_ERROR_1ARG(IArray1D::resize,I,cannot operate on references);}
       // translate
-      this->shift(I.firstIdx());
+      this->shift(I.begin());
       // compute number of elements to delete or add
       const int inc = I.lastIdx() - this->lastIdx();
       // adjust size of the container
@@ -160,7 +161,7 @@ class IArray1D  : public ITContainer1D<Derived>
     }
     /** @return the maximum possible number of elements without
      *  reallocation. */
-    inline int const& capacity() const { return capacity_;}
+    inline int capacity() const { return capacity_;}
     /** reserve internal memory for at least size elements.
      *  @param size number of elements to reserve
      **/
@@ -171,12 +172,12 @@ class IArray1D  : public ITContainer1D<Derived>
       // is this structure a ptr ?
       if (this->isRef())
       { STKRUNTIME_ERROR_1ARG(IArray1D::reserve,size,cannot operate on references);}
-      Allocator::realloc(Range(this->firstIdx(), size));
+      Allocator::realloc(Range(this->begin(), size));
       // if no alloc error update size
       this->setCapacity(size);
     }
     /** Clear the object. Memory is liberated and the
-     *  range of the Container is set to 0:-1 or 1:0 (@see STKBASEARRAYS).
+     *  range of the Container is set to 0:-1 or 1:0 (@see baseIdx).
      **/
     void clear()
     {
@@ -209,7 +210,7 @@ class IArray1D  : public ITContainer1D<Derived>
       { STKRUNTIME_ERROR_1ARG(IArray1D::pushBack,n,cannot operate on references);}
       // If the container is empty : create it
       if (this->empty())
-        this->initialize(Range(this->firstIdx(), n));
+        this->initialize(Range(this->begin(), n));
       else
         this->insertElt(this->lastIdx()+1, n);
     }
@@ -242,8 +243,8 @@ class IArray1D  : public ITContainer1D<Derived>
       if (this->isRef())
       { STKRUNTIME_ERROR_2ARG(IArray1D::erase,pos, n,cannot operate on reference);}
       // check bounds
-      if (this->firstIdx() > pos)
-      { STKOUT_OF_RANGE_2ARG(IArray1D::erase,pos, n,firstIdx() > pos);}
+      if (this->begin() > pos)
+      { STKOUT_OF_RANGE_2ARG(IArray1D::erase,pos, n,begin() > pos);}
       if (this->lastIdx() < pos)
       { STKOUT_OF_RANGE_2ARG(IArray1D::erase,pos, n,lastIdx() < pos);}
       if (this->lastIdx() < pos+n-1)
@@ -257,7 +258,7 @@ class IArray1D  : public ITContainer1D<Derived>
       if (this->size() == 0) this->freeMem();
     }
     /** Insert n elts at the position pos of the container. The bound
-     *  last_ should be modified at the very end of the insertion as pos
+     *  end_ should be modified at the very end of the insertion as pos
      *  can be a reference to it.
      *  @param pos index where to insert elements
      *  @param n number of elements to insert (default 1)
@@ -270,8 +271,8 @@ class IArray1D  : public ITContainer1D<Derived>
       if (this->isRef())
       { STKRUNTIME_ERROR_2ARG(IArray1D::insertElt,pos,n,cannot operate on references);}
       // check indices
-      if (this->firstIdx() > pos)
-      { STKOUT_OF_RANGE_2ARG(IArray1D::insertElt,pos, n,firstIdx() > pos);}
+      if (this->begin() > pos)
+      { STKOUT_OF_RANGE_2ARG(IArray1D::insertElt,pos, n,begin() > pos);}
       if (this->lastIdx()+1 < pos)
       { STKOUT_OF_RANGE_2ARG(IArray1D::insertElt,pos, n,lastIdx()+1 < pos);}
       // allocate, if necessary, the mem for the elts
@@ -297,7 +298,7 @@ class IArray1D  : public ITContainer1D<Derived>
         // reset initial stored in range
         this->setRange(Taux.range());
         // copy first elts
-        for (int k=this->firstIdx(); k<pos; k++) this->data(k) = Taux.data(k);
+        for (int k=this->begin(); k<pos; k++) this->data(k) = Taux.data(k);
         // translate and copy last elts
         for (int k=this->lastIdx(); k>=pos; k--) this->data(k+n) = Taux.data(k);
       }
@@ -312,14 +313,14 @@ class IArray1D  : public ITContainer1D<Derived>
      **/
     void insert( Range const& I, Type const& v)
     {
-      this->insertElt(I.firstIdx(), I.size());
-      for (int i=I.firstIdx(); i<=I.lastIdx(); i++) this->data(i) = v;
+      this->insertElt(I.begin(), I.size());
+      for (int i=I.begin(); i<=I.lastIdx(); i++) this->data(i) = v;
     }
     /** STL compatibility : push front an element.
      *  @param v value to append
      **/
     inline void push_front(Type const& v)
-    { insert(Range(this->firstIdx(), 0), v);}
+    { insert(Range(this->begin(), 0), v);}
 
     /** STL compatibility : append an element v.
      *  @param v value to append
@@ -335,12 +336,12 @@ class IArray1D  : public ITContainer1D<Derived>
      **/
     void swap(int pos1, int pos2)
     {
-      if (this->firstIdx() > pos1)
-      { STKOUT_OF_RANGE_2ARG(IArray1D::swap,pos1,pos2,firstIdx()>pos1);}
+      if (this->begin() > pos1)
+      { STKOUT_OF_RANGE_2ARG(IArray1D::swap,pos1,pos2,begin()>pos1);}
       if (this->lastIdx() < pos1)
       { STKOUT_OF_RANGE_2ARG(IArray1D::swap,pos1,pos2,lastIdx()<pos1);}
-      if (this->firstIdx() > pos2)
-      { STKOUT_OF_RANGE_2ARG(IArray1D::swap,pos1,pos2,firstIdx()>pos2);}
+      if (this->begin() > pos2)
+      { STKOUT_OF_RANGE_2ARG(IArray1D::swap,pos1,pos2,begin()>pos2);}
       if (this->lastIdx() < pos2)
       { STKOUT_OF_RANGE_2ARG(IArray1D::swap,pos1,pos2,lastIdx()<pos2);}
       // swap
@@ -394,7 +395,7 @@ class IArray1D  : public ITContainer1D<Derived>
       try
       {
         // initialize Elts
-        this->malloc(Range(I.firstIdx(), size));
+        this->malloc(Range(I.begin(), size));
       }
       catch (runtime_error const& error)   // if an error occur
       {
@@ -430,7 +431,7 @@ class IArray1D  : public ITContainer1D<Derived>
       // set capacity to default
       this->setCapacity();
       // set range of the Cols to default
-      this->setRange(Range(this->firstIdx(), -1));
+      this->setRange(Range(this->begin(), -1));
     }
   private:
     /** capacity of the array. */

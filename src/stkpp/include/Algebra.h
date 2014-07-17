@@ -62,7 +62,6 @@
 #define Algebra_H
 
 /* The Linear Algebra methods. */
-#include "../projects/Algebra/include/STK_LinAlgebra1D.h"
 #include "../projects/Algebra/include/STK_LinAlgebra2D.h"
 #include "../projects/Algebra/include/STK_Givens.h"
 #include "../projects/Algebra/include/STK_GramSchmidt.h"
@@ -77,5 +76,9 @@
 #include "../projects/Algebra/include/STK_EigenvaluesSymmetric.h"
 #include "../projects/Algebra/include/STK_GinvSymmetric.h"
 
+// the lapack classes
+#ifdef STKUSELAPACK
+#include "../projects/Algebra/include/STK_lapack_SymEigen.h"
+#endif
 #endif /*Algebra_H*/
 

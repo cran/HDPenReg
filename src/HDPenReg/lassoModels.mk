@@ -1,8 +1,6 @@
 ## lars makefile for R package
 
-ifeq ($(WIN),64)
-  include $(R_HOME)/etc${R_ARCH}/Makeconf
-endif
+#include $(R_HOME)/etc${R_ARCH}/Makeconf
 all:lib
 
 #-----------------------------------------------------------------------
@@ -10,7 +8,7 @@ all:lib
 # 
 LIB = ./lib/libHDPenReg.a
 
-STK_INC_DIR = -I./  -I../
+STK_INC_DIR = -I./  -I../ -I../stkpp/projects/ -I../../stkpp/projects/
 
 #-----------------------------------------------------------------------
 # Sources files
@@ -36,7 +34,7 @@ OBJS= $(SRCS:./lassoModels/%.cpp=%.o)
 # rule for compiling the cpp files
 #
 %.o: ./lassoModels/%.cpp
-	$(CXX) $(CXXFLAGS)  ${CPICFLAGS} $(STK_INC_DIR) $< -c -o $@
+	$(CXX) $(CXXFLAGS) ${CPICFLAGS} -DSTKBASEARRAYS=1 $(STK_INC_DIR) $< -c -o $@
 
 #-----------------------------------------------------------------------
 # The rule lib create the library 

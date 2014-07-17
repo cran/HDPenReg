@@ -40,6 +40,7 @@
 #if(__cplusplus >= 201100L)
 
 // if native static_assert is enabled, let's use it
+#include <type_traits>
 #define STK_STATICASSERT(X,MSG) static_assert(X,#MSG);
 
 #else // not C++11
@@ -59,6 +60,7 @@ template<> struct StaticAssert<true>
   enum
   {
     YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX,
+    YOU_TRIED_TO_USE_A_UNIDIMENSIONAL_METHOD_ON_A_MATRIX,
     YOU_TRIED_TO_CONSTRUCT_A_REFERENCE_WITH_A_DIFFERENT_ORIENTATION,
     YOU_TRIED_TO_CONSTRUCT_A_SQUAREMATRIX_WITH_DIFFERENT_DIMENSIONS,
     YOU_TRIED_TO_CONSTRUCT_A_VECTOR_WITH_MORE_THAN_ONE_COLUM,
@@ -113,7 +115,11 @@ template<> struct StaticAssert<true>
 #define STK_STATICASSERT_PRODUCT_OPERATOR_MISMATCH(COND) \
     STK_STATICASSERT(COND,YOU_TRIED_TO_APPLY_A_PRODUCT_OPERATOR_BETWEEN_NOT_COMPATIBLE_ARRAYS)
 
-#define STK_STATICASSERT_VECTOR_ONLY(TYPE) \
-STK_STATICASSERT((TYPE::sizeRows_==1)||(TYPE::sizeCols_==1),YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
+#define STK_STATICASSERT_VECTOR_ONLY(EXPR) \
+STK_STATICASSERT((EXPR::structure_==(int)Arrays::vector_)||(EXPR::structure_==(int)Arrays::point_),YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
+
+#define STK_STATICASSERT_ONE_DIMENSION_ONLY(EXPR) \
+STK_STATICASSERT((EXPR::structure_==(int)Arrays::vector_)||(EXPR::structure_==(int)Arrays::point_)||(EXPR::structure_==(int)Arrays::diagonal_),YOU_TRIED_TO_USE_A_UNIDIMENSIONAL_METHOD_ON_A_MATRIX)
+
 
 #endif /* STK_STATICASSERT_H */

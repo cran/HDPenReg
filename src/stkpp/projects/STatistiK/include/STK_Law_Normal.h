@@ -42,6 +42,10 @@ namespace STK
 
 namespace Law
 {
+class Normal;
+/** A synonymous for the normal law */
+typedef Normal Gaussian;
+
 /**
  *  @ingroup Laws
  *  @brief Normal distribution law.

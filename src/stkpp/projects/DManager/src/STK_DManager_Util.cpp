@@ -35,7 +35,7 @@
  *  strings and i/o streams in the DManager project.
  **/
 #include "../include/STK_DManager_Util.h"
-#include "../../STKernel/include/STK_Functors.h"
+#include "STKernel/include/STK_Functors.h"
 
 #include <algorithm>
 
@@ -136,12 +136,13 @@ istream& getField( istream& is, String& value, Char delimiter)
  **/
 int nbEndOfLine( istream& is)
 {
-  TestEndOfLineOp       test;
+  char last = CHAR_BLANK;
+  TestEndOfLineOp       test(&last);
   int nbLine = std::count_if( std::istreambuf_iterator<Char>( is )
-                                , std::istreambuf_iterator<Char>(),
-                                  test
-                                );
-  if (test.last_ != CHAR_NL) nbLine++;
+                            , std::istreambuf_iterator<Char>(),
+                              test
+                            );
+  if (last != CHAR_NL) nbLine++;
 #ifdef STK_DEBUG
   stk_cout << _T("In nbEndOfLine, nbLine = ") << nbLine << _T("\n");
 #endif

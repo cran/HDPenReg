@@ -36,18 +36,18 @@
 
 #include "../include/STK_IAAModel.h"
 
-#include "../../Arrays/include/STK_Array2DSquare.h"
+#include "Arrays/include/STK_Array2DSquare.h"
 
-#include "../../Algebra/include/STK_LinAlgebra2D.h"
+#include "Algebra/include/STK_LinAlgebra2D.h"
 
-#include "../../STatistiK/include/STK_Stat_Transform.h"
-#include "../../STatistiK/include/STK_Stat_MultivariateReal.h"
+#include "STatistiK/include/STK_Stat_Transform.h"
+#include "STatistiK/include/STK_Stat_MultivariateReal.h"
 
-#include "../../Reduct/include/STK_IReduct.h"
-#include "../../Regress/include/STK_IRegression.h"
+#include "Reduct/include/STK_IReduct.h"
+#include "Regress/include/STK_IRegression.h"
 
-#ifdef STK_VERBOSE
-#include "../../Arrays/include/STK_Display.h"
+#ifdef STK_AAMODELS_VERBOSE
+#include "Arrays/include/STK_Display.h"
 #endif
 
 namespace STK
@@ -128,7 +128,7 @@ void IAAModel::freeRegressor()
 /* standardize the local data set */
 void IAAModel::center()
 {
-#ifdef STK_DEBUG
+#ifdef STK_AAMODELS_DEBUG
   if (!p_workData_)
     throw runtime_error(_T("Error in IAAModel::center(): "
                            "work data is not initialized."));
@@ -173,7 +173,7 @@ void IAAModel::standardize()
 /* standardize the local data set */
 void IAAModel::standardize(Vector const& weights)
 {
-#ifdef STK_DEBUG
+#ifdef STK_AAMODELS_DEBUG
   if (!p_workData_)
     throw runtime_error(_T("Error in IAAModel::standardize(weights): "
                             "work data is not initialized."));

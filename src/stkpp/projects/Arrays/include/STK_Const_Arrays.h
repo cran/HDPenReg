@@ -458,6 +458,11 @@ class Point : public ITArrayBase<Point<Type_, Size_>, Size_, Size_ >
      *  @param j index of the element
      **/
     inline Type const elt1Impl(int j) const { return (Type(1));}
+    /** @return the element (i,j) of the constant row-vector.
+     *  @param i index of the row
+     *  @param j index of the column
+     **/
+    inline Type const elt2Impl(int i, int j) const { return (Type(1));}
 };
 
 /**@ingroup Arrays
@@ -500,6 +505,11 @@ class Vector : public ITArrayBase<Vector<Type_, Size_>, Size_, Size_ >
      *  @param i index of the element
      **/
     inline Type const elt1Impl(int i) const { return (Type(1));}
+    /** @return the element (i,j) of the constant vector.
+     *  @param i index of the row
+     *  @param j index of the column
+     **/
+    inline Type const elt2Impl(int i, int j) const { return (Type(1));}
 };
 
 

@@ -36,9 +36,8 @@
 #ifndef STK_BINARY_H
 #define STK_BINARY_H
 
-#include "STK_String_Util.h"
+#include "STK_String.h"
 #include <map>
-
 
 namespace STK
 {
@@ -48,11 +47,14 @@ namespace STK
  *
  *  The type Binary is a representation of dichotomic variables.
  **/
- enum Binary
- { zero_ =0, ///< 0 value
-   one_  =1, ///< 1 value
-   binaryNA_=__INT_MAX__ ///< Not Available value
- };
+enum Binary
+{ zero_ =0, ///< 0 value
+  one_  =1, ///< 1 value
+  binaryNA_=__INT_MAX__ ///< Not Available value
+};
+
+template<> struct Arithmetic<Binary>;
+template<> struct IdTypeImpl<Binary>;
 
  /** @ingroup Arithmetic
   *  @brief Specialization for Binary.
@@ -81,8 +83,6 @@ namespace STK
 
 /** @ingroup RTTI 
  *  @brief Specialization of the IdTypeImpl for the Type Binary.
- * 
- *  Return the IdType of a Binary.
  **/
 template<>
 struct IdTypeImpl<Binary>
@@ -90,52 +90,71 @@ struct IdTypeImpl<Binary>
   /** @return the IdType of the type Binary. */
   static inline IdType returnType() { return(binary_);}
 };
-  
+
 /** @ingroup stream
  *  @brief Overloading of the ostream << for the type Binary.
  *  @param os the output stream
- *  @param output the value to send to the stream
+ *  @param value the value to send to the stream
  **/
-ostream& operator << (ostream& os, const Binary& output);
+ostream& operator << (ostream& os, Binary const& value);
 
 /** @ingroup stream
-  *  @brief Overloading of the istream >> for the type Binary.
-  *  @param is the input stream
-  *  @param input the value to get from the stream
-  **/
-istream& operator >> (istream& is, Binary& input);
+ *  @brief Overloading of the istream >> for the type Binary.
+ *  @param is the input stream
+ *  @param value the value to get from the stream
+ **/
+istream& operator >> (istream& is, Binary& value);
 
 /** @ingroup Base
  *  Convert a String to a Binary.
- *  @param type the String we want to convert
- *  @return the Binary represented by the String @c type. if the string
- *  does not match any known name, the @c unknown_ type is returned.
+ *  @param str the String we want to convert
+ *  @return the Binary represented by the String @c str. If the string
+ *  does not match any known name, the @c binaryNA_ value  is returned.
  **/
-Binary stringToBinary( String const& type);
+Binary stringToBinary( String const& str);
 
 /** @ingroup Base
  *  Convert a String to a Binary using a map.
- *  @param type the String we want to convert
- *  @param mapping the mapping between the string and the Binary
- *  @return the Binary represented by the String @c type. if the string
- *  does not match any known name, the @c unknown_ type is returned.
+ *  @param str the String we want to convert
+ *  @param mapping the mapping between the String and the Binary
+ *  @return the Binary represented by the String @c str. If the string
+ *  does not match any known name, the @c binaryNA_ type is returned.
  **/
-Binary stringToBinary( String const& type, std::map<String, Binary> const& mapping);
+Binary stringToBinary( String const& str, std::map<String, Binary> const& mapping);
 
 /** @ingroup Base
  *  Convert a Binary to a String.
- *  @param type the type of Binary we want to convert
+ *  @param value the Binary we want to convert
+ *  @param f format, by default write every number in decimal
  *  @return the string associated to this type.
  **/
-String binaryToString( Binary const& type);
+String binaryToString( Binary const& value, std::ios_base& (*f)(std::ios_base&) = std::dec);
 
 /** @ingroup Base
  *  Convert a Binary to a String.
- *  @param type the type of Binary we want to convert
+ *  @param value the Binary we want to convert
  *  @param mapping the mapping between the Binary and the String
- *  @return the string associated to this type.
+ *  @return the string associated to this value.
  **/
-String binaryToString( Binary const& type, std::map<Binary, String> mapping);
+String binaryToString( Binary const& value, std::map<Binary, String> const& mapping);
+
+/** @ingroup Base
+ *  @brief specialization for Binary
+ *  @param str the String to convert
+ *  @return The value to get from the String
+ **/
+template<>
+inline Binary stringToType<Binary>( String const& str)
+{ return stringToBinary(str);}
+
+/** @ingroup Base
+ *  @brief specialization for Binary
+ *  @param t The Binary to convert to String
+ *  @param f format, by default write every number in decimal
+ **/
+template<>
+inline String typeToString<Binary>( Binary const& t, std::ios_base& (*f)(std::ios_base&))
+{ return binaryToString(t);}
 
 } // namespace STK
 

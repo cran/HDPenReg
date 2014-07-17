@@ -39,13 +39,15 @@
 
 #include <algorithm>
 #include "STK_Arrays_Util.h"
-#include "../../STKernel/include/STK_StaticAssert.h"
+#include "Sdk/include/STK_StaticAssert.h"
 
 // this macro will be true if the assignation is correct and false otherwise
 #define CORRECT_ASSIGN(dst,src) \
 ( (    ( dst==Arrays::array2D_ || dst==Arrays::square_) \
      &&( src==Arrays::array2D_ || src==Arrays::square_ || src==Arrays::diagonal_ || src==Arrays::lower_triangular_ || src==Arrays::upper_triangular_) \
   ) \
+  ||( dst==Arrays::array2D_ && src==Arrays::vector_) \
+  ||( dst==Arrays::array2D_ && src==Arrays::point_) \
   ||( dst==Arrays::lower_triangular_ && src==Arrays::lower_triangular_) \
   ||( dst==Arrays::upper_triangular_ && src==Arrays::upper_triangular_) \
   ||(   (dst==Arrays::diagonal_ || dst==Arrays::vector_ || dst==Arrays::point_) \
@@ -87,20 +89,56 @@ struct Copycat<  Derived,  Rhs, Arrays::array2D_, Arrays::array2D_>
   }
 };
 
+// general <- vector
+template < typename Derived, typename Rhs>
+struct Copycat<  Derived,  Rhs, Arrays::array2D_, Arrays::vector_>
+{
+  inline static void runByCol(Derived& lhs, Rhs const& rhs )
+  {
+    int j = rhs.firstIdxCols();
+    for (int i = rhs.firstIdxRows(); i <= rhs.lastIdxRows(); ++i)
+    { lhs.elt(i, j) = rhs.elt(i, j);}
+  }
+  inline static void runByRow(Derived& lhs, Rhs const& rhs )
+  {
+    int j = rhs.firstIdxCols();
+    for (int i = rhs.firstIdxRows(); i <= rhs.lastIdxRows(); ++i)
+    { lhs.elt(i, j) = rhs.elt(i, j);}
+  }
+};
+
+// general <- point
+template < typename Derived, typename Rhs>
+struct Copycat<  Derived,  Rhs, Arrays::array2D_, Arrays::point_>
+{
+  inline static void runByCol(Derived& lhs, Rhs const& rhs )
+  {
+    int i = rhs.firstIdxRows();
+    for (int j = rhs.firstIdxCols(); j <= rhs.lastIdxCols(); ++j)
+    { lhs.elt(i, j) = rhs.elt(i, j);}
+  }
+  inline static void runByRow(Derived& lhs, Rhs const& rhs )
+  {
+    int i = rhs.firstIdxRows();
+    for (int j = rhs.firstIdxCols(); j <= rhs.lastIdxCols(); ++j)
+    { lhs.elt(i, j) = rhs.elt(i, j);}
+  }
+};
+
 // general <- square
 template < typename Derived, typename Rhs>
 struct Copycat<  Derived,  Rhs, Arrays::array2D_, Arrays::square_>
 {
   inline static void runByCol(Derived& lhs, Rhs const& rhs )
   {
-    for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i)
-      for (int j = rhs.firstIdx(); j <= rhs.lastIdx(); ++j)
+    for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i)
+      for (int j = rhs.begin(); j <= rhs.lastIdx(); ++j)
       { lhs.elt(i, j) = rhs.elt(i, j);}
   }
   inline static void runByRow(Derived& lhs, Rhs const& rhs )
   {
-    for (int j = rhs.firstIdx(); j <= rhs.lastIdx(); ++j)
-      for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i)
+    for (int j = rhs.begin(); j <= rhs.lastIdx(); ++j)
+      for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i)
       { lhs.elt(i, j) = rhs.elt(i, j);}
   }
 };
@@ -113,12 +151,12 @@ struct Copycat<  Derived,  Rhs, Arrays::array2D_, Arrays::diagonal_>
   inline static void runByCol(Derived& lhs, Rhs const& rhs )
   {
     lhs.setValue(Type(0));
-    for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i,i) = rhs.elt(i);}
+    for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i,i) = rhs.elt(i);}
   }
   inline static void runByRow(Derived& lhs, Rhs const& rhs )
   {
     lhs.setValue(Type(0));
-    for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i,i) = rhs.elt(i);}
+    for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i,i) = rhs.elt(i);}
   }
 };
 
@@ -205,14 +243,14 @@ struct Copycat<  Derived,  Rhs, Arrays::square_, Arrays::square_>
 {
   inline static void runByCol(Derived& lhs, Rhs const& rhs )
   {
-    for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i)
-      for (int j = rhs.firstIdx(); j <= rhs.lastIdx(); ++j)
+    for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i)
+      for (int j = rhs.begin(); j <= rhs.lastIdx(); ++j)
       { lhs.elt(i, j) = rhs.elt(i, j);}
   }
   inline static void runByRow(Derived& lhs, Rhs const& rhs )
   {
-    for (int j = rhs.firstIdx(); j <= rhs.lastIdx(); ++j)
-      for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i)
+    for (int j = rhs.begin(); j <= rhs.lastIdx(); ++j)
+      for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i)
       { lhs.elt(i, j) = rhs.elt(i, j);}
   }
 };
@@ -350,9 +388,9 @@ template < typename Derived, typename Rhs>
 struct Copycat<  Derived,  Rhs, Arrays::diagonal_, Arrays::diagonal_>
 {
   inline static void runByCol(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
   inline static void runByRow(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
 };
 
 // diagonal <- vector
@@ -360,9 +398,9 @@ template < typename Derived, typename Rhs>
 struct Copycat<  Derived,  Rhs, Arrays::diagonal_, Arrays::vector_>
 {
   inline static void runByCol(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
   inline static void runByRow(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
 };
 
 // diagonal <- point
@@ -370,9 +408,9 @@ template < typename Derived, typename Rhs>
 struct Copycat<  Derived,  Rhs, Arrays::diagonal_, Arrays::point_>
 {
   inline static void runByCol(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
   inline static void runByRow(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
 };
 
 //---------------------VECTOR----------------------------------
@@ -381,9 +419,9 @@ template < typename Derived, typename Rhs>
 struct Copycat<  Derived,  Rhs, Arrays::vector_, Arrays::diagonal_>
 {
   inline static void runByCol(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
   inline static void runByRow(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
 };
 
 //  vector <- vector
@@ -391,18 +429,18 @@ template < typename Derived, typename Rhs>
 struct Copycat<  Derived,  Rhs, Arrays::vector_, Arrays::vector_>
 {
   inline static void runByCol(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
   inline static void runByRow(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
 };
 // vector <- point
 template < typename Derived, typename Rhs>
 struct Copycat<  Derived,  Rhs, Arrays::vector_, Arrays::point_>
 {
   inline static void runByCol(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
   inline static void runByRow(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
 };
 
 //---------------------POINT----------------------------------
@@ -411,9 +449,9 @@ template < typename Derived, typename Rhs>
 struct Copycat<  Derived,  Rhs, Arrays::point_, Arrays::diagonal_>
 {
   inline static void runByCol(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
   inline static void runByRow(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
 };
 
 //  vector <- vector
@@ -421,18 +459,18 @@ template < typename Derived, typename Rhs>
 struct Copycat<  Derived,  Rhs, Arrays::point_, Arrays::vector_>
 {
   inline static void runByCol(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
   inline static void runByRow(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
 };
 // vector <- point
 template < typename Derived, typename Rhs>
 struct Copycat<  Derived,  Rhs, Arrays::point_, Arrays::point_>
 {
   inline static void runByCol(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
   inline static void runByRow(Derived& lhs, Rhs const& rhs )
-  { for (int i = rhs.firstIdx(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
+  { for (int i = rhs.begin(); i <= rhs.lastIdx(); ++i) { lhs.elt(i) = rhs.elt(i);}}
 };
 
 
@@ -498,28 +536,28 @@ struct resizeSelector;
 template< typename Lhs, typename Rhs, int TStructure_>
 struct resizeSelector
 {
-  static void run(Lhs& dst, ArrayBase<Rhs> const& src )
+  static void run(Lhs& dst, ExprBase<Rhs> const& src )
   { dst.resize(src.rows(), src.cols());}
 };
 /** specialization for the diagonal_ case */
 template< typename Lhs, typename Rhs>
 struct resizeSelector<Lhs, Rhs, Arrays::diagonal_>
 {
-  static void run(Lhs& dst, ArrayBase<Rhs> const& src )
+  static void run(Lhs& dst, ExprBase<Rhs> const& src )
   { dst.resize(src.range());}
 };
 /** specialization for the vector_ case */
 template< typename Lhs, typename Rhs>
 struct resizeSelector<Lhs, Rhs, Arrays::vector_>
 {
-  static void run(Lhs& dst, ArrayBase<Rhs> const& src )
+  static void run(Lhs& dst, ExprBase<Rhs> const& src )
   { dst.resize(src.range());}
 };
 /** specialization for the point_ case */
 template< typename Lhs, typename Rhs>
 struct resizeSelector<Lhs, Rhs, Arrays::point_>
 {
-  static void run(Lhs& dst, ArrayBase<Rhs> const& src )
+  static void run(Lhs& dst, ExprBase<Rhs> const& src )
   { dst.resize(src.range());}
 };
 
@@ -529,22 +567,22 @@ struct resizeSelector<Lhs, Rhs, Arrays::point_>
  **/
 template<class Derived>
 template<class Rhs>
-Derived& ArrayBase<Derived>::assign(ArrayBase<Rhs> const& rhs)
+Derived& ArrayBase<Derived>::assign(ExprBase<Rhs> const& rhs)
 {
     enum
     {
-      dst_struct_ = hidden::Traits<Derived>::structure_
-    , src_struct_ = hidden::Traits<Rhs>::structure_
-    , dst_orient_ = hidden::Traits<Derived>::orient_
-    , src_orient_ = hidden::Traits<Rhs>::orient_
-    , dst_sizeRows_ = hidden::Traits<Derived>::sizeRows_
-    , src_sizeRows_ = hidden::Traits<Rhs>::sizeRows_
-    , dst_sizeCols_ = hidden::Traits<Derived>::sizeCols_
-    , src_sizeCols_ = hidden::Traits<Rhs>::sizeCols_
+      lhs_struct_ = hidden::Traits<Derived>::structure_
+    , lhs_orient_ = hidden::Traits<Derived>::orient_
+    , lhs_sizeRows_ = hidden::Traits<Derived>::sizeRows_
+    , lhs_sizeCols_ = hidden::Traits<Derived>::sizeCols_
+    , rhs_struct_ = hidden::Traits<Rhs>::structure_
+    , rhs_orient_ = hidden::Traits<Rhs>::orient_
+    , rhs_sizeRows_ = hidden::Traits<Rhs>::sizeRows_
+    , rhs_sizeCols_ = hidden::Traits<Rhs>::sizeCols_
     };
-    STK_STATICASSERT(CORRECT_ASSIGN((Arrays::Structure)dst_struct_, (Arrays::Structure)src_struct_),YOU_TRIED_TO_ASSIGN_A_NOT_COMPATIBLE_ARRAY);
+    STK_STATICASSERT(CORRECT_ASSIGN((Arrays::Structure)lhs_struct_, (Arrays::Structure)rhs_struct_),YOU_TRIED_TO_ASSIGN_A_NOT_COMPATIBLE_ARRAY);
   // choose the correct way to resize if necessary
-  hidden::resizeSelector<Derived, Rhs, dst_struct_>::run(this->asDerived(), rhs.asDerived());
+  hidden::resizeSelector<Derived, Rhs, lhs_struct_>::run(this->asDerived(), rhs.asDerived());
   // choose the correct way to copy
   hidden::CopycatSelector<Derived, Rhs,  orient_>::run(this->asDerived(), rhs.asDerived());
   return this->asDerived();
@@ -553,7 +591,7 @@ Derived& ArrayBase<Derived>::assign(ArrayBase<Rhs> const& rhs)
 /* Adding a Rhs to this. */
 template<class Derived>
 template<typename Rhs>
-Derived&  ArrayBase<Derived>::operator+=( ArrayBase<Rhs> const& other)
+Derived&  ArrayBase<Derived>::operator+=( ExprBase<Rhs> const& other)
 {
   this->asDerived() = this->asDerived() + other;
   return this->asDerived();
@@ -561,7 +599,7 @@ Derived&  ArrayBase<Derived>::operator+=( ArrayBase<Rhs> const& other)
 /* substract a Rhs to this. */
 template<class Derived>
 template<typename Rhs>
-Derived&  ArrayBase<Derived>::operator-=( ArrayBase<Rhs> const& other)
+Derived&  ArrayBase<Derived>::operator-=( ExprBase<Rhs> const& other)
 {
   this->asDerived() = this->asDerived() - other;
   return this->asDerived();

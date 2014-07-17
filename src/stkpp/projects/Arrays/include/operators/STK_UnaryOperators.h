@@ -24,7 +24,7 @@
 */
 
 /*
- * Project:  stkpp::
+ * Project:  stkpp::Arrays
  * created on: 17 oct. 2012
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
@@ -36,11 +36,13 @@
 #ifndef STK_UNARYOPERATORS_H
 #define STK_UNARYOPERATORS_H
 
+#include "STK_SliceOperators.h"
+
 namespace STK
 {
 
-template<typename UnaryOp, typename Rhs>
-class UnaryOperator;
+// forward declaration
+template<typename UnaryOp, typename Lhs> class UnaryOperator;
 
 namespace hidden
 {
@@ -48,24 +50,27 @@ namespace hidden
 /** @ingroup hidden
  *  @brief Traits class for the unary operators
  */
-template<typename UnaryOp, typename Rhs>
-struct Traits< UnaryOperator <UnaryOp, Rhs> >
+template<typename UnaryOp, typename Lhs>
+struct Traits< UnaryOperator <UnaryOp, Lhs> >
 {
   typedef typename UnaryOp::result_type Type;
+  typedef RowOperator<UnaryOperator <UnaryOp, Lhs> > Row;
+  typedef ColOperator<UnaryOperator <UnaryOp, Lhs> > Col;
+
   enum
   {
-      structure_ = Rhs::structure_,
-      orient_    = Rhs::orient_,
-      sizeRows_  = Rhs::sizeRows_,
-      sizeCols_  = Rhs::sizeCols_,
-      storage_   = Rhs::storage_
+      structure_ = Lhs::structure_,
+      orient_    = Lhs::orient_,
+      sizeRows_  = Lhs::sizeRows_,
+      sizeCols_  = Lhs::sizeCols_,
+      storage_   = Lhs::storage_
   };
 };
 
 } // end namespace hidden
 
 // forward declaration
-template<typename UnaryOp, typename Rhs>
+template<typename UnaryOp, typename Lhs>
 class UnaryOperatorBase;
 
 
@@ -75,7 +80,7 @@ class UnaryOperatorBase;
   * \brief Generic expression when unary operator is applied to an expression
   *
   * @tparam UnaryOp template functor implementing the operator
-  * @tparam Rhs the type of the expression to which we are applying the unary operator
+  * @tparam Lhs the type of the expression to which we are applying the unary operator
   *
   * This class represents an expression where a unary operator is applied to
   * an expression. It is the return type of all operations taking exactly 1
@@ -87,22 +92,23 @@ class UnaryOperatorBase;
   * Most of the time, this is the only way that it is used, so you typically
   * don't have to name UnaryOperator types explicitly.
   */
-template<typename UnaryOp,  typename Rhs>
-class UnaryOperator  : public UnaryOperatorBase< UnaryOp, Rhs >, public TRef<1>
+template<typename UnaryOp,  typename Lhs>
+class UnaryOperator  : public UnaryOperatorBase< UnaryOp, Lhs >, public TRef<1>
 {
   public:
-    typedef UnaryOperator<UnaryOp, Rhs> Derived;
-    typedef UnaryOperatorBase< UnaryOp, Rhs > Base;
-    typedef typename hidden::Traits<Derived>::Type Type;
+    typedef UnaryOperatorBase< UnaryOp, Lhs > Base;
+    typedef typename hidden::Traits< UnaryOperator >::Type Type;
+    typedef typename hidden::Traits< UnaryOperator >::Row Row;
+    typedef typename hidden::Traits< UnaryOperator >::Col Col;
     enum
     {
-        structure_ = hidden::Traits<Derived>::structure_,
-        orient_    = hidden::Traits<Derived>::orient_,
-        sizeRows_  = hidden::Traits<Derived>::sizeRows_,
-        sizeCols_  = hidden::Traits<Derived>::sizeCols_,
-        storage_   = hidden::Traits<Derived>::storage_
+        structure_ = hidden::Traits< UnaryOperator >::structure_,
+        orient_    = hidden::Traits< UnaryOperator >::orient_,
+        sizeRows_  = hidden::Traits< UnaryOperator >::sizeRows_,
+        sizeCols_  = hidden::Traits< UnaryOperator >::sizeCols_,
+        storage_   = hidden::Traits< UnaryOperator >::storage_
     };
-    inline UnaryOperator( Rhs const& rhs, UnaryOp const& functor = UnaryOp())
+    inline UnaryOperator( Lhs const& rhs, UnaryOp const& functor = UnaryOp())
                         : Base(), rhs_(rhs), functor_(functor)
     {}
     /**  @return the range of the rows */
@@ -115,23 +121,23 @@ class UnaryOperator  : public UnaryOperatorBase< UnaryOp, Rhs >, public TRef<1>
     inline int const sizeColsImpl() const { return rhs_.sizeCols();}
 
     /** @return the right hand side expression */
-    inline Rhs const& rhs() const { return rhs_; }
+    inline Lhs const& rhs() const { return rhs_; }
     /** @return the functor representing the unary operation */
     inline UnaryOp const& functor() const { return functor_; }
 
   protected:
-    Rhs const& rhs_;
+    Lhs const& rhs_;
     UnaryOp const functor_;
 };
 
 /** @ingroup Arrays
   * @brief implement the access to the elements in the (2D) general case.
   **/
-template<typename UnaryOp, typename Rhs>
-class UnaryOperatorBase : public ArrayBase< UnaryOperator<UnaryOp, Rhs> >
+template<typename UnaryOp, typename Lhs>
+class UnaryOperatorBase : public ExprBase< UnaryOperator<UnaryOp, Lhs> >
 {
   public:
-    typedef ArrayBase< UnaryOperator<UnaryOp, Rhs> > Base;
+    typedef ExprBase< UnaryOperator<UnaryOp, Lhs> > Base;
     typedef typename UnaryOp::result_type Type;
     /** constructor. */
     inline UnaryOperatorBase() : Base() {}
@@ -149,20 +155,6 @@ class UnaryOperatorBase : public ArrayBase< UnaryOperator<UnaryOp, Rhs> >
     /** accesses to the element of the operator */
     inline Type const elt0Impl() const
     { return this->asDerived().functor()(this->asDerived().rhs().elt());}
-//    /** @return the element (i,j) of the operator.
-//     *  @param i index of the row
-//     *  @param j index of the column
-//     **/
-//    inline Type const elt(int i, int j) const
-//    { return this->asDerived().functor()(this->asDerived().rhs().elt(i, j));}
-//    /** @return the element ith element of the operator
-//     *  @param i index of the ith element
-//     **/
-//    inline Type const elt(int i) const
-//    { return this->asDerived().functor()(this->asDerived().rhs().elt(i));}
-//    /** accesses to the element of the operator */
-//    inline Type const elt() const
-//    { return this->asDerived().functor()(this->asDerived().rhs().elt());}
 };
 
 } // namespace STK

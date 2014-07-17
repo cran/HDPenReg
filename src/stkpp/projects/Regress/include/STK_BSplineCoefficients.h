@@ -36,8 +36,8 @@
 #ifndef STK_BSPLINECOEFFICIENTS_H
 #define STK_BSPLINECOEFFICIENTS_H
 
-#include "../../Sdk/include/STK_IRunner.h"
-#include "../../Arrays/include/STK_Array2D.h"
+#include "Sdk/include/STK_IRunner.h"
+#include "Arrays/include/STK_Array2D.h"
 
 namespace STK
 {
@@ -129,15 +129,15 @@ class BSplineCoefficients : public IRunnerBase
     /** give the degree of the B-Spline curves.
      * @return the degree of the B-Splines
      **/
-    inline int const& degree() const { return degree_;}
+    inline int degree() const { return degree_;}
     /** give the number of knots of the B-Spline curves.
      * @return the number of knots of the B-Spline curve
      **/
-    inline int const& nbKnots() const { return nbKnots_;}
+    inline int nbKnots() const { return nbKnots_;}
     /** give the number of control points of the B-Spline curves.
      * @return the number of control points of the curve
      **/
-    inline int const& nbControlPoints() const { return nbControlPoints_;}
+    inline int nbControlPoints() const { return nbControlPoints_;}
     /** give the knots of the B-Spline curves.
      * @return the vector of knots of the B-Spline curve
      **/

@@ -36,7 +36,7 @@
 #ifndef STK_IAAMODEL_H
 #define STK_IAAMODEL_H
 
-#include "../../Arrays/include/STK_Array2DSquare.h"
+#include "Arrays/include/STK_Array2DSquare.h"
 
 namespace STK
 {
@@ -108,7 +108,7 @@ class IAAModel
     /** get the dimension of the model
      * @return the dimension of the model
      **/
-    inline int const& dim() const { return dim_;}
+    inline int dim() const { return dim_;}
 
     /** is the data set centered ?
      * @return @c true if the data set is centered, @c false otherwise

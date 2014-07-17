@@ -37,8 +37,8 @@
 
 #include "STK_ILinearReduct.h"
 
-#include "../../Arrays/include/STK_Array2DSquare.h"
-#include "../../STatistiK/include/STK_Stat_MultivariateReal.h"
+#include "Arrays/include/STK_Array2DSquare.h"
+#include "STatistiK/include/STK_Stat_MultivariateReal.h"
 
 namespace STK
 {
@@ -101,7 +101,7 @@ class LocalVariance : public ILinearReduct
     /** Destructor */
     virtual ~LocalVariance();
     /** @return the number of neighbors used in the local covariance.*/
-    inline int const& nbNeighbor() const { return nbNeighbor_;}
+    inline int nbNeighbor() const { return nbNeighbor_;}
     /**@return an array with the index of the neighbors of an individual */
     inline Array2D<int> const& pred() const { return neighbors_;}
     /** @return the covariance matrix of the data set */

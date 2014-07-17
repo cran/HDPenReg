@@ -37,7 +37,7 @@
 
 #include "STK_Law_IUnivLaw.h"
 #include "../include/STK_Law_Util.h"
-#include "../../Arrays/include/STK_Array2DVector.h"
+#include "Arrays/include/STK_Array2DVector.h"
 
 namespace STK
 {
@@ -70,7 +70,15 @@ class Categorical: public IUnivLaw<int>
 {
   public:
     typedef IUnivLaw<int> Base;
-    /** Default constructor.
+    /** Default constructor. Only one category */
+    inline Categorical() : Base(_T("Categorical")), prob_(1,1) { computeCumProb();}
+    /** constructor with given probabilities.
+     *  The probabilities will be normalized in order to have an overall sum of 1
+     *  @param prob probabilities of success in a Categorical trial
+     **/
+    Categorical(Array2DVector<Real> const& prob) : Base(_T("Categorical")), prob_(prob)
+    { computeCumProb();}
+    /** constructor with given probabilities.
      *  The probabilities will be normalized in order to have an overall sum of 1
      *  @param prob probabilities of success in a Categorical trial
      **/
@@ -122,16 +130,24 @@ class Categorical: public IUnivLaw<int>
     template<class OtherArray>
     static int rand(OtherArray const& prob)
     {
-      Real u = Law::generator.randUnif();
-      int k; Real cum = 0.;
-      for(k = prob.firstIdx(); k< prob.lastIdx(); k++)
+      Real u = Law::generator.randUnif(), cum = 0.;
+      for(int k = prob.begin(); k< prob.lastIdx(); k++)
       {
         cum += prob[k];
         if (u<=cum) return k;
       }
-      return k;
-
+      return prob.lastIdx();
     }
+    /** @brief compute the log probability distribution function
+     *  Give the value of the log-pdf at the point x.
+     *  @param x the value to compute the lpdf.
+     *  @param prob the probability of each value
+     *  @return the value of the log-pdf
+     **/
+    template<class OtherArray>
+    static Real lpdf(int const& x, OtherArray const& prob)
+    { return (prob[x] == 0) ? -Arithmetic<Real>::infinity() : std::log(prob[x]);}
+
   protected:
     /** probabilities in a Categorical trial */
     Array2DVector<Real> prob_;

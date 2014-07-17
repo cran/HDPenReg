@@ -36,38 +36,58 @@
 
 #include <algorithm>
 #include "../include/STK_Range.h"
-#include "../include/STK_String_Util.h"
+#include "../include/STK_String.h"
 
 namespace STK
 {
 
-/** Read a Range in the form first:last (MATLAB-like form) from
- * an input stream. The input stream can also be a number (say n). In this case
- * the range will be 1:n. If the range cannot be read the method return the
- * default range 1:0 (Should be NA value, but NA value is not defined
- * for Range).
+/* @brief Read a Range in the form first:last (MATLAB-like form) from
+ *  an input stream. The input stream can also be a number (say n).
+ *  In this case the range will be n:n. If the range cannot be read the
+ *  method return a NA value
  * @param is the input stream
  * @param I the range to set
  **/
 istream& operator>> (istream& is, Range& I)
 {
-  String num;
-  is >> std::skipws;
+  // get current file position
+  std::ios::pos_type pos = is.tellg();
+
+  String str;
   // get first number
-  std::getline(is, num, _T(':'));
+  std::getline(is, str, _T(':'));
   // check if the istream is exhausted
   if (is.eof())
   {
-    I.first_ = STKBASEARRAYS;
-    if (!stringToType(I.last_, num)) I.last_ =STKBASEARRAYS-1;
+    int last;
+    if (!stringToType(last, str))
+    { I = Arithmetic<Range>::NA();
+      is.seekg(pos); is.setstate(std::ios::failbit);
+      return is;
+    }
+    // otherwise
+    I.begin_ = last;
+    I.end_   = last+1;
     return is;
   }
-  // otherwise we encounter a ":", thus skip the current char
-  if (!stringToType(I.first_, num)) I.first_ =STKBASEARRAYS;
+  // otherwise we encounter a ":"
+  if (!stringToType(I.begin_, str))
+  { I = Arithmetic<Range>::NA();
+    is.seekg(pos); is.setstate(std::ios::failbit);
+    return is;
+  }
+  // skip the current char ":"
   is.peek();
-  if ((is >> I.last_).fail())
+  int last;
+  if ((is >> last).fail())
   {
-    I.first_ =STKBASEARRAYS; I.last_ =STKBASEARRAYS-1;
+    I = Arithmetic<Range>::NA();
+    is.seekg(pos); is.setstate(std::ios::failbit);
+    return is;
+  }
+  else
+  {
+    I.end_ =last+1;
   }
   return is;
 }

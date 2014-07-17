@@ -33,8 +33,8 @@
  *  constants.
  **/
 
-#include "../../STKernel/include/STK_Integer.h"
-#include "../../STKernel/include/STK_Real.h"
+#include "STKernel/include/STK_Integer.h"
+#include "STKernel/include/STK_Real.h"
 #include "../include/STK_Const_Math.h"
 #include "../include/STK_ISerie.h"
 #include "../include/STK_Algo.h"
@@ -89,7 +89,7 @@ class SeriePi : public ISerie<SeriePi>
     **/
     inline Real operator[](int k) const
     { int aux = 4*k;
-      return  std::pow(2, -aux)
+      return  std::pow(2., -aux)
             * ( 2.0/(aux+0.5)
               - 1.0/(aux+2.0)
               - 0.5/(aux+2.5)

@@ -46,8 +46,7 @@
  **/
 
 /** @defgroup hidden Hidden implementation details
- * @namespace hidden Hidden objects.
- * @brief The hidden namespace enclose the classes and method
+ * @namespace STK::hidden The hidden namespace enclose the classes and methods
  * which are used internally by the STK++ classes. They are hidden to the
  * end-user of theses classes.
  **/
@@ -55,13 +54,17 @@
 #ifndef SDK_H
 #define SDK_H
 
+/* Macros. */
+#include "../projects/Sdk/include/STK_Macros.h"
+/* Static Assert. */
+#include "../projects/Sdk/include/STK_StaticAssert.h"
+/* Templates. */
+#include "../projects/Sdk/include/STK_MetaTemplate.h"
+
 /* Interface for all classes using the curious recursive template paradigm.*/
 #include "../projects/Sdk/include/STK_IRecursiveTemplate.h"
 
 /* Interface for all runners classes */
 #include "../projects/Sdk/include/STK_IRunner.h"
-
-/* Traits classes */
-#include "../projects/Sdk/include/STK_Traits.h"
 
 #endif  /* SDK_H */

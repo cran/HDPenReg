@@ -35,10 +35,8 @@
 #ifndef STK_VARIABLE_H
 #define STK_VARIABLE_H
 
-#include <map>
-
-#include "../../Sdk/include/STK_Traits.h"
-#include "../../Arrays/include/STK_IArray2D.h"
+#include "Arrays/include/STK_Traits.h"
+#include "Arrays/include/STK_IArray2D.h"
 #include "STK_IVariable.h"
 
 namespace STK
@@ -201,7 +199,7 @@ class Variable : public IVariable
       this->back() = v;
     }
     /** Insert n elements at the position pos of the container. The bound
-     *  last_ should be modified at the very end of the insertion as pos
+     *  end_ should be modified at the very end of the insertion as pos
      *  can be a reference to it.
      *  @param pos index where to insert elements
      *  @param n number of elements to insert (default 1)
@@ -235,9 +233,9 @@ class Variable : public IVariable
     }
     /** encode values as ints. Not used yet. */
     void encode()
-    { int code = STKBASEARRAYS;
+    { int code = baseIdx;
       std::pair< typename std::map<Type, int>::iterator, bool> ret;
-      for (int i=this->firstIdx(); i<= this->lastIdx(); i++)
+      for (int i=this->begin(); i<= this->lastIdx(); i++)
       { ret=coding_.insert(std::pair<Type, int>(this->elt(i), i));
         if (ret.second==true) { code++;}
       }
@@ -247,7 +245,7 @@ class Variable : public IVariable
     {
       typename String::size_type maxlength = with_name ? this->name().size() : 0;
       // loop over the values
-      for (int i=this->firstIdx(); i<=this->lastIdx(); i++)
+      for (int i=this->begin(); i<=this->lastIdx(); i++)
       { maxlength = std::max(maxlength, this->template eltAsString<Type>(i).size() );}
       return int(maxlength);
     }
@@ -256,7 +254,7 @@ class Variable : public IVariable
     {
       int nbMiss = 0;
       // loop over the values
-      for (int i=this->firstIdx(); i<=this->lastIdx(); i++)
+      for (int i=this->begin(); i<=this->lastIdx(); i++)
       { if (Arithmetic<Type>::isNA(this->elt(i))) nbMiss++;}
       return nbMiss;
     }
@@ -352,7 +350,7 @@ inline int Variable<Type>::importFromString( Variable< String > const& V
   this->resize(V.range());
   this->setName(V.name());
   int nSuccess = V.size();
-  for (int i=V.firstIdx(); i<=V.lastIdx(); i++)
+  for (int i=V.begin(); i<=V.lastIdx(); i++)
     if ( (Arithmetic<String>::isNA(V[i])) || (V[i]==stringNa) ) // not Available
       this->elt(i) = Arithmetic<Type>::NA();
     else
@@ -373,7 +371,7 @@ inline void Variable<Type>::exportAsString( Variable< String >& V) const
 {
   V.resize(this->range());
   V.setName(this->name());
-  for (int i=this->firstIdx(); i<=this->lastIdx(); i++)
+  for (int i=this->begin(); i<=this->lastIdx(); i++)
   { V[i] = this->template eltAsString<Type>(i);}
 }
 /** Operator << : overwrite the Variable by converting the strings
@@ -385,7 +383,7 @@ inline Variable<String>& Variable<String>::operator<<( Variable< String > const&
 {
   this->resize(V.range());
   this->setName(V.name());
-  for (int i=V.firstIdx(); i<=V.lastIdx(); i++) this->elt(i) = V[i];
+  for (int i=V.begin(); i<=V.lastIdx(); i++) this->elt(i) = V[i];
   return *this;
 }
 /** Operator << : overwrite the Variable by converting the Strings
@@ -397,7 +395,7 @@ inline Variable<Type>& Variable<Type>::operator<<( Variable< String > const& V)
 {
   this->resize(V.range());
   this->setName(V.name());
-  for (int i=V.firstIdx(); i<=V.lastIdx(); i++) this->elt(i) = stringToType<Type>(V[i]);
+  for (int i=V.begin(); i<=V.lastIdx(); i++) this->elt(i) = stringToType<Type>(V[i]);
   return *this;
 }
 /** Operator >> : convert the Variable V into strings.
@@ -408,7 +406,7 @@ inline Variable<String> const& Variable<String>::operator>>(Variable< String >& 
 {
   V.resize(this->range());
   V.setName(this->name());
-  for (int i=this->firstIdx(); i<=this->lastIdx(); i++) V[i] = this->elt(i);
+  for (int i=this->begin(); i<=this->lastIdx(); i++) V[i] = this->elt(i);
   return *this;
 }
 /** Operator >> : convert the Variable V into strings.
@@ -419,7 +417,7 @@ inline Variable<Type> const& Variable<Type>::operator>>(Variable< String >& V) c
 {
   V.resize(this->range());
   V.setName(this->name());
-  for (int i=this->firstIdx(); i<=this->lastIdx(); i++) V[i] = typeToString<Type>(this->elt(i));
+  for (int i=this->begin(); i<=this->lastIdx(); i++) V[i] = typeToString<Type>(this->elt(i));
   return *this;
 }
 /** ostream for Variable. */

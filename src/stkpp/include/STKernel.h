@@ -29,8 +29,7 @@
  **/
 
 /** @file STKernel.h
- *  @brief This file include all the other header files of the
- *  project STKernel.
+ *  @brief This file include all the header files of the project STKernel.
  *
  **/
 
@@ -77,51 +76,17 @@
 #ifndef STKERNEL_H
 #define STKERNEL_H
 
-/* Macros. */
-#include "../projects/STKernel/include/STK_Macros.h"
-/* Templates. */
-#include "../projects/STKernel/include/STK_StaticAssert.h"
-
-/* Templates. */
-#include "../projects/STKernel/include/STK_MetaTemplate.h"
-
-/* Functors. */
-#include "../projects/STKernel/include/STK_Functors.h"
-
-/* Arithmetic classes for fundamental types. */
-#include "../projects/STKernel/include/STK_Arithmetic.h"
-
-/* RTTI class for fundamental types. */
-#include "../projects/STKernel/include/STK_IdTypeImpl.h"
-
-/* fundamental STK Char.  */
-#include "../projects/STKernel/include/STK_Char.h"
-
-/* STK String parametrized with Char. */
-#include "../projects/STKernel/include/STK_String.h"
-
-/* Fundamental constant of STKpp. */
-#include "../projects/STKernel/include/STK_String_Util.h"
-
-/* Proxy classes for the fundamental types of STKpp.  */
-#include "../projects/STKernel/include/STK_Proxy.h"
-
 /* Fundamental types of STKpp.  */
 #include "../projects/STKernel/include/STK_TypeBase.h"
-
-/* Chrono functions.  */
-#include "../projects/STKernel/include/STK_Chrono.h"
-
-/* Miscellaneous functions. */
-#include "../projects/STKernel/include/STK_Misc.h"
-
 /* Index range. */
 #include "../projects/STKernel/include/STK_Range.h"
-
-/* STK streams parametrized with Char.  */
-#include "../projects/STKernel/include/STK_Stream.h"
-
 /* Standard exceptions */
 #include "../projects/STKernel/include/STK_Exceptions.h"
+/* STK streams parametrized with Char.  */
+#include "../projects/STKernel/include/STK_Functors.h"
+/* Chrono functions.  */
+#include "../projects/STKernel/include/STK_Chrono.h"
+/* Miscellaneous functions. */
+#include "../projects/STKernel/include/STK_Misc.h"
 
 #endif  /* STKERNEL_H */

@@ -29,9 +29,10 @@
  **/
 
 /** @file STK_Clust_Util.cpp
- *  @brief In this file we implement the utilties functions of the Clustering project.
+ *  @brief In this file we implement the utilities functions of the Clustering project.
  **/
 
+#include "STKernel/include/STK_String.h"
 
 #include "../include/STK_Clust_Util.h"
 #include "../include/STK_MixtureAlgo.h"
@@ -58,6 +59,43 @@ String exceptionToString( exceptions const& type)
   if (type == cStepFail_)  return String(_T("cStep fail"));
   if (type == sStepFail_)  return String(_T("sStep fail"));
   return String(_T("unknown exception"));
+}
+
+/* @ingroup Clustering
+ *  convert a String to an Mixture.
+ *  @param type the String we want to convert
+ *  @return the Mixture represented by the String @c type. if the string
+ *  does not match any known name, the @c unknown_mixture_ type is returned.
+ **/
+Mixture stringToMixture( std::string const& type)
+{
+  if (toUpperString(type) == toUpperString(_T("Gamma_ajk_bjk"))) return Gamma_ajk_bjk_;
+  if (toUpperString(type) == toUpperString(_T("Gamma_ajk_bj"))) return Gamma_ajk_bj_;
+  if (toUpperString(type) == toUpperString(_T("Gaussian_sjk"))) return Gaussian_sjk_;
+  if (toUpperString(type) == toUpperString(_T("Gaussian_sk"))) return Gaussian_sk_;
+  if (toUpperString(type) == toUpperString(_T("Gaussian_sj"))) return Gaussian_sj_;
+  if (toUpperString(type) == toUpperString(_T("Gaussian_s"))) return Gaussian_s_;
+  if (toUpperString(type) == toUpperString(_T("Categorical_pjk"))) return Categorical_pjk_;
+  if (toUpperString(type) == toUpperString(_T("Categorical_pk"))) return Categorical_pk_;
+  return unknown_mixture_;
+}
+
+/* @ingroup Clustering
+ *  convert a Mixture to a String.
+ *  @param type the type of Mixture we want to convert
+ *  @return the string associated to this type.
+ **/
+std::string mixtureToString( Mixture const& type)
+{
+  if (type == Gamma_ajk_bjk_) return String(_T("Gamma_ajk_bjk"));
+  if (type == Gamma_ajk_bj_) return String(_T("Gamma_ajk_bj"));
+  if (type == Gaussian_sjk_) return String(_T("Gaussian_sjk"));
+  if (type == Gaussian_sk_) return String(_T("Gaussian_sk"));
+  if (type == Gaussian_sj_) return String(_T("Gaussian_sj"));
+  if (type == Gaussian_s_) return String(_T("Gaussian_s"));
+  if (type == Categorical_pjk_) return String(_T("Categorical_pjk"));
+  if (type == Categorical_pk_) return String(_T("Categorical_pk"));
+  return String(_T("unknown"));
 }
 
 /* utility function for creating an estimation algorithm

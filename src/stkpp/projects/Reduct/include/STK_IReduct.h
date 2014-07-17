@@ -37,8 +37,8 @@
 #ifndef STK_IREDUCT_H
 #define STK_IREDUCT_H
 
-#include "../../Sdk/include/STK_IRunner.h"
-#include "../../Arrays/include/STK_Array2D.h"
+#include "Sdk/include/STK_IRunner.h"
+#include "Arrays/include/STK_Array2D.h"
 
 namespace STK
 {
@@ -79,7 +79,7 @@ class IReduct : public IRunnerUnsupervised<Matrix, Vector>
     /** get the number of dimension.
      *  @return The number of dimension computed
      **/
-    inline int const& dim() const { return dim_;}
+    inline int dim() const { return dim_;}
     /** get a pointer on the reduced data set
      * @return a constant pointer on the data set
      **/

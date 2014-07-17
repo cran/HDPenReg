@@ -30,22 +30,24 @@
  **/
 
 /** @file STK_Clust_Util.h
- *  @brief In this file we define the constant and utilities functions of the
- *  Clustering project.
+ *  @brief In this file we define the enum, constants and utilities functions
+ *  of the Clustering project.
  **/
 
 
-#ifndef STK_CLUST_UTIL_H_
-#define STK_CLUST_UTIL_H_
+#ifndef STK_CLUST_UTIL_H
+#define STK_CLUST_UTIL_H
 
-#include "../../STKernel/include/STK_Real.h"
+#include "STKernel/include/STK_Real.h"
 
 
 namespace STK
 {
-// forwaerd declaration
+
+// forward declaration
 class IMixtureAlgo;
 class IMixtureInit;
+class IMixture;
 
 namespace Clust
 {
@@ -97,6 +99,14 @@ enum exceptions
 };
 
 /** @ingroup Clustering
+ *  convert a Clust::exceptions to a String.
+ *  @param type the type of exception that occur
+ *  @return the string associated to this exception.
+ **/
+String exceptionToString( exceptions const& type);
+
+
+/** @ingroup Clustering
  *  Give the state of the model.
  **/
 enum modelState
@@ -110,12 +120,35 @@ enum modelState
 };
 
 /** @ingroup Clustering
- *  convert a Clust::exceptions to a String.
- *  @param type the type of exception that occur
- *  @return the string associated to this exception.
+ * list of the mixtures that can be used by the composer
  **/
-String exceptionToString( exceptions const& type);
+enum Mixture
+{
+  Gamma_ajk_bjk_,
+  Gamma_ajk_bj_,
+  Gaussian_sjk_,
+  Gaussian_sk_,
+  Gaussian_sj_,
+  Gaussian_s_,
+  Categorical_pjk_,
+  Categorical_pk_,
+  unknown_mixture_
+};
 
+/** @ingroup Clustering
+ *  convert a String to an Mixture.
+ *  @param type the String we want to convert
+ *  @return the Mixture represented by the String @c type. if the string
+ *  does not match any known name, the @c unknown_mixture_ type is returned.
+ **/
+Mixture stringToMixture( std::string const& type);
+
+/** @ingroup Clustering
+ *  convert a Mixture to a String.
+ *  @param type the type of Mixture we want to convert
+ *  @return the string associated to this type.
+ **/
+std::string mixtureToString( Mixture const& type);
 
 /** @ingroup Clustering
  * Default number of trial in an initialization */

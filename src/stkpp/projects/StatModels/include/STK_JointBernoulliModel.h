@@ -40,7 +40,7 @@
 #include <cmath>
 
 #include "STK_IMultiStatModel.h"
-#include "../../STatistiK/include/STK_Law_Bernoulli.h"
+#include "STatistiK/include/STK_Law_Bernoulli.h"
 
 namespace STK
 {
@@ -140,7 +140,7 @@ class JointBernoulliModel : public IMultiStatModel<Array, WColVector, JointBerno
     virtual Real computeLnLikelihood( RowVector const& rowData) const
     {
       Real sum =0.;
-      for (Integer j= rowData.firstIdx(); j <= rowData.lastIdx(); ++j)
+      for (Integer j= rowData.begin(); j <= rowData.lastIdx(); ++j)
       {
         sum += rowData[j] * p_param()->lnProb(j)
              + (1-rowData[j] * p_param()->ln1mProb(j) );

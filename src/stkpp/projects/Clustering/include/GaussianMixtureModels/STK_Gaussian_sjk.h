@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013 Vincent KUBICKI
+/*     Copyright (C) 2004-2013 Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -25,53 +25,40 @@
 /*
  * Project:  stkpp::Clustering
  * created on: Oct 24, 2013
- * Author:   Vincent KUBICKI
+ * Author:   Serge Iovleff
  **/
 
 /** @file STK_Gaussian_sjk.h
- *  @brief In this file we implement the Gaussian_pk_sjk and Gaussian_p_sjk classes
+ *  @brief In this file we implement the Gaussian_sjk class
  **/
 
 #ifndef STK_GAUSSIAN_SJK_H
 #define STK_GAUSSIAN_SJK_H
 
-#include "../STK_IMixtureModel.h"
-
-#include "STK_DiagGaussianComponent.h"
-#include "STK_Gaussian_sjkImpl.h"
+#include "STK_DiagGaussianBase.h"
 
 namespace STK
 {
 
 //forward declaration, to allow for recursive template
-template<class Array>class Gaussian_pk_sjk;
-template<class Array>class Gaussian_p_sjk;
+template<class Array>class Gaussian_sjk;
 
-namespace hidden
+namespace Clust
 {
-/** @ingroup hidden
- *  Traits class for the Gaussian_pk_sjk traits policy. */
+/** @ingroup Clustering
+ *  Traits class for the Gaussian_sjk traits policy. */
 template<class _Array>
-struct MixtureTraits< Gaussian_pk_sjk<_Array> >
+struct MixtureModelTraits< Gaussian_sjk<_Array> >
 {
   typedef _Array Array;
-  typedef DiagGaussianComponent<_Array, Gaussian_sjk_Parameters> Component;
-  typedef Gaussian_sjk_Parameters        Parameters;
-};
-/** @ingroup hidden
- *  Traits class for the Gaussian_p_sjk traits policy. */
-template<class _Array>
-struct MixtureTraits< Gaussian_p_sjk<_Array> >
-{
-  typedef _Array Array;
-  typedef DiagGaussianComponent<_Array, Gaussian_sjk_Parameters> Component;
+  typedef MixtureComponent<_Array, Gaussian_sjk_Parameters> Component;
   typedef Gaussian_sjk_Parameters        Parameters;
 };
 
 } // namespace hidden
 
 /** @ingroup Clustering
- *  The diagonal Gaussian mixture model @c Gaussian_pk_sjk is
+ *  The diagonal Gaussian mixture model @c Gaussian_sjk is
  *  the most general diagonal Gaussian model and have a density function of the
  *  form
  * \f[
@@ -80,104 +67,82 @@ struct MixtureTraits< Gaussian_p_sjk<_Array> >
  * \f]
  **/
 template<class Array>
-class Gaussian_pk_sjk : public IMixtureModel<Gaussian_pk_sjk<Array> >
+class Gaussian_sjk : public DiagGaussianBase<Gaussian_sjk<Array> >
 {
   public:
-    typedef IMixtureModel<Gaussian_pk_sjk<Array> > Base;
-    using Base::p_data_;
-    using Base::components_;
+    typedef DiagGaussianBase<Gaussian_sjk<Array> > Base;
+    typedef typename Clust::MixtureModelTraits< Gaussian_sjk<Array> >::Component Component;
+    typedef typename Clust::MixtureModelTraits< Gaussian_sjk<Array> >::Parameters Parameters;
+    typedef typename Array::Col ColVector;
+
+    using Base::p_tik;
+    using Base::p_data;
+    using Base::p_param;
+    using Base::components;
 
     /** default constructor
      * @param nbCluster number of cluster in the model
      **/
-    Gaussian_pk_sjk( int nbCluster) : Base(nbCluster) {}
-    /** constructor. Create a model with a data set.
-     *  @param data the data set to process
-     *  @param nbCluster number of cluster in the model
-     **/
-    Gaussian_pk_sjk( int nbCluster, Array const& data) : Base(nbCluster, data) {}
-    /** constructor with a pointer on the data set
-     *  @param p_data a pointer on the data set to process
-     *  @param nbCluster number of cluster in the model
-     **/
-    Gaussian_pk_sjk( int nbCluster, Array const* p_data) : Base(nbCluster, p_data) {}
+    Gaussian_sjk( int nbCluster) : Base(nbCluster) {}
     /** copy constructor
      *  @param model The model to copy
      **/
-    Gaussian_pk_sjk( Gaussian_pk_sjk const& model) : Base(model) {}
+    Gaussian_sjk( Gaussian_sjk const& model) : Base(model) {}
     /** destructor */
-    virtual ~Gaussian_pk_sjk() {}
-    /** Write the parameters*/
-    virtual void writeParameters(ostream& os) const
-    {
-      stk_cout << _T("lnLikelihood = ") << this->lnLikelihood() << _T("\n");
-      stk_cout << _T("Proportions = ") << *this->p_prop() << _T("\n");
-      for (int k= components_.firstIdx(); k <= components_.lastIdx(); ++k)
-      {
-        stk_cout << _T("---> Component ") << k << _T("\n");
-        stk_cout << _T("mean_ = ") << components_[k]->p_param()->mean_;
-        stk_cout << _T("sigma_ = ")<< components_[k]->p_param()->sigma_;
-      }
-    }
+    ~Gaussian_sjk() {}
+    /** Compute the initial weighted means and the initial weighted variances
+     *  of the mixture */
+    void initializeStep();
+    /** Initialize randomly the parameters of the Gaussian mixture. The centers
+     *  will be selected randomly among the data set and the standard-deviation
+     *  will be set to 1.
+     */
+    void randomInit();
+    /** Compute the weighted mean and the common variance. */
+    void mStep();
     /** @return the number of free parameters of the model */
     inline int computeNbFreeParameters() const
-    { return 2*this->nbCluster()*this->nbVar()+ this->nbCluster()-1;}
+    { return 2*this->nbCluster()*this->nbVariable();}
 };
 
-/** @ingroup Clustering
- *  The diagonal Gaussian mixture model @c Gaussian_pk_sjk is
- *  the most general diagonal Gaussian model and have a density function of the
- *  form
- * \f[
- *  f(\mathbf{x}|\theta) = \sum_{k=1}^K p \prod_{j=1}^d
- *    \frac{1}{\sqrt{2\pi}\sigma^j_{k}}
- *    \exp\left\{-\frac{(x^j-\mu^j_k)^2}{2(\sigma^j_{k})^2}\right\}.
- * \f]
- **/
+/* Initialize the parameters using mStep. */
 template<class Array>
-class Gaussian_p_sjk : public IMixtureModelFixedProp<Gaussian_p_sjk<Array> >
+void Gaussian_sjk<Array>::initializeStep()
 {
-  public:
-    typedef IMixtureModelFixedProp<Gaussian_p_sjk<Array> > Base;
-    using Base::p_data_;
-    using Base::components_;
+  this->initialMean();
+  for (int k= baseIdx; k <= p_tik()->lastIdxCols(); ++k)
+  {
+    ColVector tik(p_tik()->col(k), true); // create a reference
+    p_param(k)->sigma_ = Stat::varianceWithFixedMean(*p_data(), tik, p_param(k)->mean_, false).sqrt();
+    if (p_param(k)->sigma_.nbAvailableValues() != p_param(k)->sigma_.size()) throw Clust::initializeStepFail_;
+  }
+}
 
-    /** default constructor
-     * @param nbCluster number of cluster in the model
-     **/
-    Gaussian_p_sjk( int nbCluster) : Base(nbCluster) {}
-    /** constructor. Create a model with a data set.
-     *  @param data the data set to process
-     *  @param nbCluster number of cluster in the model
-     **/
-    Gaussian_p_sjk( int nbCluster, Array const& data) : Base(nbCluster, data) {}
-    /** constructor with a pointer on the data set
-     *  @param p_data a pointer on the data set to process
-     *  @param nbCluster number of cluster in the model
-     **/
-    Gaussian_p_sjk( int nbCluster, Array const* p_data) : Base(nbCluster, p_data) {}
-    /** copy constructor
-     *  @param model The model to copy
-     **/
-    Gaussian_p_sjk( Gaussian_p_sjk const& model) : Base(model) {}
-    /** destructor */
-    virtual ~Gaussian_p_sjk() {}
-    /** Write the parameters*/
-    virtual void writeParameters(ostream& os) const
-    {
-      stk_cout << _T("lnLikelihood = ") << this->lnLikelihood() << _T("\n");
-      stk_cout << _T("Proportions = ") << *this->p_prop() << _T("\n");
-      for (int k= components_.firstIdx(); k <= components_.lastIdx(); ++k)
-      {
-        stk_cout << _T("---> Component ") << k << _T("\n");
-        stk_cout << _T("mean_ = ") << components_[k]->p_param()->mean_;
-        stk_cout << _T("sigma_ = ")<< components_[k]->p_param()->sigma_;
-      }
-    }
-    /** @return the number of free parameters of the model */
-    inline int computeNbFreeParameters() const
-    { return 2*this->nbCluster()*this->nbVar();}
-};
+/* Initialize randomly the parameters of the Gaussian mixture. The centers
+ *  will be selected randomly among the data set and the standard-deviation
+ *  will be set to 1.
+ */
+template<class Array>
+void Gaussian_sjk<Array>::randomInit()
+{
+  this->randomMean();
+  for (int k= baseIdx; k <= components().lastIdx(); ++k)
+  { p_param(k)->sigma_ = 1.;}
+}
+
+/* Compute the weighted means and the weighted variances. */
+template<class Array>
+void Gaussian_sjk<Array>::mStep()
+{
+  // compute the means
+  this->updateMean();
+  for (int k= baseIdx; k <= p_tik()->lastIdxCols(); ++k)
+  {
+    ColVector tik(p_tik()->col(k), true); // create a reference
+    p_param(k)->sigma_ = Stat::varianceWithFixedMean(*p_data(), tik, p_param(k)->mean_, false).sqrt();
+    if (p_param(k)->sigma_.nbAvailableValues() != p_param(k)->sigma_.size()) throw Clust::mStepFail_;
+  }
+}
 
 } // namespace STK
 

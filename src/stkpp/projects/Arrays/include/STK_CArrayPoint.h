@@ -35,14 +35,8 @@
 #ifndef STK_CARRAY2DPOINT_H
 #define STK_CARRAY2DPOINT_H
 
-#include "../../STKernel/include/STK_Constants.h"
-#include "../../STKernel/include/STK_MetaTemplate.h"
-#include "../../STKernel/include/STK_StaticAssert.h"
+#include "STKernel/include/STK_Constants.h"
 
-#include "../../Sdk/include/STK_Traits.h"
-
-#include "STK_Arrays_Util.h"
-#include "STK_CAllocator.h"
 #include "STK_ICArray.h"
 
 namespace STK
@@ -137,6 +131,13 @@ class CArrayPoint : public ICArray < CArrayPoint<Type, SizeCols_, Orient_> >
      *  @param ref true if T is wrapped
      **/
     inline CArrayPoint( const CArrayPoint &T, bool ref=false) : Base(T, ref) {}
+    /** wrapper constructor for 0 based C-Array.
+     *  @param q pointer on the array
+     *  @param nbCol number of columns
+     **/
+    inline CArrayPoint( Type* const& q, int nbCol): Base(q, 1, nbCol)
+    {}
+
     /** constructor by reference.
      *  @param allocator the allocator to wrap
      **/

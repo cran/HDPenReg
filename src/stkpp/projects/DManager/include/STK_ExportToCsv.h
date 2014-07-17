@@ -36,9 +36,7 @@
 #ifndef STK_EXPORTCSV_H
 #define STK_EXPORTCSV_H
 
-#include "../../STKernel/include/STK_String_Util.h"
-
-#include "../../Arrays/include/STK_ITContainer2D.h"
+#include "Arrays/include/STK_ITContainer2D.h"
 
 #include "STK_DataFrame.h"
 #include "STK_ReadWriteCsv.h"
@@ -85,7 +83,7 @@ class ExportToCsv
       p_data_->resize(rw.sizeRows(), rw.sizeCols());
       p_data_->setWithNames(rw.withNames());
       // for each field Try a String conversion
-      for(int iRw = rw.firstIdxCols(), iData = p_data_->firstIdx(); iRw<=rw.lastIdxCols(); iRw++, iData++)
+      for(int iRw = rw.firstIdxCols(), iData = p_data_->begin(); iRw<=rw.lastIdxCols(); iRw++, iData++)
       { rw.var(iRw).exportAsString(p_data_->var(iData));}
     }
 
@@ -102,7 +100,7 @@ class ExportToCsv
       // create an empty ReadWriteCsv with no variable name
       p_data_ = new ReadWriteCsv();
       p_data_->setWithNames(true);
-      for(int iVar = A.firstIdx(); iVar<=A.lastIdx(); iVar++)
+      for(int iVar = A.begin(); iVar<=A.lastIdx(); iVar++)
       {
         // add an empty string variable (an empty column)
         p_data_->push_back(Variable<String>());
@@ -124,7 +122,7 @@ class ExportToCsv
       // create an empty ReadWriteCsv with no variable name
       p_data_ = new ReadWriteCsv();
       p_data_->setWithNames(true);
-      for(int iVar = A.firstIdx(); iVar<=A.lastIdx(); iVar++)
+      for(int iVar = A.begin(); iVar<=A.lastIdx(); iVar++)
       {
         // add an empty string variable (an empty column)
         p_data_->push_back(Variable<String>());
@@ -144,7 +142,7 @@ class ExportToCsv
         typedef typename hidden::Traits<Container>::Type TYPE;
       // create an empty ReadWriteCsv with no variable name
       p_data_ = new ReadWriteCsv();
-      for(int iVar = A.firstIdx(); iVar<=A.lastIdx(); iVar++)
+      for(int iVar = A.begin(); iVar<=A.lastIdx(); iVar++)
       {
         // add an empty string variable (an empty column)
         p_data_->push_back(Variable<String>());
@@ -164,12 +162,14 @@ class ExportToCsv
       typedef typename hidden::Traits<Container>::Type TYPE;
       // create an empty ReadWriteCsv with no name
       p_data_ = new ReadWriteCsv();
+
       // for each field try a String conversion
       for(int iVar = A.firstIdxCols(); iVar<=A.lastIdxCols(); iVar++)
       {
         // add an empty string variable (an empty column)
         p_data_->push_back(Variable<String>());
         p_data_->back().setName(prefix+typeToString<int>(iVar)) ;
+
         for (int irow=A.firstIdxRows(); irow<=A.lastIdxRows(); irow++)
         { p_data_->back().push_back(typeToString<TYPE>(A.at(irow,iVar)));}
       }
@@ -188,7 +188,7 @@ class ExportToCsv
     {
       typedef typename hidden::Traits<Container>::Type TYPE;
       // for each field Try a String conversion
-      const int first = A.firstIdx(), last = A.lastIdx();
+      const int first = A.begin(), last = A.lastIdx();
 
       // add an empty string variable
       p_data_->push_back(Variable<String>());
@@ -206,7 +206,7 @@ class ExportToCsv
     {
       typedef typename hidden::Traits<Container>::Type TYPE;
       // for each field Try a String conversion
-      const int first = A.firstIdx(), last = A.lastIdx();
+      const int first = A.begin(), last = A.lastIdx();
       // add an empty string variable
       p_data_->push_back(Variable<String>());
       p_data_->back().setName(prefix) ;

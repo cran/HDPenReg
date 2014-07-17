@@ -34,11 +34,11 @@
  **/
 
 #include "../include/STK_BSplineCoefficients.h"
-#include "../../DManager/include/STK_HeapSort.h"
-#include "../../STKernel/include/STK_String_Util.h"
+#include "DManager/include/STK_HeapSort.h"
+#include "STKernel/include/STK_String.h"
 
-#ifdef STK_VERBOSE
-#include "../../Arrays/include/STK_Display.h"
+#ifdef STK_REGRESS_VERBOSE
+#include "Arrays/include/STK_Display.h"
 #endif
 
 
@@ -195,7 +195,7 @@ Matrix BSplineCoefficients::extrapolate(Vector const& x) const
   // check if the original data set was not reduced to a single point
   if (minValue_ == maxValue_) return coefs;
   // compute the coefficients
-  for (int irow=x.firstIdx(); irow<= x.lastIdx(); irow++)
+  for (int irow=x.begin(); irow<= x.lastIdx(); irow++)
   {
     const Real value = x[irow];
     // value outside the range of the knots case
@@ -239,7 +239,7 @@ Matrix BSplineCoefficients::extrapolate(Vector const& x) const
 bool BSplineCoefficients::computeKnots()
 {
   // get dimensions
-  int first = p_data_->firstIdx(), last = p_data_->lastIdx();
+  int first = p_data_->begin(), last = p_data_->lastIdx();
   // compute min value
   for (int i=first; i<= last; i++)
   {
@@ -317,7 +317,7 @@ void BSplineCoefficients::computeDensityKnots()
 
   // compute step
   Real step = xtri.size()/(Real)lastKnot_;
-  int first = xtri.firstIdx(), last = xtri.lastIdx();
+  int first = xtri.begin(), last = xtri.lastIdx();
   // set knots
   for (int k = 0; k < lastKnot_; k++)
   {
@@ -331,17 +331,17 @@ void BSplineCoefficients::computeDensityKnots()
 /* Compute the coefficients of the B-Spline curves.*/
 void BSplineCoefficients::computeCoefficients()
 {
-#ifdef STK_VERBOSE
+#ifdef STK_REGRESS_VERBOSE
   stk_cout << _T("BSplineCoefficients::computeCoefficients()\n");
 #endif
   // get dimensions
-  int first = p_data_->firstIdx(), last = p_data_->lastIdx();
+  int first = p_data_->begin(), last = p_data_->lastIdx();
   // compute the coefficients
   for (int i=first; i<= last; i++)
   {
     computeCoefficientsRow(i, (*p_data_)[i]);
   }
-#ifdef STK_VERBOSE
+#ifdef STK_REGRESS_VERBOSE
   stk_cout << _T("BSplineCoefficients::computeCoefficients() done\n");
 #endif
 }

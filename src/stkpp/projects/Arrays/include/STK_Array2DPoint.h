@@ -33,14 +33,10 @@
   * @brief A Array2DPoint is a one dimensional horizontal container
  **/
 
-#ifndef STK_ARRAYHO_H
-#define STK_ARRAYHO_H
+#ifndef STK_ARRAY2DPOINT_H
+#define STK_ARRAY2DPOINT_H
 
-#include "../../STKernel/include/STK_Real.h"
-#include "../../Sdk/include/STK_Traits.h"
-
-#include "STK_Arrays_Util.h"
-#include "STK_IArray2D.h"
+#include "STK_Display.h"
 
 namespace STK
 {
@@ -185,7 +181,7 @@ class Array2DPoint : public IArray2D< Array2DPoint<Type> >
     void erase( int const& pos, int const& n=1)
     { Base::eraseCols(pos, n);}
     /** Insert n elts at the position pos of the container. The bound
-     *  last_ should be modified at the very end of the insertion as pos
+     *  end_ should be modified at the very end of the insertion as pos
      *  can be a reference to it.
      *  @param pos index where to insert elements
      *  @param n number of elements to insert (default 1)
@@ -209,4 +205,4 @@ class Array2DPoint : public IArray2D< Array2DPoint<Type> >
 
 } // namespace STK
 
-#endif // STK_ARRAYHO_H
+#endif // STK_ARRAY2DPOINT_H

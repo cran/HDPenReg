@@ -35,15 +35,10 @@
 #ifndef STK_CARRAY_H
 #define STK_CARRAY_H
 
-#include "../../STKernel/include/STK_Constants.h"
-#include "../../STKernel/include/STK_MetaTemplate.h"
-#include "../../STKernel/include/STK_StaticAssert.h"
+#include "STKernel/include/STK_Constants.h"
 
-#include "../../Sdk/include/STK_Traits.h"
-
-#include "STK_Arrays_Util.h"
-#include "STK_CAllocator.h"
 #include "STK_ICArray.h"
+#include "STK_Display.h"
 
 namespace STK
 {
@@ -172,6 +167,12 @@ class CArray: public ICArray < CArray<Type, SizeRows_, SizeCols_, Orient_> >
      *  @param ref true if T is wrapped
      **/
     inline CArray( CArray const& T, bool ref=false) : Base(T, ref) {}
+    /** wrapper constructor for 0 based C-Array.
+     *  @param q pointer on the array
+     *  @param nbRow number of rows
+     *  @param nbCol number of columns
+     **/
+    inline CArray( Type* const& q, int nbRow, int nbCol): Base(q, nbRow, nbCol) {}
     /** constructor by reference.
      *  @param allocator the allocator to wrap
      **/
@@ -187,7 +188,7 @@ class CArray: public ICArray < CArray<Type, SizeRows_, SizeCols_, Orient_> >
      *  @param rhs the container to copy
      **/
     template<class Rhs>
-    inline CArray& operator=(ArrayBase<Rhs> const& rhs)
+    inline CArray& operator=(ExprBase<Rhs> const& rhs)
     { return this->assign(rhs.asDerived());}
     /** operator = : overwrite the CArray with the Right hand side rhs.
      *  @param rhs the container to copy

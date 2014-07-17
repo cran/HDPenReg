@@ -40,8 +40,8 @@
 #include <cmath>
 
 #include "STK_IMultiStatModel.h"
-#include "../../STatistiK/include/STK_Law_Normal.h"
-#include "../../STatistiK/include/STK_Stat_Functors.h"
+#include "STatistiK/include/STK_Law_Normal.h"
+#include "STatistiK/include/STK_Stat_Functors.h"
 
 namespace STK
 {
@@ -137,7 +137,7 @@ class JointGaussianModel : public IMultiStatModel<Array, WColVector, JointGaussi
     virtual Real computeLnLikelihood( RowVector const& rowData) const
     {
       Real sum =0.;
-      for (Integer j= rowData.firstIdx(); j <= rowData.lastIdx(); ++j)
+      for (Integer j= rowData.begin(); j <= rowData.lastIdx(); ++j)
       { sum += Law::Normal::lpdf(rowData[j], p_param()->mu(j), p_param()->sigma(j));}
       return sum;
     }
@@ -147,7 +147,7 @@ class JointGaussianModel : public IMultiStatModel<Array, WColVector, JointGaussi
     {
       for (int j=p_data()->firstIdxCols(); j<=p_data()->lastIdxCols(); ++j)
       {
-        p_param()->setMu(j, p_data()->col(j).meanSafe());
+        p_param()->setMu(j, p_data()->col(j).safe().mean());
         p_param()->setSigma(j,std::sqrt(Stat::varianceWithFixedMean(p_data()->col(j), p_param()->mu(j), true)));
       }
     }
@@ -156,7 +156,7 @@ class JointGaussianModel : public IMultiStatModel<Array, WColVector, JointGaussi
     {
       for (int j=p_data()->firstIdxCols(); j<=p_data()->lastIdxCols(); ++j)
       {
-        p_param()->setMu(j, p_data()->col(j).wmeanSafe(weights));
+        p_param()->setMu(j, p_data()->col(j).safe().wmean(weights));
         p_param()->setSigma(j,std::sqrt(Stat::varianceWithFixedMean(p_data()->col(j), weights, p_param()->mu(j), true)));
       }
     }

@@ -36,6 +36,8 @@
 #ifndef STK_BINARYOPERATORS_H
 #define STK_BINARYOPERATORS_H
 
+#include "STK_SliceOperators.h"
+
 #define EGAL(arg1, arg2) ((arg1::structure_ == int(Arrays::arg2)))
 
 namespace STK
@@ -47,9 +49,9 @@ namespace Arrays
 /** Kind of the operands in a BinaryOperator. */
 enum BinOpKind
 {
-  binOp0d_ = 0, ///<
-  binOp1d_ = 1,
-  binOp2d_ = 2,
+  binOp0d_ = 0, ///< both operand are number_
+  binOp1d_ = 1, ///< both operand are vector_ or point_
+  binOp2d_ = 2, ///< both operand are array2d_ or square_
   binOpDiag2d_,
   binOp2dDiag_,
   binOp2dUp_,
@@ -171,31 +173,36 @@ namespace hidden {
  *  @brief Traits class for the BinaryOperator
  */
 template<typename BinaryOp, typename Lhs, typename Rhs>
-struct Traits< BinaryOperator <BinaryOp, Lhs, Rhs> >
+struct Traits< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   enum
   {
+    // find the kind of binary operator and the Structure using helper class BinaryTraits
     binOpKind_ = BinaryTraits<Lhs::structure_, Rhs::structure_>::binOpKind_,
-    // helper flags
-    is0D_      =  EGAL(Lhs,number_)&&EGAL(Rhs,number_),
-    is1D_      =  (EGAL(Lhs,vector_)||EGAL(Lhs,point_)) && (EGAL(Rhs,vector_)||EGAL(Rhs,point_)),
-    is2D_      =   (EGAL(Lhs,array2D_)||EGAL(Lhs,square_)||EGAL(Lhs,diagonal_)||EGAL(Lhs,lower_triangular_)||EGAL(Lhs,upper_triangular_))
-                 &&(EGAL(Rhs,array2D_)||EGAL(Rhs,square_)||EGAL(Rhs,diagonal_)||EGAL(Rhs,lower_triangular_)||EGAL(Rhs,upper_triangular_)),
-    is1D1D_    = ((EGAL(Lhs,vector_)||EGAL(Lhs,point_) ) && (EGAL(Rhs,diagonal_)))
-               ||((EGAL(Lhs,diagonal_)) && (EGAL(Rhs,vector_)||EGAL(Rhs,point_))),
-
-    // find the Structure using helper class BinaryTraits
     structure_ = hidden::BinaryTraits<Lhs::structure_, Rhs::structure_>::structure_,
+    // helper flags
+    isLhs1D_ = EGAL(Lhs,vector_)||EGAL(Lhs,point_)||EGAL(Lhs,diagonal_),
+    isRhs1D_ = EGAL(Rhs,vector_)||EGAL(Rhs,point_)||EGAL(Rhs,diagonal_),
+    isLhs2D_ = EGAL(Lhs,array2D_)||EGAL(Lhs,square_)||EGAL(Lhs,diagonal_)||EGAL(Lhs,lower_triangular_)||EGAL(Lhs,upper_triangular_),
+    isRhs2D_ = EGAL(Rhs,array2D_)||EGAL(Rhs,square_)||EGAL(Rhs,diagonal_)||EGAL(Rhs,lower_triangular_)||EGAL(Rhs,upper_triangular_),
+    isRes0D_ = EGAL(Lhs,number_) && EGAL(Rhs,number_),
+    isRes1D_ = (EGAL(Lhs,vector_)||EGAL(Lhs,point_)) && (EGAL(Rhs,vector_)||EGAL(Rhs,point_)),
+    isRes2D_ = isLhs2D_ && isRhs2D_,
+    is1D1D_  = isLhs1D_ && isRhs1D_,
+
     // preserve the Lhs storage orientation. Could be optimized ?
     orient_    = Lhs::orient_,
     // try fixed sizes for 2D containers
-    sizeRows_  = (((Lhs::sizeRows_== UnknownSize) && (is2D_)) ? int(Rhs::sizeRows_) : int(Lhs::sizeRows_)),
-    sizeCols_  = (((Lhs::sizeCols_== UnknownSize) && (is2D_)) ? int(Rhs::sizeCols_) : int(Lhs::sizeCols_)),
+    sizeRows_  = ((Lhs::sizeRows_== UnknownSize) ? int(Rhs::sizeRows_) : Lhs::sizeRows_),
+    sizeCols_  = ((Lhs::sizeCols_== UnknownSize) ? int(Rhs::sizeCols_) : Lhs::sizeCols_),
     storage_   = (Lhs::storage_ == int(Arrays::dense_)) || (Rhs::storage_ == int(Arrays::dense_))
                ?  int(Arrays::dense_) : int(Arrays::sparse_)
   };
   // handle the case when the type is different in LHS and Rhs.
   typedef typename BinaryOp::result_type Type;
+  typedef RowOperator< BinaryOperator<BinaryOp, Lhs, Rhs> > Row;
+  typedef ColOperator< BinaryOperator<BinaryOp, Lhs, Rhs> > Col;
+
 };
 
 } // end namespace hidden
@@ -233,19 +240,18 @@ template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperator : public BinaryOperatorBase< BinaryOp, Lhs, Rhs >
                      , public TRef<1>
 {
-  protected:
-    Lhs const& lhs_;
-    Rhs const& rhs_;
-    BinaryOp const functor_;
-
   public:
     typedef BinaryOperatorBase<BinaryOp, Lhs, Rhs, hidden::Traits< BinaryOperator <BinaryOp, Lhs, Rhs> >::binOpKind_> Base;
 
+    typedef typename hidden::Traits<BinaryOperator >::Type Type;
+    typedef typename hidden::Traits<BinaryOperator >::Row Row;
+    typedef typename hidden::Traits<BinaryOperator >::Col Col;
+
     enum
     {
-      is0D_      = hidden::Traits<BinaryOperator>::is0D_,
-      is1D_      = hidden::Traits<BinaryOperator>::is1D_,
-      is2D_      = hidden::Traits<BinaryOperator>::is2D_,
+      isRes0D_   = hidden::Traits<BinaryOperator>::isRes0D_,
+      isRes1D_   = hidden::Traits<BinaryOperator>::isRes1D_,
+      isRes2D_   = hidden::Traits<BinaryOperator>::isRes2D_,
       is1D1D_    = hidden::Traits<BinaryOperator>::is1D1D_,
 
       structure_ = hidden::Traits<BinaryOperator>::structure_,
@@ -255,41 +261,46 @@ class BinaryOperator : public BinaryOperatorBase< BinaryOp, Lhs, Rhs >
       storage_   = hidden::Traits<BinaryOperator>::storage_,
 
       // All the valid cases for binary operators
-      isValid_ =( is0D_ || is1D_  || is2D_ || is1D1D_)
+      isValid_ =( isRes0D_ || isRes1D_  || isRes2D_ || is1D1D_)
     };
     inline BinaryOperator( const Lhs& lhs, const Rhs& rhs, const BinaryOp& func = BinaryOp())
-                         : Base(), lhs_(lhs), rhs_(rhs), functor_(func)
-    { // FIXME : not safe. Add more test at compile time (and runtime ?)
+                            : Base(), lhs_(lhs), rhs_(rhs), functor_(func)
+    { // FIXME : not safe. Add more test in the 1D case at compile time (and runtime ?)
       STK_STATICASSERT_BINARY_OPERATOR_MISMATCH( isValid_ );
       STK_STATICASSERT_COLS_DIMENSIONS_MISMATCH(!( (int(Lhs::sizeCols_) != UnknownSize)
                                                &&  (int(Rhs::sizeCols_) != UnknownSize)
-                                               &&  (int(Lhs::sizeCols_) != Rhs::sizeCols_)
-                                               &&  (is2D_)
+                                               &&  (int(Lhs::sizeCols_) != int(Rhs::sizeCols_))
+                                               &&  (isRes2D_)
                                                  ));
       STK_STATICASSERT_ROWS_DIMENSIONS_MISMATCH(!( (int(Lhs::sizeRows_) != UnknownSize)
                                                &&  (int(Rhs::sizeRows_) != UnknownSize)
-                                               &&  (int(Lhs::sizeRows_) != Rhs::sizeRows_)
-                                               &&  (is2D_)
+                                               &&  (int(Lhs::sizeRows_) != int(Rhs::sizeRows_))
+                                               &&  (isRes2D_)
                                                  ));
-      if ((lhs.rows() != rhs.rows() || lhs.cols() != rhs.cols()) && (is2D_))
-      { STKRUNTIME_ERROR_NO_ARG(BinaryOperator, sizes mismatch for 2D array);}
+      if ((lhs.rows() != rhs.rows()) && (isRes2D_))
+      { STKRUNTIME_ERROR_2ARG(BinaryOperator, lhs.rows(), rhs.rows(), Rows sizes mismatch for 2D array);}
+      if (( lhs.cols() != rhs.cols()) && (isRes2D_))
+      { STKRUNTIME_ERROR_2ARG(BinaryOperator, lhs.cols(), rhs.cols(), Columns sizes mismatch for 2D array);}
     }
     /**  @return the range of the rows */
     inline Range const rows() const { return lhs_.rows();}
     /** @return the range of the columns */
     inline Range const cols() const { return lhs_.cols();}
     /** @return the fixed size type if available to enable compile time optimizations */
-    inline int sizeRowsImpl() const
-    { return (sizeRows_==UnknownSize) ? lhs_.sizeRows() : sizeRows_;}
+    inline int sizeRowsImpl() const { return((sizeRows_ != UnknownSize) ? sizeRows_ : rhs_.sizeRows());}
     /** @return the fixed size type if available to enable compile time optimizations */
-    inline int sizeColsImpl() const
-    { return (sizeCols_==UnknownSize) ? lhs_.sizeCols() : sizeCols_;}
+    inline int sizeColsImpl() const { return((sizeCols_ != UnknownSize) ? sizeCols_ : rhs_.sizeCols());}
     /** @return the left hand side expression */
     inline Lhs const& lhs() const { return lhs_; }
     /** @return the right hand side nested expression */
     inline Rhs const& rhs() const { return rhs_; }
     /** @return the functor representing the binary operation */
     inline BinaryOp const& functor() const { return functor_; }
+
+  protected:
+    Lhs const& lhs_;
+    Rhs const& rhs_;
+    BinaryOp const functor_;
 };
 
 /** @ingroup Arrays
@@ -297,10 +308,10 @@ class BinaryOperator : public BinaryOperatorBase< BinaryOp, Lhs, Rhs >
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase<BinaryOp, Lhs, Rhs, Arrays::binOp0d_>
-      : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+      : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
     /** accesses to the element */
@@ -313,10 +324,10 @@ class BinaryOperatorBase<BinaryOp, Lhs, Rhs, Arrays::binOp0d_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase<BinaryOp, Lhs, Rhs, Arrays::binOp1d_>
-      : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+      : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     /** constructor. */
     inline BinaryOperatorBase() : Base()
     {}
@@ -334,10 +345,10 @@ class BinaryOperatorBase<BinaryOp, Lhs, Rhs, Arrays::binOp1d_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOp2d_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::result_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -351,10 +362,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOp2d_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpDiag2d_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param1_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -369,10 +380,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpDiag2d_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOp2dDiag_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param2_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -387,10 +398,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOp2dDiag_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOp2dUp_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param2_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -405,10 +416,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOp2dUp_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpUp2d_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param2_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -423,10 +434,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpUp2d_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOp2dLow_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param2_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -441,10 +452,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOp2dLow_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpLow2d_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param2_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -459,10 +470,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpLow2d_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpDiagUp_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param1_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -478,10 +489,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpDiagUp_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpUpDiag_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param2_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -497,10 +508,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpUpDiag_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpDiagLow_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param1_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -516,10 +527,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpDiagLow_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpLowDiag_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param2_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -535,10 +546,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpLowDiag_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpUpUp_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param2_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -553,10 +564,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpUpUp_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpLowLow_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param2_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -571,10 +582,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpLowLow_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpUpLow_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param2_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}
@@ -590,10 +601,10 @@ class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpUpLow_>
   **/
 template<typename BinaryOp, typename Lhs, typename Rhs>
 class BinaryOperatorBase< BinaryOp, Lhs, Rhs, Arrays::binOpLowUp_>
-                        : public ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
+                        : public ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> >
 {
   public:
-    typedef ArrayBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
+    typedef ExprBase< BinaryOperator<BinaryOp, Lhs, Rhs> > Base;
     typedef typename BinaryOp::param2_type Type;
     /** constructor. */
     inline BinaryOperatorBase() : Base() {}

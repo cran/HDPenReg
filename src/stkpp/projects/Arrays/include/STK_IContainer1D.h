@@ -30,13 +30,18 @@
  **/
 
 /** @file STK_IContainer1D.h
- *  @brief Interface Base class for 1D Containers.
+ *  @brief Interface base class for the 1D containers, this is an internal
+ *  header file, included by other Containers library headers.
+ *
+ *  You should not attempt to use it directly but rather used one of the
+ *  derived class like Array1D, except if you want to create your own
+ *  Container Class.
  **/
 
 #ifndef STK_ICONTAINER1D_H
 #define STK_ICONTAINER1D_H
 
-#include "../../STKernel/include/STK_Range.h"
+#include "STKernel/include/STK_Range.h"
 
 namespace STK
 {
@@ -69,15 +74,15 @@ class IContainer1D
     /**  get the index of the first element
      *   @return the index of the first element
      */
-    inline int const& firstIdx() const { return range_.firstIdx();}
+    inline int begin() const { return range_.begin();}
     /**  get the index of the last element
      *   @return the index of the last element
      */
-    inline int const& lastIdx() const  { return range_.lastIdx();}
+    inline int lastIdx() const  { return range_.lastIdx();}
     /**  get the number of elements
      *   @return the size of the container
      */
-    inline int const& size() const  { return range_.size();};
+    inline int size() const  { return range_.size();};
     /**  get the range of the container
      *   @return the range of the container
      */

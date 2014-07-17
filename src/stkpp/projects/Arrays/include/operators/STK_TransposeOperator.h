@@ -23,7 +23,7 @@
 */
 
 /*
- * Project:  stkpp::Deriveds
+ * Project:  stkpp::Arrays
  * created on: 17 oct. 2012
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
@@ -35,13 +35,15 @@
 #ifndef STK_TRANSPOSEOPERATOR_H
 #define STK_TRANSPOSEOPERATOR_H
 
+#include "STK_SliceOperators.h"
+
 namespace STK
 {
 
 namespace hidden
 {
 /** @ingroup hidden
-  * Trait class for transposed array.
+  * Helper Traits class for transposed operator.
   **/
 template<int Structure_> struct TransposeTraits;
 
@@ -81,32 +83,34 @@ namespace hidden
 /** @ingroup hidden
  *  @brief Traits class for the transposed operator
  */
-template<typename Derived>
-struct Traits< TransposeOperator <Derived> >
+template<typename Lhs>
+struct Traits< TransposeOperator <Lhs> >
 {
-  typedef typename Derived::Type Type;
+    typedef RowOperator<TransposeOperator < Lhs> > Row;
+    typedef ColOperator<TransposeOperator < Lhs> > Col;
+  typedef typename Lhs::Type Type;
   enum
   {
-    structure_ = TransposeTraits<Derived::structure_>::structure_,
-    orient_    = !Derived::orient_,
-    sizeRows_  = Derived::sizeCols_,
-    sizeCols_  = Derived::sizeRows_,
-    storage_   = Derived::storage_
+    structure_ = TransposeTraits<Lhs::structure_>::structure_,
+    orient_    = !Lhs::orient_,
+    sizeRows_  = Lhs::sizeCols_,
+    sizeCols_  = Lhs::sizeRows_,
+    storage_   = Lhs::storage_
   };
 };
 
 } // end namespace hidden
 
 // forward declaration
-template<typename Derived> class TransposeOperatorBase;
+template<typename Lhs> class TransposeOperatorBase;
 
 
-/** @class TransposeOperator
-  * @ingroup Arrays
+/** @ingroup Arrays
+ *  @class TransposeOperator
   *
   * \brief Generic expression when an expression is transposed
   *
-  * @tparam Array the type of the expression to which we are applying the
+  * @tparam Lhs the type of the expression to which we are applying the
   * transpose operator.
   *
   * This class represents an expression where a transpose operator is applied to
@@ -115,55 +119,49 @@ template<typename Derived> class TransposeOperatorBase;
   * Most of the time, this is the only way that it is used, so you typically
   * don't have to name TransposeOperator type explicitly.
   */
-template< typename Derived>
-class TransposeOperator  : public TransposeOperatorBase< Derived >, public TRef<1>
+template< typename Lhs>
+class TransposeOperator  : public TransposeOperatorBase< Lhs >, public TRef<1>
 {
   public:
-    typedef TransposeOperatorBase< Derived > Base;
-    typedef typename hidden::Traits< TransposeOperator<Derived> >::Type Type;
+    typedef TransposeOperatorBase< Lhs > Base;
+    typedef typename hidden::Traits< TransposeOperator<Lhs> >::Type Type;
+    typedef typename hidden::Traits< TransposeOperator<Lhs> >::Row Row;
+    typedef typename hidden::Traits< TransposeOperator<Lhs> >::Col Col;
     enum
     {
-        structure_ = hidden::Traits< TransposeOperator<Derived> >::structure_,
-        orient_    = hidden::Traits< TransposeOperator<Derived> >::orient_,
-        sizeRows_  = hidden::Traits< TransposeOperator<Derived> >::sizeRows_,
-        sizeCols_  = hidden::Traits< TransposeOperator<Derived> >::sizeCols_,
-        storage_   = hidden::Traits< TransposeOperator<Derived> >::storage_
+        structure_ = hidden::Traits< TransposeOperator<Lhs> >::structure_,
+        orient_    = hidden::Traits< TransposeOperator<Lhs> >::orient_,
+        sizeRows_  = hidden::Traits< TransposeOperator<Lhs> >::sizeRows_,
+        sizeCols_  = hidden::Traits< TransposeOperator<Lhs> >::sizeCols_,
+        storage_   = hidden::Traits< TransposeOperator<Lhs> >::storage_
     };
     /** Constructor */
-    inline TransposeOperator( Derived const& rhs) : Base(), rhs_(rhs) {}
+    inline TransposeOperator( Lhs const& lhs) : Base(), lhs_(lhs) {}
     /**  @return the range of the rows */
-    inline Range const rows() const { return rhs_.cols();}
+    inline Range const rows() const { return lhs_.cols();}
     /** @return the range of the Columns */
-    inline Range const cols() const { return rhs_.rows();}
+    inline Range const cols() const { return lhs_.rows();}
     /** @return the number of rows of the transposed expression */
-    inline int const sizeRowsImpl() const { return rhs_.sizeCols();}
+    inline int const sizeRowsImpl() const { return lhs_.sizeCols();}
     /** @return the number of columns of the transposed expression */
-    inline int const sizeColsImpl() const { return rhs_.sizeRows();}
+    inline int const sizeColsImpl() const { return lhs_.sizeRows();}
 
-    /** @return the right hand side expression */
-    inline Derived const& rhs() const { return rhs_; }
+    /** @return the left hand side expression */
+    inline Lhs const& lhs() const { return lhs_; }
 
   protected:
-    Derived const& rhs_;
+    Lhs const& lhs_;
 };
 
 /** @ingroup Arrays
   * @brief implement the access to the elements in the (2D) general case.
   **/
-template< typename Derived>
-class TransposeOperatorBase : public ArrayBase< TransposeOperator< Derived> >
+template< typename Lhs>
+class TransposeOperatorBase : public ExprBase< TransposeOperator< Lhs> >
 {
   public:
-  typedef typename hidden::Traits< TransposeOperator<Derived> >::Type Type;
-  enum
-  {
-      structure_ = hidden::Traits< TransposeOperator<Derived> >::structure_,
-      orient_    = hidden::Traits< TransposeOperator<Derived> >::orient_,
-      sizeRows_  = hidden::Traits< TransposeOperator<Derived> >::sizeRows_,
-      sizeCols_  = hidden::Traits< TransposeOperator<Derived> >::sizeCols_,
-      storage_   = hidden::Traits< TransposeOperator<Derived> >::storage_
-  };
-    typedef ArrayBase< TransposeOperator< Derived> > Base;
+    typedef typename hidden::Traits< TransposeOperator<Lhs> >::Type Type;
+    typedef ExprBase< TransposeOperator< Lhs> > Base;
     /** constructor. */
     inline TransposeOperatorBase() : Base() {}
     /** @return the element (i,j) of the transposed expression.
@@ -171,15 +169,15 @@ class TransposeOperatorBase : public ArrayBase< TransposeOperator< Derived> >
      *  @param j index of the column
      **/
     inline Type const elt2Impl(int i, int j) const
-    { return (this->asDerived().rhs().elt(j, i));}
+    { return (this->asDerived().lhs().elt(j, i));}
     /** @return the element ith element of the transposed expression
      *  @param i index of the ith element
      **/
     inline Type const elt1Impl(int i) const
-    { return (this->asDerived().rhs().elt(i));}
+    { return (this->asDerived().lhs().elt(i));}
     /** accesses to the element of the transposed expression */
     inline Type const elt0Impl() const
-    { return (this->asDerived().rhs().elt());}
+    { return (this->asDerived().lhs().elt());}
 };
 
 } // namespace STK

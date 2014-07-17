@@ -28,22 +28,22 @@
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
-/** @file STK_ArrayBaseProduct.h
+/** @file STK_ExprBaseProduct.h
  *  @brief In this file we define the matrix-matrix product and its particular cases.
  **/
 
 
-#ifndef STK_ARRAYPRODUCT_H
-#define STK_ARRAYPRODUCT_H
+#ifndef STK_EXPRBASEPRODUCT_H
+#define STK_EXPRBASEPRODUCT_H
 
-#include "../../STKernel/include/STK_StaticAssert.h"
+#include "Sdk/include/STK_StaticAssert.h"
 
 namespace STK
 {
 
 // this is the different class that will handle the product
 // there will be specialized for the different product cases
-// in the directory product
+// in the product folder
 template<typename Lhs, typename Rhs> class DotProduct;
 
 template<typename Lhs, typename Rhs> class MatrixByMatrixProduct;
@@ -52,6 +52,8 @@ template<typename Lhs, typename Rhs> class MatrixByDiagonalProduct;
 
 template<typename Lhs, typename Rhs> class PointByMatrixProduct;
 template<typename Lhs, typename Rhs> class PointByDiagonalProduct;
+
+template<typename Lhs, typename Rhs> class VectorByPointProduct;
 
 template<typename Lhs, typename Rhs> class DiagonalByMatrixProduct;
 template<typename Lhs, typename Rhs> class DiagonalByVectorProduct;
@@ -80,6 +82,11 @@ struct ProductSelector<Lhs, Rhs, Arrays::point_, RStructure_>
 template<typename Lhs, typename Rhs>
 struct ProductSelector<Lhs, Rhs, Arrays::point_, Arrays::diagonal_>
 {  typedef PointByDiagonalProduct<Lhs, Rhs> ReturnType;};
+
+
+template<typename Lhs, typename Rhs>
+struct ProductSelector<Lhs, Rhs, Arrays::vector_, Arrays::point_>
+{  typedef VectorByPointProduct<Lhs, Rhs> ReturnType;};
 
 
 template<typename Lhs, typename Rhs, int LStructure_>
@@ -172,7 +179,7 @@ struct ProductReturnType
 template<typename Derived>
 template<typename Rhs>
 inline typename ProductReturnType<Derived, Rhs>::ReturnType const
-ArrayBase<Derived>::operator*( ArrayBase<Rhs> const& other) const
+ExprBase<Derived>::operator*( ExprBase<Rhs> const& other) const
 {
   enum
   {
@@ -199,34 +206,6 @@ ArrayBase<Derived>::operator*( ArrayBase<Rhs> const& other) const
   return typename ProductReturnType<Derived, Rhs>::ReturnType(this->asDerived(), other.asDerived());
 }
 
-
-/*  @returns the dot product of *this with other. */
-template<class Derived>
-template<class Rhs>
-typename STK::hidden::Promote<typename STK::hidden::Traits<Derived>::Type, typename Rhs::Type>::result_type const
-ArrayBase<Derived>::dot(ArrayBase<Rhs> const& other) const
-{
-  STK_STATICASSERT_VECTOR_ONLY(Derived);
-  STK_STATICASSERT_VECTOR_ONLY(Rhs);
-  return BinaryOperator< ProductOp<Type, typename hidden::Traits<Rhs>::Type>
-                       , Derived
-                       , Rhs>(this->asDerived(), other.asDerived()).sum();
-}
-
-/*  @returns the dot product of *this with other. */
-template<class Derived>
-template<class Rhs>
-typename STK::hidden::Promote<typename STK::hidden::Traits<Derived>::Type, typename Rhs::Type>::result_type const
-ArrayBase<Derived>::dotSafe(ArrayBase<Rhs> const& other) const
-{
-  STK_STATICASSERT_VECTOR_ONLY(Derived);
-  STK_STATICASSERT_VECTOR_ONLY(Rhs);
-  return BinaryOperator< ProductOp<Type, typename hidden::Traits<Rhs>::Type>
-                       , Derived
-                       , Rhs>(this->asDerived(), other.asDerived()).sumSafe();
-}
-
-
 } // namespace STK
 
-#endif /* STK_ARRAYPRODUCT_H */
+#endif /* STK_EXPRBASEPRODUCT_H */

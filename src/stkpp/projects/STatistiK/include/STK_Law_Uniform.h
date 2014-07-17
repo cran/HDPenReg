@@ -36,7 +36,7 @@
 #define STK_LAW_UNIFORM_H
 
 #include "STK_Law_IUnivLaw.h"
-#include "../../STKernel/include/STK_Real.h"
+#include "STKernel/include/STK_Real.h"
 
 namespace STK
 {
@@ -44,14 +44,13 @@ namespace STK
 namespace Law
 {
 /** @ingroup Laws
- *  @brief class for the Uniform random generator.
+ *  @brief class for the Uniform law distribution.
  * 
  *  The Uniform distribution, is a continuous probability
  *  distribution with probability pdf function
  *  \f[
- *    f(x; \lambda) = \frac{1}{\lambda} e^{- x/\lambda} 1_{x\geq 0}
+ *    f(x; a, b) = \frac{1}{b-a} 1_{ a \leq x \leq b}.
  *  \f]
- *  where \f$\lambda>0\f$ is the scale parameter.
 **/
 class Uniform : public IUnivLaw<Real>
 {
@@ -105,13 +104,13 @@ class Uniform : public IUnivLaw<Real>
      *  @param a the lower bound
      *  @param b the upper bound
      **/
-    static Real pdf( Real const& x, Real a, Real b);
+    static Real pdf( Real const& x, Real a=0., Real b=1.);
     /** Give the value of the log-pdf at x.
      *  @param p a probablility
      *  @param a the lower bound
      *  @param b the upper bound
      **/
-    static Real lpdf( Real const& p, Real a, Real b);
+    static Real lpdf( Real const& p, Real a=0., Real b=1.);
 
   protected:
     /** The lower bound. */

@@ -40,8 +40,8 @@
 #include <cmath>
 
 #include "STK_IModelBase.h"
-#include "../../STKernel/include/STK_Macros.h"
-#include "../../STatistiK/include/STK_Law_IMultiLaw.h"
+#include "Sdk/include/STK_Macros.h"
+#include "STatistiK/include/STK_Law_IMultiLaw.h"
 
 namespace STK
 {
@@ -118,7 +118,7 @@ class StatisticalModel : public IModelBase
     inline void setData( Data const& data)
     { p_data_ = &data;
       this->setNbSample(p_data_->sizeRows());
-      this->setNbVar(p_data_->sizeCols()) ;
+      this->setNbVariable(p_data_->sizeCols()) ;
     }
     /** Set the data set of the model.
      *  @param p_data the data set of the model
@@ -128,7 +128,7 @@ class StatisticalModel : public IModelBase
       if (p_data_)
       {
         this->setNbSample(p_data_->sizeRows());
-        this->setNbVar(p_data_->sizeCols()) ;
+        this->setNbVariable(p_data_->sizeCols()) ;
       }
     }
 

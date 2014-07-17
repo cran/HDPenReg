@@ -23,7 +23,7 @@
 */
 
 /*
- * Project:  Base
+ * Project:  STKernel::Base
  * Purpose:  Define the fundamental type String.
  * Author:   Serge Iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  *
@@ -39,15 +39,10 @@
 // C++ headers
 #include <string>
 
-// STK headers
-#include "STK_Char.h"
-#include "STK_Arithmetic.h"
-#include "STK_IdTypeImpl.h"
 #include "STK_Stream.h"
 
 namespace STK
 {
-
 /** @ingroup Base
  *  @brief STK fundamental type of a String.
  *
@@ -94,25 +89,99 @@ struct Arithmetic<String> : public std::numeric_limits<String>
 template<>
 struct IdTypeImpl<String>
 {
-  /** @return the IdType string */
-  static IdType returnType() { return(string);}
+  /** @return the IdType string_ */
+  static IdType returnType() { return(string_);}
 };
 
 /** @ingroup Base
-  * @brief Representation of a Not Available value.
-  *
-  * By default we represent a Not Available value of any type as a "." (like in
-  * (SAS(R))) for the end-user. This value can be overloaded at runtime.
+  * @brief Set a new value to the na String representation and modify
+  * stringNaSize accordingly.
   **/
-static String stringNa  = String(_T("."));
+void setStringNa(String const& na);
 
 /** @ingroup Base
-  * @brief Size (in number of Char) of a Not Available value.
-  * We represent a Not Available value of any type as a "." (like in
-  * (SAS(R))) for the end-user.
-  **/
-static inline int stringNaSize() { return (int)stringNa.size();}
+ *  @brief convert the characters of the String to upper case
+ *
+ *  @param s The String to convert
+ *  @return the string converted to upper case
+ **/
+String& toUpperString( String& s);
 
+/** @ingroup Base
+ *  @brief convert the characters of the String to upper case
+ *
+ *  @param s The String to convert
+ *  @return a copy of @c s in upper case
+ **/
+String toUpperString( String const& s);
+
+}
+
+#include "STK_Proxy.h"
+
+namespace STK
+{
+/** @ingroup Base
+ *  @brief convert a String to Type
+ *
+ *  This method return true if the String @c s could be converted into
+ *  a correct Type t.
+ *  http://www.codeguru.com/forum/showpost.php?p=678440&postcount=1
+ *  http://c.developpez.com/faq/cpp/?page=strings#STRINGS_is_type
+ *
+ *  @note The operator >> have been overloaded for the @c Proxy class in order
+ *  to return a NA value if the conversion fail.
+ *
+ *  @param t The value to get from the String
+ *  @param s the String to convert
+ *  @param f flags
+ *  @return @c true if the conversion succeed, @c false otherwise
+ **/
+template <class Type>
+bool stringToType( Type  &t, String const& s
+                 , std::ios_base& (*f)(std::ios_base&) = std::dec
+                 )
+{ return (istringstream(s) >> f >>  Proxy<Type>(t)).fail();}
+
+/** @ingroup Base
+ *  @brief convert a String to Type without error check
+ *
+ *  This method return the String @c s converted into a correct Type t
+ *  without formatting.
+ *  http://www.codeguru.com/forum/showpost.php?p=678440&postcount=1
+ *  http://c.developpez.com/faq/cpp/?page=strings#STRINGS_is_type
+ *
+ *  @note if the conversion fail, the method return a NA value if available
+ *  for this @c Type.
+ *  @param s the String to convert
+ *  @return The value to get from the String
+ **/
+template <class Type>
+Type stringToType( String const& s)
+{
+  Type t;
+  istringstream iss(s);
+  iss >> Proxy<Type>(t);
+  return(t);
+}
+
+/** @ingroup Base
+ *  @brief convert a Type to String
+ *
+ *  This method return the Type t into a String s.
+ *  @see http://www.codeguru.com/forum/showpost.php?p=678440&postcount=1
+ *  @see http://c.developpez.com/faq/cpp/?page=strings#STRINGS_convertform
+ *
+ *  @param t The value to convert to String
+ *  @param f flag, by default write every number in decimal
+ **/
+template <class Type>
+String typeToString( Type const& t, std::ios_base& (*f)(std::ios_base&) = std::dec)
+{
+  ostringstream oss;
+  oss << f << Proxy<Type>(t);
+  return oss.str();
+}
 
 } // namespace STK
 

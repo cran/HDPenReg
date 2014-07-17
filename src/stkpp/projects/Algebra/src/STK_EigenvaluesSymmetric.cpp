@@ -33,17 +33,16 @@
  *  @brief In this file we implement the EigenvaluesSymmetric class.
  **/
 
-#include "../../Arrays/include/STK_Array2DVector.h"
+#include "Arrays/include/STK_Array2DVector.h"
 
 #include "../include/STK_Householder.h"
 #include "../include/STK_Givens.h"
-#include "../include/STK_LinAlgebra1D.h"
 
 #include "../include/STK_EigenvaluesSymmetric.h"
 
 
-#ifdef STK_VERBOSE
-#include "../../Arrays/include/STK_Display.h"
+#ifdef STK_ALGEBRA_VERBOSE
+#include "Arrays/include/STK_Display.h"
 #endif
 
 #define MAXITER 100
@@ -57,7 +56,7 @@ EigenvaluesSymmetric::EigenvaluesSymmetric( MatrixSquare const* p_data)
                                           : Runner(p_data)
                                           , P_()
                                           , D_()
-                                          , first_()
+                                          , begin_()
                                           , last_()
                                           , norm_(0)
                                           , rank_(0)
@@ -67,7 +66,7 @@ EigenvaluesSymmetric::EigenvaluesSymmetric( MatrixSquare const& data)
                                           : Runner(data)
                                           , P_()
                                           , D_()
-                                          , first_()
+                                          , begin_()
                                           , last_()
                                           , norm_(0)
                                           , rank_(0)
@@ -79,7 +78,7 @@ EigenvaluesSymmetric::EigenvaluesSymmetric( EigenvaluesSymmetric const& S)
                                           : Runner(S)
                                           , P_(S.P_)
                                           , D_(S.D_)
-                                          , first_(S.first_)
+                                          , begin_(S.begin_)
                                           , last_(S.last_)
                                           , norm_(S.norm_)
                                           , rank_(S.rank_)
@@ -92,7 +91,7 @@ EigenvaluesSymmetric& EigenvaluesSymmetric::operator=( EigenvaluesSymmetric cons
 {
   P_     = S.P_;        // Matrix P
   D_     = S.D_;        // Singular values
-  first_ = S.first_;    // first value
+  begin_ = S.begin_;    // first value
   last_  = S.last_;     // last value
   norm_  = S.norm_;     // norm of the matrix
   rank_  = S.rank_;     // rank of the matrix
@@ -130,12 +129,12 @@ void EigenvaluesSymmetric::ginv(MatrixSquare& res)
   // compute tolerance
   Real tol = Arithmetic<Real>::epsilon() * norm_;
   // compute PDP'
-  for (int i = first_; i<=last_; i++)
+  for (int i = begin_; i<=last_; i++)
   {
-    for (int j = first_; j<=last_; j++)
+    for (int j = begin_; j<=last_; j++)
     {
       res(j,i) = 0.0;
-      for (int k = first_; k<=last_; k++)
+      for (int k = begin_; k<=last_; k++)
       {
         if (std::abs(D_[k]) > tol)
           res(j,i) += (P_(i, k) * P_(j, k)) / D_[k];
@@ -149,7 +148,7 @@ void EigenvaluesSymmetric::ginv(MatrixSquare& res)
 /* Compute diagonalization of the symmetric matrix */
 bool EigenvaluesSymmetric::run()
 {
-#ifdef STK_VERBOSE
+#ifdef STK_ALGEBRA_VERBOSE
     stk_cout << _T("Entering in EigenvaluesSymmetric::run()\n");
 #endif
   try
@@ -160,28 +159,28 @@ bool EigenvaluesSymmetric::run()
     // copy data
     P_ = *p_data_;
     D_.resize(P_.range());
-    first_ = P_.firstIdx();
+    begin_ = P_.begin();
     last_ = P_.lastIdx();
     norm_ = 0.;
     rank_ = 0;
     det_ = 0.;
     // tridiagonalize P_
-#ifdef STK_VERBOSE
+#ifdef STK_ALGEBRA_VERBOSE
     stk_cout << _T("calling EigenvaluesSymmetric::tridiagonalize()\n");
 #endif
     tridiagonalize();
     // compute P_
-#ifdef STK_VERBOSE
+#ifdef STK_ALGEBRA_VERBOSE
     stk_cout << _T("calling EigenvaluesSymmetric::compHouse()\n");
 #endif
     compHouse();
     // Diagonalize
-#ifdef STK_VERBOSE
+#ifdef STK_ALGEBRA_VERBOSE
     stk_cout << _T("calling EigenvaluesSymmetric::diagonalize()\n");
 #endif
     diagonalize();
     // compute rank, norm and determinant
-#ifdef STK_VERBOSE
+#ifdef STK_ALGEBRA_VERBOSE
     stk_cout << _T("calling EigenvaluesSymmetric::compEstimates()\n");
 #endif
     compEstimates();
@@ -215,16 +214,16 @@ bool EigenvaluesSymmetric::run(Vector const& weights)
     // copy data
     P_ = p_data_->asDerived();
     D_.resize(P_.range());
-    first_ = P_.firstIdx();
+    begin_ = P_.begin();
     last_ = P_.lastIdx();
     norm_ = 0.;
     rank_ = 0;
     det_ = 0.;
     // weight rows and columns of the container
-    for (int i= first_; i <= last_; ++i)
+    for (int i= begin_; i <= last_; ++i)
     {
       Real aux = Real(sqrt((double)weights[i]));
-      for (int j= P_.firstIdx(); j <= P_.lastIdx(); ++i)
+      for (int j= P_.begin(); j <= P_.lastIdx(); ++i)
       {
         P_(i,j) *= aux;
         P_(j,i) *= aux;
@@ -241,12 +240,12 @@ bool EigenvaluesSymmetric::run(Vector const& weights)
     compEstimates();
 
     // Unweighed rows and columns of the rotation
-    for (int i= first_; i <= last_; ++i)
+    for (int i= begin_; i <= last_; ++i)
     {
       Real aux = Real(sqrt(weights[i]));
       if (aux)
       {
-        for (int j= P_.firstIdx(); j <= P_.lastIdx(); ++i)
+        for (int j= P_.begin(); j <= P_.lastIdx(); ++i)
         {
           P_(i,j) /= aux;
           P_(j,i) /= aux;
@@ -269,14 +268,14 @@ bool EigenvaluesSymmetric::run(Vector const& weights)
 void EigenvaluesSymmetric::tridiagonalize()
 {
   // Upper diagonal values
-  F_.resize(Range(first_-1, last_, 0));
+  F_.resize(Range(begin_-1, last_, 0));
   F_.front() = 0.0; F_.back() =0.0;
   // initial range of the Householder vectors
-  Range range1(Range(first_+1, last_, 0));
-  Range range2(Range(first_+2, last_, 0));
+  Range range1(Range(begin_+1, last_, 0));
+  Range range2(Range(begin_+2, last_, 0));
   // Bidiagonalisation of P_
   // loop on the cols and rows
-  for ( int iter=first_, iter1=first_+1, iter2=first_+2
+  for ( int iter=begin_, iter1=begin_+1, iter2=begin_+2
       ; iter<last_
       ; iter++, iter1++, iter2++, range1.incFirst(1), range2.incFirst(1)
       )
@@ -305,10 +304,15 @@ void EigenvaluesSymmetric::tridiagonalize()
       {
         // Computation of p_i = beta * P_ v using the lower part of P_
         // save p_i in the unusued part of D_ and compute p'v
-        aux1 += ( D_[i] = beta* (M1[i] + P_.row(i,Range(iter2,i,0)).dot(v.sub(Range(iter2,i,0)))
-                                       + P_.col(Range(i+1,last_,0),i).dot(v.sub(Range(i+1,last_,0)))
-                                )
-                ) * v[i];
+        Real aux = M1[i] /* *1.0 */;
+        for (int j=iter2; j<=i;    j++)  { aux += P_(i,j)*v[j];}
+        for (int j=i+1;   j<=last_; j++) { aux += P_(j,i)*v[j];}
+        // save p_i in the unusued part of D_ and compute p'v
+        aux1 += (D_[i] = beta*aux) * v[i];
+        //aux1 += ( D_[i] = beta* (M1[i] + P_.row(i,Range(iter2,i,0)).dot(v.sub(Range(iter2,i,0)))
+        //                               + P_.col(Range(i+1,last_,0),i).dot(v.sub(Range(i+1,last_,0)))
+        //                        )
+        //        ) * v[i];
       }
       // update diagonal element M_ii+= 2 v_i * q_i = 2* q_i (i=iter1)
       // aux = q_iter1 and aux1 = beta*<p,v>/2 (we don't save aux in D_)
@@ -321,7 +325,7 @@ void EigenvaluesSymmetric::tridiagonalize()
         // get q_i and save it in D_i=q_i = p_i + <p,v> * beta * v_i/2
         D_[i] += aux1 * v[i];
         // Compute P_ + u q' + q u',
-        // update the row i, first_ element
+        // update the row i, begin_ element
         M1[i] += D_[i] /* *1.0 */+ v[i] * aux;
         // update the row i: all cols under the diagonal
 //        P_.row(i, Range(iter2,i,0)) += (v.sub(Range(iter2,i,0)) * D_[i]
@@ -342,7 +346,7 @@ void EigenvaluesSymmetric::compHouse()
   // iter0 is the column of the Householder vector
   // iter is the current column to compute
   for ( int iter0=last_-1, iter=last_, iter1=last_+1
-      ; iter0>=first_
+      ; iter0>=begin_
       ; iter0--, iter--, iter1--)
   {
     // reference on the Householder vector
@@ -364,7 +368,7 @@ void EigenvaluesSymmetric::compHouse()
         for (int j=iter1; j<=last_; j++)
         { aux += P_(j, i) * v[j]; }
         aux *= beta;
-        // first_ row (iter)
+        // begin_ row (iter)
         P_(iter, i) = aux;
         // other rows
         for (int j=iter1; j<=last_; j++)
@@ -377,17 +381,17 @@ void EigenvaluesSymmetric::compHouse()
       { P_(iter, j) =0.0; P_(j, iter) = 0.0;}
     }
   }
-  // first_ row and first_ col
-  P_(first_, first_) = 1.0;
-  for (int j=first_+1; j<=last_; j++)
-  { P_(first_, j) = 0.0; P_(j, first_) = 0.0;}
+  // begin_ row and begin_ col
+  P_(begin_, begin_) = 1.0;
+  for (int j=begin_+1; j<=last_; j++)
+  { P_(begin_, j) = 0.0; P_(j, begin_) = 0.0;}
 }
 
 // diagonalize D_ and F_
 void EigenvaluesSymmetric::diagonalize()
 {
   // Diagonalisation of P_
-  for (int iend=last_; iend>=first_+1; iend--)
+  for (int iend=last_; iend>=begin_+1; iend--)
   {
     int iter;
     for (iter=0; iter<MAXITER; iter++) // fix the number of iterations max
@@ -400,7 +404,7 @@ void EigenvaluesSymmetric::diagonalize()
       { F_[iend-1] = 0.0 ; break;}
       // look for a single small subdiagonal element to split the matrix
       int ibeg = iend-1;
-      while (ibeg>first_)
+      while (ibeg>begin_)
       {
         ibeg--;
         // if a subdiagonal is zero, we get a sub matrix unreduced
@@ -458,8 +462,8 @@ void EigenvaluesSymmetric::diagonalize()
     } // end sort
   } // iend
   // sort first value
-  Real z = D_[first_];        // current value
-  for (int i=first_+1; i<=D_.lastIdx(); i++)
+  Real z = D_[begin_];        // current value
+  for (int i=begin_+1; i<=D_.lastIdx(); i++)
   { if (D_[i] > z)                // if the ith eigenvalue is greater
     {
       D_.swap(i-1, i);       // swap the cols
@@ -473,21 +477,21 @@ void EigenvaluesSymmetric::diagonalize()
 void EigenvaluesSymmetric::compEstimates()
 {
   // compute 2-norm_
-  norm_ = std::abs(D_[1]);
+  norm_ = std::max(std::abs(D_[begin_]),std::abs(D_[last_]));
   det_ = 1;
   // trivial case
   if (norm_ < Arithmetic<Real>::epsilon())
   {
     rank_ = 0;
     // compute determinant
-    for (int i = first_; i<= last_; i++)
+    for (int i = begin_; i<= last_; i++)
     { det_ *= D_[i];}
     return;
   }
   // compute tolerance
   Real tol = Arithmetic<Real>::epsilon();
   // compute rank_and determinant
-  for (int i = first_; i<= last_; i++)
+  for (int i = begin_; i<= last_; i++)
   {
     det_ *= D_[i];
     if (std::abs(D_[i])> tol ) rank_++;

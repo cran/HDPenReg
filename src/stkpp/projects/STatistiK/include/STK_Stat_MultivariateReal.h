@@ -36,12 +36,11 @@
 #ifndef STK_STAT_MULTIVARIATEREAL_H
 #define STK_STAT_MULTIVARIATEREAL_H
 
-#include "../../STKernel/include/STK_Arithmetic.h"
-#include "../../STKernel/include/STK_Misc.h"
+#include "STKernel/include/STK_Arithmetic.h"
+#include "STKernel/include/STK_Misc.h"
 
-#include "../../Arrays/include/STK_Array2DSquare.h"
+#include "Arrays/include/STK_Array2DSquare.h"
 
-#include "STK_Stat_UnivariateReal.h"
 #include "STK_Stat_BivariateRealReal.h"
 #include "STK_Stat_Multivariate.h"
 #include "STK_Stat_Functors.h"
@@ -120,9 +119,9 @@ class Multivariate<Array, Real> : public IRunnerUnsupervised< Array, typename Ar
     inline virtual Multivariate* clone() const { return new Multivariate(*this);}
 
     /** @return the number of variables in the p_data_ set (the number of columns) */
-    inline int const& nbVar() const {return nbVar_;}
+    inline int nbVariable() const {return nbVar_;}
     /** @return the number of samples in the p_data_ set (the number of rows) */
-    inline int const& nbSamples() const {return nbSamples_;}
+    inline int nbSamples() const {return nbSamples_;}
     /** @return the minimal values of the variables in a RowVector */
     inline RowVector const& min() const { return min_;}
     /** @return the maximal values of the variables in a RowVector  */

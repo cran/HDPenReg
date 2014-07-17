@@ -40,25 +40,11 @@
 
 #include <list>
 
-#include "../../STKernel/include/STK_Char.h"
-#include "../../STKernel/include/STK_String_Util.h"
-#include "../../STKernel/include/STK_Stream.h"
-#include "../../STKernel/include/STK_Integer.h"
+#include "STKernel/include/STK_Integer.h"
 
 namespace STK
 {
 
-/** @ingroup DManager
-  * @brief Representation of Not Available String value.
-  * Empty String : the empty string is also the NA value of the class String.
-  **/
-static const String STRING_EMPTY   = String();
-/** @ingroup DManager
- * @brief Representation of a New Line String. */
-static const String STRING_NL      = _T("\n");
-/** @ingroup DManager
- * @brief  Representation of a blank value. */
-static const String STRING_BLANK  = _T(" ");
 /** @ingroup DManager
  * @brief  default prefix of a variable name. */
 static const String STRING_VAR  = _T("Var");

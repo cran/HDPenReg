@@ -29,702 +29,1116 @@
  **/
 
 /** @file STK_Stat_Functors.h
- *  @brief This file contain the functors computing statistics.
+ *  @brief This file contain the functors computings statistics.
  **/
 
 #ifndef STK_STAT_FUNCTORS_H
 #define STK_STAT_FUNCTORS_H
 
-#include "../../STKernel/include/STK_MetaTemplate.h"
-#include "../../Arrays/include/STK_ITContainer2D.h"
-#include "../../DManager/include/STK_HeapSort.h"
+#include "Arrays/include/STK_ExprBaseFunctors.h"
+
 
 namespace STK
 {
 
+
 namespace Stat
 {
-
-template<typename Array, bool isVector > struct MinOp;
-template<typename Array, bool isVector > struct MaxOp;
-template<typename Array, bool isVector > struct MeanOp;
-template<typename Array, bool isVector > struct VarianceOp;
-template<typename Array, bool isVector > struct VarianceWithFixedMeanOp;
-
-} // namespace Stat
-
-namespace hidden
+/** @ingroup Stat
+ *  Compute the minimal value of the variable V
+ **/
+template<class Derived>
+struct MinOp
 {
-
-template<typename Array, template<class, bool> class StatOp>
-struct StatOpSelector
-{
-  enum
-  {
-    isVector_   =  (  Array::structure_ == int(Arrays::vector_)
-                   || Array::structure_ == int(Arrays::point_)
-                   )
-  };
-  typedef StatOp<Array, (bool)isVector_> TypeOp;
-  typedef typename TypeOp::result_type result_type;
+    typedef typename Derived::Type Type;
+    /** constructor */
+    inline MinOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
+    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    /**  @return the minimal value of the variable V
+     *  \f[ \min_{i=1}^n v_i \f]
+     **/
+    Type const operator()() const
+    {
+      Type min  = Arithmetic<Type>::infinity();
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { min = std::min(min, V_[i]);}
+      return min;
+    }
+    /** @return the minimal value of the variable V
+     *  \f[ \min_{i=1}^n w_i v_i \f]
+     *  @param w the weights
+     **/
+    template< class Weights>
+    Type const operator()( ExprBase<Weights> const&  w) const
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      Type min  = Arithmetic<Type>::infinity();
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { min = std::min(min, w[i]*V_[i]);}
+      return min;
+    }
+  protected:
+    Derived const& V_;
 };
 
-/** @ingroup StatDesc
- *  Compute the minimal value of the variable V discarding all missing values.
- *  @param V the variable
- *  @return the minimal value of the variable V
+/** @ingroup Stat
+ *  Compute safely the minimal value of the variable V
  **/
-template<class TContainer1D>
-Real minImpl( ArrayBase<TContainer1D> const&  V)
+template<class Derived>
+struct MinSafeOp
 {
-  Real min  = Arithmetic<Real>::infinity();
-  for (int i=V.firstIdx(); i<=V.lastIdx(); i++)
-  { if (!Arithmetic<Real>::isNA(V[i])) min = std::min(min, V[i]);}
-  return min;
-}
-
-/** @ingroup StatDesc
- *  Compute the maximal value of the variable V discarding all missing values.
- *  @param V the variable
- *  @return the maximal value of the variable V
- **/
-template<class TContainer1D>
-Real maxImpl( ArrayBase<TContainer1D> const&  V)
-{
-  Real max  = - Arithmetic<Real>::infinity();
-  for (int i=V.firstIdx(); i<=V.lastIdx(); i++)
-  { if (!Arithmetic<Real>::isNA(V[i])) max = std::max(max, V[i]);}
-  return max;
-}
-
-/** @ingroup StatDesc
- *  Compute the mean of the variable V discarding all missing values.
- *  \f[ \hat{\mu} = \frac{1}{n} \sum_{i=1}^n V(i) \f]
- *  @param V the variable
- *  @return the mean or NA if there is no available value
- **/
-template<class TContainer1D>
-Real meanImpl( ArrayBase<TContainer1D> const&  V)
-{
-  // no samples
-  if (V.empty()) { return Arithmetic<Real>::NA();}
-  // get dimensions
-  int nobs = V.size();
-  // sum the samples
-  Real sum  = 0.0;
-  for (int i=V.firstIdx(); i<=V.lastIdx(); i++)
-  { (!Arithmetic<Real>::isNA(V[i])) ? sum += V[i] : nobs--;}
-  // compute the mean
-  return nobs ? sum /= Real(nobs) : Arithmetic<Real>::NA();
-}
-
-/** @ingroup StatDesc
- *  Compute the variance of the variable V with fixed mean.
- *  \f[ \hat{\sigma^2} = \frac{1}{n} \sum_{i=1}^n (V(i) - \mu)^2. \f]
- *  using a compensated algorithm.
- *
- *  @note
- *  Chan, Tony F.; Golub, Gene H.; LeVeque, Randall J. (1983).
- *  Algorithms for Computing the Sample Variance: Analysis and Recommendations.
- *  The American Statistician 37, 242-247.
- *
- *  @param V variable
- *  @param mu the fixed mean
- *  @param unbiased @c true if we want an unbiased estimator of the variance,
- *  @c false otherwise
- **/
-template<class TContainer1D>
-Real varianceWithFixedMeanImpl( ArrayBase<TContainer1D> const& V, Real const& mu, bool unbiased)
-{
-  // no samples
-  if (V.empty()) { return Arithmetic<Real>::NA();}
-
-  int nobs = V.size();
-  // sum
-  Real sum  = 0.0, var  = 0.0, dev;
-  for (int i=V.firstIdx(); i<=V.lastIdx(); i++)
-  {
-    if (!Arithmetic<Real>::isNA(V[i]))
+    typedef typename Derived::Type Type;
+    /** constructor */
+    inline MinSafeOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
+    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    /**  @return the safely computed minimal value of the variable V */
+    Type const operator()() const
     {
-      sum += (dev = V[i] - mu); // deviation from the mean
-      var += (dev*dev);         // squared value
+      Type min  = Arithmetic<Type>::infinity();
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { if (!Arithmetic<Type>::isNA(V_[i])) min = std::min(min, V_[i]);}
+      return min;
     }
-    else nobs--;
-  }
-  // compute the variance
-  if (unbiased)
-  {
-    return (nobs > 1) ? (var - (sum*sum)/Real(nobs))/Real(nobs -1)
-                      : Arithmetic<Real>::NA();
-  }
-  // variance
-  return (nobs > 0) ? (var - (sum*sum)/(Real)nobs)/(Real)(nobs)
-                    : Arithmetic<Real>::NA();
-}
+    /** @return the safely computed weighted minimal value of the variable V
+     *  @param w the weights
+     **/
+    template< class Weights>
+    Type const operator()( ExprBase<Weights> const&  w) const
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      Type min  = Arithmetic<Type>::infinity();
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { if (!Arithmetic<Type>::isNA(V_[i])) min = std::min(min, w[i]*V_[i]);}
+      return min;
+    }
+  protected:
+    Derived const& V_;
+};
 
-/** @ingroup StatDesc
+/** @ingroup Stat
+ *  Compute the maximal value of the variable V
+ **/
+template<class Derived>
+struct MaxOp
+{
+    typedef typename Derived::Type Type;
+    /** constructor */
+    inline MaxOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
+    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    /** @return the maximal value of the variable V
+     *  \f[ \max_{i=1}^n v_i \f]
+     **/
+    Type const operator()() const
+    {
+      Type max  = -Arithmetic<Type>::infinity();
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { max = std::max(max, V_[i]);}
+      return max;
+    }
+    /** @return the weighted maximal value of the variable V
+     *  \f[ \max_{i=1}^n w_i v_i \f]
+     *  @param w the weights
+     **/
+    template< class Weights>
+    Type const operator()( ExprBase<Weights> const&  w) const
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      Type max  = -Arithmetic<Type>::infinity();
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { max = std::max(max, w[i]*V_[i]);}
+      return max;
+    }
+  protected:
+    Derived const& V_;
+};
+
+/** @ingroup Stat
+ *  Compute safely the maximal value of the variable V
+ **/
+template<class Derived>
+struct MaxSafeOp
+{
+    typedef typename Derived::Type Type;
+    /** constructor */
+    inline MaxSafeOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
+    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    /** @return the safely computed maximal value of the variable V */
+    Type const operator()() const
+    {
+      Type max  = -Arithmetic<Type>::infinity();
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { if (!Arithmetic<Type>::isNA(V_[i])) max = std::max(max, V_[i]);}
+      return max;
+    }
+    /** @return the safely computed weighted maximal value of the variable V
+     *  @param w the weigths
+     **/
+    template< class Weights>
+    Type const operator()( ExprBase<Weights> const&  w) const
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      Type max  = -Arithmetic<Type>::infinity();
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { if (!Arithmetic<Type>::isNA(V_[i])) max = std::max(max, w[i]*V_[i]);}
+      return max;
+    }
+  protected:
+    Derived const& V_;
+};
+
+/** @ingroup Stat
+ *  Compute the sum of the variable V.
+ **/
+template<class Derived>
+struct SumOp
+{
+    typedef typename Derived::Type Type;
+    /** constructor */
+    inline SumOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
+    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    /** @return the mean of the variable V
+     *  \f[ \hat{\mu} = \frac{1}{n} \sum_{i=1}^n V(i) \f]
+     **/
+    Type const operator()() const
+    {
+      // sum the samples
+      Type sum  = 0.;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++) { sum += V_[i];}
+      // compute the mean
+      return sum;
+    }
+    /** @return the weighted mean value of the variable V
+     *  \f[ \hat{\mu} = \frac{1}{\sum_{i=1}^n w(i)} \sum_{i=1}^n w(i) V(i). \f]
+     *  @param w the weigths
+     **/
+    template< class Weights>
+    Type const operator()( ExprBase<Weights> const&  w) const
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      // sum the weighted samples
+      Type sum  = 0.0, nweight = 0.0;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { sum     += w[i] * V_[i];}
+      // compute the weighted mean. If all weights are 0, we get 0
+      return sum;
+    }
+  protected:
+    Derived const& V_;
+};
+
+/** @ingroup Stat
+ *  Compute safely the sum of the variable V.
+ **/
+template<class Derived>
+struct SumSafeOp
+{
+    typedef typename Derived::Type Type;
+    /** constructor */
+    inline SumSafeOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
+    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    /** @return the safely computed mean of the variable V discarding all missing values. */
+    Type const operator()() const
+    {
+      // sum the samples
+      Type sum  = 0.0;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { if (!Arithmetic<Type>::isNA(V_[i])) sum += V_[i];}
+      // compute the mean
+      return sum;
+    }
+    /** @return the safely computed weighted mean of the variable V
+     *  @param w the weigths
+     **/
+    template< class Weights>
+    inline Type const operator()( ExprBase<Weights> const&  w) const
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      if (V_.range() != w.range())
+        STKRUNTIME_ERROR_NO_ARG(wmeanSafe,V.range()!=w.range());
+
+      // sum the weighted samples
+      Type sum  = 0.0;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { if ( (!Arithmetic<Type>::isNA(V_[i])) && (!Arithmetic<Type>::isNA(w[i])))
+        { sum += std::abs(w[i]) * V_[i];}
+      }
+      // compute the weighted mean. If all weights are 0, we get 0
+      return sum;
+    }
+  protected:
+    Derived const& V_;
+};
+
+/** @ingroup Stat
+ *  Compute the mean of the variable V.
+ **/
+template<class Derived>
+struct MeanOp
+{
+    typedef typename Derived::Type Type;
+    /** constructor */
+    inline MeanOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
+    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    /** @return the mean of the variable V
+     *  \f[ \hat{\mu} = \frac{1}{n} \sum_{i=1}^n V(i) \f]
+     **/
+    Type const operator()() const
+    {
+      // no samples
+      if (V_.empty()) { return Arithmetic<Type>::NA();}
+      // sum the samples
+      Type sum  = 0.;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++) { sum += V_[i];}
+      // compute the mean
+      return sum /= (Type)(V_.size());
+    }
+    /** @return the weighted mean value of the variable V
+     *  \f[ \hat{\mu} = \frac{1}{\sum_{i=1}^n w(i)} \sum_{i=1}^n w(i) V(i). \f]
+     *  @param w the weigths
+     **/
+    template< class Weights>
+    Type const operator()( ExprBase<Weights> const&  w) const
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      // no samples
+      if (V_.empty()) { return Arithmetic<Type>::NA();}
+      // sum the weighted samples
+      Type sum  = 0.0, nweight = 0.0;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      {
+        Type const weight = w[i];
+        nweight += weight;
+        sum     += weight * V_[i];
+      }
+      // compute the weighted mean. If all weights are 0, we get 0
+      return (nweight) ? sum /= nweight : 0.;
+    }
+  protected:
+    Derived const& V_;
+};
+
+/** @ingroup Stat
+ *  Compute safely mean of the variable V.
+ **/
+template<class Derived>
+struct MeanSafeOp
+{
+    typedef typename Derived::Type Type;
+    /** constructor */
+    inline MeanSafeOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
+    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    /** @return the safely computed mean of the variable V discarding all missing values. */
+    Type const operator()() const
+    {
+      // no samples
+      if (V_.empty()) { return Arithmetic<Type>::NA();}
+      // get dimensions
+      int nobs = V_.size();
+      // sum the samples
+      Type sum  = 0.0;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { (!Arithmetic<Type>::isNA(V_[i])) ? sum += V_[i] : nobs--;}
+      // compute the mean
+      return nobs ? sum /= Type(nobs) : Arithmetic<Type>::NA();
+    }
+    /** @return the safely computed weighted mean of the variable V
+     *  @param w the weigths
+     **/
+    template< class Weights>
+    inline Type const operator()( ExprBase<Weights> const&  w) const
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      // no samples
+      if (V_.empty()) { return Arithmetic<Type>::NA();}
+      if (V_.range() != w.range())
+        STKRUNTIME_ERROR_NO_ARG(wmeanSafe,V.range()!=w.range());
+
+      // sum the weighted samples
+      Type sum  = 0.0, nweight = 0.0;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { if ( (!Arithmetic<Type>::isNA(V_[i])) && (!Arithmetic<Type>::isNA(w[i])))
+        {
+          Type weight  = std::abs(w[i]);
+          nweight  += weight;
+          sum      += weight * V_[i];
+        }
+      }
+      // compute the weighted mean. If all weights are 0, we get 0
+      return (nweight) ? sum /= nweight : 0.;
+    }
+  protected:
+    Derived const& V_;
+};
+
+/** @ingroup Stat
  *  Compute the variance of the variable V.
- *  \f[ \hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^n (V(i)-\hat{\mu})^2. \f]
- *  @param V variable
- *  @param unbiased @c true if we want an unbiased estimator of the variance,
- *  @c false otherwise
  **/
-template<class TContainer1D>
-Real varianceImpl( ArrayBase<TContainer1D> const& V, bool unbiased)
+template<class Derived>
+struct VarianceOp
 {
-  // no samples
-  if (V.empty()) { return Arithmetic<Real>::NA();}
-
-  int nobs = V.size();
-  // Compute the mean
-  Real mu = meanImpl<TContainer1D>(V);
-  // sum
-  Real sum  = 0.0, var  = 0.0, dev;
-  for (int i=V.firstIdx(); i<=V.lastIdx(); i++)
-  {
-    if (!Arithmetic<Real>::isNA(V[i]))
+    typedef typename Derived::Type Type;
+    /** constructor */
+    inline VarianceOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
+    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    /** @return the variance of the variable V.
+     *  \f[ \hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^n (V(i)-\hat{\mu})^2. \f]
+     *  @param unbiased @c true if we want an unbiased estimator of the variance,
+     *  @c false otherwise
+     **/
+    inline Type const operator()(bool unbiased) const
     {
-      sum += (dev = V[i] - mu); // deviation from the mean
-      var += (dev*dev);         // squared value
+      // no samples
+      if (V_.empty()) { return Arithmetic<Type>::NA();}
+
+      int const nobs = V_.size();
+      // Compute the mean and sum
+      Type mu = MeanOp<Derived>(V_)();
+      Type sum  = 0.0, var  = 0.0, dev;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      {
+        sum += (dev = V_[i] - mu); // deviation from the mean
+        var += (dev*dev);         // squared value
+      }
+      // compute the variance
+      if (unbiased)
+      { return (nobs > 1) ? (var - (sum*sum)/Type(nobs))/Type(nobs -1)
+                          : Arithmetic<Type>::NA();
+      }
+      // variance
+      return (var - (sum*sum)/(Type)nobs)/(Type)(nobs);
     }
-    else nobs--;
-  }
-  // compute the variance
-  if (unbiased)
-  {
-    return (nobs > 1) ? (var - (sum*sum)/Real(nobs))/Real(nobs -1)
-                      : Arithmetic<Real>::NA();
-  }
-  // variance
-  return (nobs > 0) ? (var - (sum*sum)/(Real)nobs)/(Real)(nobs)
-                    : Arithmetic<Real>::NA();
-}
-
-
-/** @ingroup StatDesc
- *  Compute the (weighted) mean of the variable V
- *  \f[ \hat{\mu} = \frac{1}{\sum_{i=1}^n W(i)} \sum_{i=1}^n W(i) V(i). \f]
- *  If the range of the weights does not match the range
- *  of the variable the method return the usual mean.
- *  @param V variable
- *  @param W weights
- **/
-template<class TContainer1D, class WColVector>
-Real wmeanImpl( ArrayBase<TContainer1D> const& V, WColVector const& W)
-{
-  // no samples
-  if (V.empty()||W.empty()) { return Arithmetic<Real>::NA();}
-  // use common range
-  Range common = Range::inf(V.range(), W.range());
-
-  // sum the weighted samples
-  Real sum  = 0.0, nweight = 0.0;
-  for (int i=common.firstIdx(); i<=common.lastIdx(); i++)
-  { if ( (!Arithmetic<Real>::isNA(V[i])) && (!Arithmetic<Real>::isNA(W[i])))
+    /** @return the weighted variance of the variable V.
+     *  \f[ \hat{\sigma}^2
+     *  = \frac{\sum_{i=1}^n w(i)}{\left( \sum_{i=1}^n w(i))\right)^2-\sum_{i=1}^n w(i)^2}
+     *    \sum_{i=1}^n w(i) (V(i)-\hat{\mu})^2.
+     *  \f]
+     * If there is no weights, this definition reduces to the usual
+     * definition of the variance with factor 1/(n-1).
+     *  @param w weights
+     *  @param unbiased @c true if we want an unbiased estimator of the variance,
+     *  @c false otherwise
+     **/
+    template< class Weights>
+    inline Type const operator()( ExprBase<Weights> const&  w, bool unbiased) const
     {
-      Real weight  = std::abs(W[i]);
-      nweight  += weight;
-      sum      += weight * V[i];
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      // no samples
+      if (V_.empty()) { return Arithmetic<Type>::NA();}
+      // Compute the mean
+      Type mu = MeanOp<Derived>(V_)(w);
+      // sum the weighted samples
+      Type dev, sum = 0.0, var = 0.0, nweight = 0.0, nweight2 = 0.0;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      {
+        Type const weight = w[i];
+        nweight    += weight;
+        nweight2   += weight * weight;
+        sum        += weight*(dev = V_[i]-mu); // deviation from the mean
+        var        += weight*(dev*dev);       // squared value
+      }
+      // compute the variance
+      if (unbiased)
+      {
+        return (nweight*nweight - nweight2 > 0.) ? (var - sum*sum/nweight)/(nweight - nweight2/nweight)
+                                                 : 0.;
+      }
+      return (nweight) ? (var - sum*sum)/(nweight) : 0.;
     }
-  }
-  // compute the weighted mean. If all weights are 0, we get 0
-  return (nweight) ? sum /= nweight : 0.;
-}
+  protected:
+    Derived const& V_;
+};
 
-/** Compute the weighted variance of the variable V with fixed mean.
- *  \f[ \hat{\sigma^2} = \frac{1}{\sum_{i=1}^n W(i)}
- *                  \sum_{i=1}^n W(i) (V(i) - \mu)^2
- *  \f]
- *  @param V variable
- *  @param W weights
- *  @param mu the mean
- *  @param unbiased @c true if we want an unbiased estimator of the variance,
- *  @c false otherwise
+/** @ingroup Stat
+ *  Compute safely the variance of the variable V.
  **/
-template<class TContainer1D, class WColVector>
-Real wvarianceWithFixedMeanImpl( ArrayBase<TContainer1D> const& V, WColVector const& W
-                               , Real const& mu, bool unbiased
-                               )
+template<class Derived>
+struct VarianceSafeOp
 {
-  // no samples
-  if (V.empty()) { return Arithmetic<Real>::NA();}
-  // use common range
-  Range common = Range::inf(V.range(), W.range());
-  // sum the weighted samples
-  Real dev, sum = 0.0, var = 0.0, nweight = 0.0, nweight2 = 0.0;
-  for (int i=common.firstIdx(); i<=common.lastIdx(); i++)
-  { if ( !Arithmetic<Real>::isNA(V[i]) && !Arithmetic<Real>::isNA(W[i]) )
+    typedef typename Derived::Type Type;
+    /** constructor */
+    inline VarianceSafeOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
+    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    /** @return the variance of the variable V discarding all missing values.
+     *  \f[ \hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^n (V(i)-\hat{\mu})^2. \f]
+     *  @param unbiased @c true if we want an unbiased estimator of the variance,
+     *  @c false otherwise
+     **/
+    Type const operator()(bool unbiased) const
     {
-      Real weight = std::abs(W[i]);
-      nweight    += weight;
-      nweight2   += weight * weight;
-      sum        += weight*(dev = V[i]-mu); // deviation from the mean
-      var        += weight*(dev*dev);       // squared value
+      // no samples
+      if (V_.empty()) { return Arithmetic<Type>::NA();}
+      int nobs = V_.size();
+      // Compute the mean
+      Type mu = MeanSafeOp<Derived>(V_)();
+      // sum
+      Type sum  = 0.0, var  = 0.0, dev;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      {
+        if (!Arithmetic<Type>::isNA(V_[i]))
+        {
+          sum += (dev = V_[i] - mu); // deviation from the mean
+          var += (dev*dev);         // squared value
+        }
+        else nobs--;
+      }
+      // compute the variance
+      if (unbiased)
+      {
+        return (nobs > 1) ? (var - (sum*sum)/Type(nobs))/Type(nobs -1)
+                          : Arithmetic<Type>::NA();
+      }
+      // variance
+      return (nobs > 0) ? (var - (sum*sum)/(Type)nobs)/(Type)(nobs)
+                        : Arithmetic<Type>::NA();
     }
-  }
-  // compute the variance
-  if (unbiased)
-  {
-    return (nweight*nweight - nweight2 > 0.) ? (var - sum*sum/nweight)/(nweight - nweight2/nweight)
-                                             : 0.;
-
-  }
-  return (nweight) ? (var - sum*sum)/(nweight) : 0.;
-}
-
-/** @ingroup StatDesc
- *  Compute the weighted variance of the variable V.
- *  \f[ \hat{\sigma}^2
- *  = \frac{\sum_{i=1}^n W(i)}{\left( \sum_{i=1}^n W(i))\right)^2-\sum_{i=1}^n W(i)^2}
- *    \sum_{i=1}^n W(i) (V(i)-\hat{\mu})^2.
- *  \f]
- * If there is no weights, this definition reduces to the usual
- * definition of the variance with factor 1/(n-1). If the range of the weights
- * is not equal to the range of the varaible, the usual varaince is computed.
- *  @param V variable
- *  @param W weights
- *  @param unbiased @c true if we want an unbiased estimator of the variance,
- *  @c false otherwise
- **/
-template<class TContainer1D, class WColVector>
-Real wvarianceImpl( ArrayBase<TContainer1D> const& V, WColVector const& W
-                  , bool unbiased
-                  )
-{
-  // no samples
-  if (V.empty()) { return Arithmetic<Real>::NA();}
-  // Compute the mean if necessary
-  Real mu = wmeanImpl(V, W);
-  // use common range
-  Range common = Range::inf(V.range(), W.range());
-  // sum the weighted samples
-  Real dev, sum = 0.0, var = 0.0, nweight = 0.0, nweight2 = 0.0;
-  for (int i=common.firstIdx(); i<=common.lastIdx(); i++)
-  { if ( !Arithmetic<Real>::isNA(V[i]) && !Arithmetic<Real>::isNA(W[i]) )
+    /** @return the safely computed weighted variance of the variable V.
+     *  \f[ \hat{\sigma}^2
+     *  = \frac{\sum_{i=1}^n w(i)}{\left( \sum_{i=1}^n w(i))\right)^2-\sum_{i=1}^n w(i)^2}
+     *    \sum_{i=1}^n w(i) (V(i)-\hat{\mu})^2.
+     *  \f]
+     * If there is no weights, this definition reduces to the usual
+     * definition of the variance with factor 1/(n-1).
+     *  @param w weights
+     *  @param unbiased @c true if we want an unbiased estimator of the variance,
+     *  @c false otherwise
+    **/
+    template< class Weights>
+    Type const operator()( ExprBase<Weights> const&  w, bool unbiased) const
     {
-      Real weight = std::abs(W[i]);
-      nweight    += weight;
-      nweight2   += weight * weight;
-      sum        += weight*(dev = V[i]-mu); // deviation from the mean
-      var        += weight*(dev*dev);       // squared value
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      // no samples
+      if (V_.empty()) { return Arithmetic<Type>::NA();}
+      // Compute the mean
+      Type mu = MeanSafeOp<Derived>(V_)(w);
+      if (V_.range() != w.range())
+        STKRUNTIME_ERROR_NO_ARG(VarianceSafeOp,V.range()!=w.range());
+      // sum the weighted samples
+      Type dev, sum = 0.0, var = 0.0, nweight = 0.0, nweight2 = 0.0;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { if ( !Arithmetic<Type>::isNA(V_[i]) && !Arithmetic<Type>::isNA(w[i]) )
+        {
+          Type weight = std::abs(w[i]);
+          nweight    += weight;
+          nweight2   += weight * weight;
+          sum        += weight*(dev = V_[i]-mu); // deviation from the mean
+          var        += weight*(dev*dev);       // squared value
+        }
+      }
+      // compute the variance
+      if (unbiased)
+      {
+        return (nweight*nweight - nweight2 > 0.) ? (var - sum*sum/nweight)/(nweight - nweight2/nweight)
+                                                 : 0.;
+      }
+      return (nweight) ? (var - sum*sum)/(nweight) : 0.;
     }
-  }
-  // compute the variance
-  if (unbiased)
-  {
-    return (nweight*nweight - nweight2 > 0.) ? (var - sum*sum/nweight)/(nweight - nweight2/nweight)
-                                             : 0.;
-
-  }
-  return (nweight) ? (var - sum*sum)/(nweight) : 0.;
-}
-
-} // namespace hidden
-
-namespace Stat
-{
-/** @ingroup StatDesc
- *  @brief compute the minimal value by column.
- **/
-template<typename Array>
-struct MinOp<Array, false>
-{
-  enum { NbParam_ = 1 };
-  typedef Array const& param1_type ;
-  typedef typename hidden::Promote< typename Array::Type, Real >::result_type Type;
-  typedef Array2DPoint<Type> result_type;
-
-  inline MinOp( ArrayBase<Array> const& lhs) : lhs_(lhs.asDerived()) {}
-  inline result_type operator()()
-  {
-    result_type res(lhs_.cols());
-    for (int j= lhs_.firstIdxCols(); j <= lhs_.lastIdxCols(); ++j)
-    { res[j] = hidden::minImpl(lhs_.col(j));}
-    return res;
-  }
-  template<typename Weights>
-  inline result_type operator()(ArrayBase<Weights> const& weights)
-  {
-    result_type res_(lhs_.cols());
-    for (int j= lhs_.firstIdxCols(); j <= lhs_.lastIdxCols(); ++j)
-    { res_[j] = hidden::minImpl(lhs_.col(j));}
-    return res_;
-  }
   protected:
-    param1_type lhs_;
+    Derived const& V_;
+};
+
+/** @ingroup Stat
+ *  Compute the variance of the variable V when the mean is given.
+ **/
+template<class Derived>
+struct VarianceWithFixedMeanOp
+{
+    typedef typename Derived::Type Type;
+    /** constructor */
+    inline VarianceWithFixedMeanOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
+    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+  /** @return the variance of the variable V with fixed mean.
+   *  \f[ \hat{\sigma^2} = \frac{1}{n} \sum_{i=1}^n (V(i) - \mu)^2. \f]
+   *  using a compensated algorithm.
+   *  @note
+   *  Chan, Tony F.; Golub, Gene H.; LeVeque, Randall J. (1983).
+   *  Algorithms for Computing the Sample Variance: Analysis and Recommendations.
+   *  The American Statistician 37, 242-247.
+   *  @param mu the fixed mean
+   *  @param unbiased @c true if we want an unbiased estimator of the variance,
+   *  @c false otherwise
+   **/
+    Type const operator()( Type const& mu, bool unbiased) const
+    {
+      // no samples
+      if (V_.empty()) { return Arithmetic<Type>::NA();}
+      int const nobs = V_.size();
+      // sum
+      Type sum = 0., var = 0., dev;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      {
+        sum += (dev = V_[i] - mu); // deviation from the mean
+        var += (dev*dev);         // squared value
+      }
+      // unbiased variance
+      if (unbiased)
+      {
+        return (nobs > 1) ? (var - (sum*sum)/(Type)(V_.size()))/(Type)(V_.size() -1)
+                              : Arithmetic<Type>::NA();
+      }
+      // ML variance
+      return (var - (sum*sum)/(Type)nobs)/(Type)(nobs);
+    }
+    /** @return the weighted variance of the variable V with fixed mean.
+     *  \f[ \hat{\sigma^2} = \frac{1}{\sum_{i=1}^n w(i)}
+     *                  \sum_{i=1}^n w(i) (V(i) - \mu)^2
+     *  \f]
+     *  @param w weights
+     *  @param mu the mean
+     *  @param unbiased @c true if we want an unbiased estimator of the variance,
+     *  @c false otherwise
+     **/
+    template< class Weights>
+    Type const operator()( ExprBase<Weights> const& w, Type const& mu, bool unbiased) const
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      // no samples
+      if (V_.empty()) { return Arithmetic<Type>::NA();}
+      // sum the weighted samples
+      Type dev, sum = 0.0, var = 0.0, nweight = 0.0, nweight2 = 0.0;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      {
+        Type weight = w[i];
+        nweight    += weight;
+        nweight2   += weight * weight;
+        sum        += weight*(dev = V_[i]-mu); // deviation from the mean
+        var        += weight*(dev*dev);       // squared value
+      }
+      // compute the variance
+      if (unbiased)
+      {
+        return (nweight*nweight - nweight2 > 0.) ? (var - sum*sum/nweight)/(nweight - nweight2/nweight)
+                                                 : 0.;
+
+      }
+      return (nweight) ? (var - sum*sum)/(nweight) : 0.;
+    }
+  protected:
+    Derived const& V_;
+};
+
+/** @ingroup Stat
+ *  Compute safely the variance of the variable V when the mean is given.
+ **/
+template<class Derived>
+struct VarianceWithFixedMeanSafeOp
+{
+    typedef typename Derived::Type Type;
+    /** constructor */
+    inline VarianceWithFixedMeanSafeOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
+    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    /** @return the safely computed variance of the variable V with fixed mean.
+     *  \f[ \hat{\sigma^2} = \frac{1}{n} \sum_{i=1}^n (V(i) - \mu)^2. \f]
+     *  using a compensated algorithm and discarding the missing values.
+     *  @note
+     *  Chan, Tony F.; Golub, Gene H.; LeVeque, Randall J. (1983).
+     *  Algorithms for Computing the Sample Variance: Analysis and Recommendations.
+     *  The American Statistician 37, 242-247.
+     *  @param mu the fixed mean
+     *  @param unbiased @c true if we want an unbiased estimator of the variance,
+     *  @c false otherwise
+     **/
+    Type const operator()( Type mu, bool unbiased) const
+    {
+      // no samples
+      if (V_.empty()) { return Arithmetic<Type>::NA();}
+      int nobs = V_.size();
+      // sum
+      Type sum  = 0.0, var  = 0.0, dev;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      {
+        if (!Arithmetic<Type>::isNA(V_[i]))
+        {
+          sum += (dev = V_[i] - mu); // deviation from the mean
+          var += (dev*dev);         // squared value
+        }
+        else nobs--;
+      }
+      // compute the variance
+      if (unbiased)
+      {
+        return (nobs > 1) ? (var - (sum*sum)/Type(nobs))/Type(nobs -1)
+                          : Arithmetic<Type>::NA();
+      }
+      // variance
+      return (nobs > 0) ? (var - (sum*sum)/(Type)nobs)/(Type)(nobs)
+                        : Arithmetic<Type>::NA();
+    }
+
+    /** @return the safely computed weighted variance of the variable V with fixed mean.
+     *  \f[ \hat{\sigma^2} = \frac{1}{\sum_{i=1}^n w(i)}
+     *                  \sum_{i=1}^n w(i) (V(i) - \mu)^2
+     *  \f]
+     *  @param w weights
+     *  @param mu the mean
+     *  @param unbiased @c true if we want an unbiased estimator of the variance,
+     *  @c false otherwise
+     **/
+    template< class Weights>
+    Type const operator()( ExprBase<Weights> const& w
+                         , Type const& mu
+                         , bool unbiased) const
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      // no samples
+      if (V_.empty()) { return Arithmetic<Type>::NA();}
+      if (V_.range() != w.range())
+        STKRUNTIME_ERROR_NO_ARG(wmeanSafe,V.range()!=w.range());
+      // sum the weighted samples
+      Type dev, sum = 0.0, var = 0.0, nweight = 0.0, nweight2 = 0.0;
+      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      { if ( !Arithmetic<Type>::isNA(V_[i]) && !Arithmetic<Type>::isNA(w[i]) )
+        {
+          Type weight = std::abs(w[i]);
+          nweight    += weight;
+          nweight2   += weight * weight;
+          sum        += weight*(dev = V_[i]-mu); // deviation from the mean
+          var        += weight*(dev*dev);       // squared value
+        }
+      }
+      // compute the variance
+      if (unbiased)
+      {
+        return (nweight*nweight - nweight2 > 0.) ? (var - sum*sum/nweight)/(nweight - nweight2/nweight)
+                                                 : 0.;
+
+      }
+      return (nweight) ? (var - sum*sum)/(nweight) : 0.;
+    }
+  protected:
+    Derived const& V_;
 };
 
 /** @ingroup StatDesc
- *  @brief compute the min of a row or column oriented vector.
- **/
-template<typename Array>
-struct MinOp<Array, true>
-{
-  enum { NbParam_ = 1 };
-  typedef Array const& param1_type ;
-  typedef typename hidden::Promote< typename Array::Type, Real >::result_type Type;
-  typedef Type result_type;
-
-  inline MinOp( ArrayBase<Array> const& lhs) : lhs_(lhs.asDerived()) {}
-  inline result_type operator()() { return hidden::minImpl(lhs_);}
-  template<typename Weights>
-  inline result_type operator()(ArrayBase<Weights> const& weights)
-  { return hidden::minImpl(lhs_);}
-
-  protected:
-    param1_type lhs_;
-};
-
-/** @ingroup StatDesc
- *  @brief compute the max by column.
- **/
-template<typename Array>
-struct MaxOp<Array, false>
-{
-  enum { NbParam_ = 1 };
-  typedef Array const& param1_type ;
-  typedef typename hidden::Promote< typename Array::Type, Real >::result_type Type;
-  typedef Array2DPoint<Type> result_type;
-
-  inline MaxOp( ArrayBase<Array> const& lhs) : lhs_(lhs.asDerived()) {}
-  inline result_type operator()()
-  {
-    result_type res(lhs_.cols());
-    for (int j= lhs_.firstIdxCols(); j <= lhs_.lastIdxCols(); ++j)
-    { res[j] = hidden::maxImpl(lhs_.col(j));}
-    return res;
-  }
-  template<typename Weights>
-  inline result_type operator()(ArrayBase<Weights> const& weights)
-  {
-    result_type res_(lhs_.cols());
-    for (int j= lhs_.firstIdxCols(); j <= lhs_.lastIdxCols(); ++j)
-    { res_[j] = hidden::maxImpl(lhs_);}
-    return res_;
-  }
-  protected:
-    param1_type lhs_;
-};
-
-/** @ingroup StatDesc
- *  @brief compute the maximal value of a row or column oriented vector.
- **/
-template<typename Array>
-struct MaxOp<Array, true>
-{
-  enum { NbParam_ = 1 };
-  typedef Array const& param1_type ;
-  typedef typename hidden::Promote< typename Array::Type, Real >::result_type Type;
-  typedef Type result_type;
-
-  inline MaxOp( ArrayBase<Array> const& lhs) : lhs_(lhs.asDerived()) {}
-  inline result_type operator()() { return hidden::maxImpl(lhs_);}
-  template<typename Weights>
-  inline result_type operator()(ArrayBase<Weights> const& weights)
-  { return hidden::maxImpl(lhs_);}
-
-  protected:
-    param1_type lhs_;
-};
-
-/** @ingroup StatDesc
- *  @brief compute the mean by column.
- **/
-template<typename Array>
-struct MeanOp<Array, false>
-{
-  enum { NbParam_ = 1 };
-  typedef Array const& param1_type ;
-  typedef typename hidden::Promote< typename Array::Type, Real >::result_type Type;
-  typedef Array2DPoint<Type> result_type;
-
-  inline MeanOp( ArrayBase<Array> const& lhs)
-               : lhs_(lhs.asDerived())
-  {}
-  inline result_type operator()()
-  {
-    result_type res(lhs_.cols());
-    for (int j= lhs_.firstIdxCols(); j <= lhs_.lastIdxCols(); ++j)
-    { res[j] = hidden::meanImpl(lhs_.col(j));}
-    return res;
-  }
-  template<typename Weights>
-  inline result_type operator()(ArrayBase<Weights> const& weights)
-  {
-    result_type res(lhs_.cols());
-    for (int j= lhs_.firstIdxCols(); j <= lhs_.lastIdxCols(); ++j)
-    { res[j] = hidden::wmeanImpl(lhs_.col(j), weights);}
-    return res;
-  }
-  protected:
-    param1_type lhs_;
-};
-
-/** @ingroup StatDesc
- *  @brief compute the mean by column.
- **/
-template<typename Array>
-struct MeanOp<Array, true>
-{
-  enum { NbParam_ = 1 };
-  typedef Array const& param1_type ;
-  typedef typename hidden::Promote< typename Array::Type, Real >::result_type Type;
-  typedef Type result_type;
-
-  inline MeanOp( ArrayBase<Array> const& lhs) : lhs_(lhs.asDerived()) {}
-  inline result_type operator()() { return hidden::meanImpl(lhs_);}
-  template<typename Weights>
-  inline result_type operator()(ArrayBase<Weights> const& weights)
-  { return hidden::wmeanImpl(lhs_, weights);}
-
-  protected:
-    param1_type lhs_;
-};
-
-/** @ingroup StatDesc
- *  @brief compute the mean by column.
- **/
-template<typename Array>
-struct VarianceOp<Array, false>
-{
-  enum { NbParam_ = 1 };
-  typedef Array const& param1_type ;
-  typedef typename hidden::Promote< typename Array::Type, Real >::result_type Type;
-  typedef Array2DPoint<Type> result_type;
-
-  inline VarianceOp( ArrayBase<Array> const& lhs) : lhs_(lhs.asDerived()) {}
-  inline result_type operator()(bool unbiased)
-  {
-    result_type res(lhs_.cols());
-    for (int j= lhs_.firstIdxCols(); j <= lhs_.lastIdxCols(); ++j)
-    { res[j] = hidden::varianceImpl(lhs_.col(j), unbiased);}
-    return res;
-  }
-  template<typename Weights>
-  inline result_type operator()(ArrayBase<Weights> const& weights, bool unbiased)
-  {
-    result_type res(lhs_.cols());
-    for (int j= lhs_.firstIdxCols(); j <= lhs_.lastIdxCols(); ++j)
-    { res[j] = hidden::wvarianceImpl(lhs_.col(j), weights, unbiased);}
-    return res;
-  }
-  protected:
-    param1_type lhs_;
-};
-
-/** @ingroup StatDesc
- *  @brief compute the mean by column.
- **/
-template<typename Array>
-struct VarianceOp<Array, true>
-{
-  enum { NbParam_ = 1 };
-  typedef Array const& param1_type ;
-  typedef typename hidden::Promote< typename Array::Type, Real >::result_type Type;
-  typedef Type result_type;
-
-  inline VarianceOp( ArrayBase<Array> const& lhs) : lhs_(lhs.asDerived()) {}
-  inline result_type operator()(bool unbiased) { return hidden::varianceImpl(lhs_, unbiased);}
-  template<typename Weights>
-  inline result_type operator()(ArrayBase<Weights> const& weights, bool unbiased)
-  { return hidden::wvarianceImpl(lhs_, weights, unbiased);}
-
-  protected:
-    param1_type lhs_;
-};
-
-/** @ingroup StatDesc
- *  @brief compute the mean by column.
- **/
-template<typename Array>
-struct VarianceWithFixedMeanOp<Array, false>
-{
-  enum { NbParam_ = 1 };
-  typedef Array const& param1_type ;
-  typedef typename hidden::Promote< typename Array::Type, Real >::result_type Type;
-  typedef typename MeanOp<Array, false>::result_type const& mean_type;
-  typedef Array2DPoint<Type> result_type;
-
-  inline VarianceWithFixedMeanOp( ArrayBase<Array> const& lhs, mean_type mean)
-               : lhs_(lhs.asDerived())
-               , mean_(mean)
-  {}
-  inline result_type operator()(bool unbiased)
-  {
-    result_type res(lhs_.cols());
-    for (int j= lhs_.firstIdxCols(); j <= lhs_.lastIdxCols(); ++j)
-    { res[j] = hidden::varianceWithFixedMeanImpl(lhs_.col(j), mean_[j], unbiased);}
-    return res;
-  }
-  template<typename Weights>
-  inline result_type operator()(ArrayBase<Weights> const& weights, bool unbiased)
-  {
-    result_type res(lhs_.cols());
-    for (int j= lhs_.firstIdxCols(); j <= lhs_.lastIdxCols(); ++j)
-    { res[j] = hidden::wvarianceWithFixedMeanImpl(lhs_.col(j), weights, mean_[j], unbiased);}
-    return res;
-  }
-  protected:
-    param1_type lhs_;
-    mean_type mean_;
-};
-
-/** @ingroup StatDesc
- *  @brief compute the mean by column.
- **/
-template<typename Array>
-struct VarianceWithFixedMeanOp<Array, true>
-{
-  enum { NbParam_ = 1 };
-  typedef Array const& param1_type ;
-  typedef typename hidden::Promote< typename Array::Type, Real >::result_type Type;
-  typedef Type result_type;
-
-  inline VarianceWithFixedMeanOp( ArrayBase<Array> const& lhs, Type mean)
-                                : lhs_(lhs.asDerived())
-                                , mean_(mean)
-  {}
-  inline result_type operator()(bool unbiased)
-  { return hidden::varianceWithFixedMeanImpl(lhs_, mean_, unbiased);}
-  template<typename Weights>
-  inline result_type operator()(ArrayBase<Weights> const& weights, bool unbiased)
-  { return hidden::wvarianceWithFixedMeanImpl(lhs_, weights, mean_, unbiased);}
-
-  protected:
-    param1_type lhs_;
-    Type mean_;
-};
-
-/** Compute the minimal(s) value(s) of A. If A is a row-vector or a
+ *  Compute the minimal(s) value(s) of A. If A is a row-vector or a
  *  column-vector then the function will return the usual min of the vector.
  *  If A is a two-dimensional array, the function will return (by value) an
  *  Array2DPoint with the minimal values of each columns.
- *  @sa mean, max, variance, varianceWithFixedMean, hidden::minImpl.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the array
+ *  @return the minimal value(s) of A or NA if there is no available value.
+ **/
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, MinOp >::resultByColType
+min(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, MinOp>::ColOp(A)();}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, MinOp >::resultByRowType
+minByRow(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, MinOp>::RowOp(A)();}
+
+/** @ingroup StatDesc
+ *  Compute the weighted minimal(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min; STK::Stat::sum.
+ *  @param A the array
+ *  @param w the weights
+ *  @return the minimal value(s) of A or NA if there is no available value.
+ **/
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, MinOp >::resultByColType
+min(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, MinOp>::ColOp(A)(w);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, MinOp >::resultByRowType
+minByRow(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, MinOp>::RowOp(A)(w);}
+
+/** @ingroup StatDesc
+ *  Compute safely the minimal(s) value(s) of A. If A is a row-vector or a
+ *  column-vector then the function will return the usual min of the vector.
+ *  If A is a two-dimensional array, the function will return (by value) an
+ *  Array2DPoint with the minimal values of each columns.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
  *  @param A the array
  *  @return the minimal value(s) of A or NA if there is no available
  *  value.
  **/
-template< class Array>
-typename hidden::StatOpSelector<Array, MinOp>::result_type min(Array const& A)
-{ return typename hidden::StatOpSelector<Array, MinOp>::TypeOp(A)();}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, MinSafeOp >::resultByColType
+minSafe(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, MinSafeOp>::ColOp(A)();}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, MinSafeOp >::resultByRowType
+minSafeByRow(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, MinSafeOp>::RowOp(A)();}
 
-/** Compute the weighted minimal(s) value(s) of A. This give the same result
- *  than min(A).
- *  @sa mean, max, variance, varianceWithFixedMean, hidden::minImpl.
+/** @ingroup StatDesc
+ *  Compute safely the weighted minimal(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
  *  @param A the array
- *  @param W the weights
+ *  @param w the weights
  *  @return the minimal value(s) of A or NA if there is no available
  *  value.
  **/
-template< class Array, class WColVector>
-typename hidden::StatOpSelector<Array, MinOp>::result_type min(Array const& A, WColVector W)
-{ return typename hidden::StatOpSelector<Array, MinOp>::TypeOp(A)(W);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, MinSafeOp >::resultByColType
+minSafe(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, MinSafeOp>::ColOp(A)(w);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, MinSafeOp >::resultByRowType
+minSafeByRow(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, MinSafeOp>::RowOp(A)(w);}
 
-/** Compute the maximal(s) value(s) of A. If A is a row-vector or a
+/** @ingroup StatDesc
+ *  Compute the maximal(s) value(s) of A. If A is a row-vector or a
  *  column-vector then the function will return the usual max of the vector.
  *  If A is a two-dimensional array, the function will return (by value) an
  *  Array2DPoint with the maximal values of each columns.
- *  @sa mean, min, variance, varianceWithFixedMean, hidden::maxImpl.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
  *  @param A the array
  *  @return the maximal value(s) of A or NA if there is no available
  *  value.
  **/
-template< class Array>
-typename hidden::StatOpSelector<Array, MaxOp>::result_type max(Array const& A)
-{ return typename hidden::StatOpSelector<Array, MaxOp>::TypeOp(A)();}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, MaxOp >::resultByColType
+max(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, MaxOp>::ColOp(A)();}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, MaxOp >::resultByRowType
+maxByRow(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, MaxOp>::RowOp(A)();}
 
-/** Compute the weighted maximal(s) value(s) of A. This give the same result
- *  than max(A).
- *  @sa mean, min, variance, varianceWithFixedMean, hidden::maxImpl.
+/** @ingroup StatDesc
+ *  Compute the weighted maximal(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
  *  @param A the array
- *  @param W the weights
+ *  @param w the weights
  *  @return the maximal value(s) of A or NA if there is no available
  *  value.
  **/
-template< class Array, class WColVector>
-typename hidden::StatOpSelector<Array, MaxOp>::result_type max(Array const& A, WColVector W)
-{ return typename hidden::StatOpSelector<Array, MaxOp>::TypeOp(A)(W);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, MaxOp >::resultByColType
+max(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, MaxOp>::ColOp(A)(w);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, MaxOp >::resultByRowType
+maxByRow(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, MaxOp>::RowOp(A)(w);}
 
-/** Compute the mean(s) value(s) of A. If A is a row-vector or a
+/** @ingroup StatDesc
+ *  Compute safely the maximal(s) value(s) of A. If A is a row-vector or a
+ *  column-vector then the function will return the usual max of the vector.
+ *  If A is a two-dimensional array, the function will return (by value) an
+ *  Array2DPoint with the maximal values of each columns.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the array
+ *  @return the maximal value(s) of A or NA if there is no available
+ *  value.
+ **/
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, MaxSafeOp >::resultByColType
+maxSafe(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, MaxSafeOp>::ColOp(A)();}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, MaxSafeOp >::resultByRowType
+maxSafeByRow(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, MaxSafeOp>::RowOp(A)();}
+
+/** @ingroup StatDesc
+ *  Compute the weighted maximal(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the array
+ *  @param w the weights
+ *  @return the maximal value(s) of A or NA if there is no available
+ *  value.
+ **/
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, MaxSafeOp >::resultByColType
+maxSafe(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, MaxSafeOp>::ColOp(A)(w);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, MaxSafeOp >::resultByRowType
+maxSafeByRow(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, MaxSafeOp>::RowOp(A)(w);}
+
+/** @ingroup StatDesc
+ *  Compute the sum of A. If A is a row-vector or a
+ *  column-vector then the function will return the usual sum of the vector.
+ *  If A is a two-dimensional array, the function will return (by value) an
+ *  Array2DPoint with the sum of each columns.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min
+ *  @param A the data
+ *  @return the mean(s) or NA if there is no available value
+ **/
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, SumOp >::resultByColType
+sum(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, SumOp>::ColOp(A)();}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, SumOp >::resultByRowType
+sumByRow(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, SumOp>::RowOp(A)();}
+
+/** @ingroup StatDesc
+ *  Compute the weighted mean(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
+ *  @param w the weights
+ *  @return the weighted mean(s) or NA if there is no available value
+ **/
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, SumOp >::resultByColType
+sum(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, SumOp>::ColOp(A)(w);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, SumOp >::resultByRowType
+sumByRow(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, SumOp>::RowOp(A)(w);}
+
+/** @ingroup StatDesc
+ *  Compute safely the mean(s) value(s) of A. If A is a row-vector or a
  *  column-vector then the function will return the usual mean of the vector.
  *  If A is a two-dimensional array, the function will return (by value) an
  *  Array2DPoint with the mean values of each columns.
- *  @sa max, min, variance, varianceWithFixedMean, hidden::meanImpl.
- *  @param A the Array
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
  *  @return the mean(s) or NA if there is no available value
  **/
-template< class Array>
-typename hidden::StatOpSelector<Array, MeanOp>::result_type mean(Array const& A)
-{ return typename hidden::StatOpSelector<Array, MeanOp>::TypeOp(A)();}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, SumSafeOp >::resultByColType
+sumSafe(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, SumSafeOp>::ColOp(A)();}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, SumSafeOp >::resultByRowType
+sumSafeByRow(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, SumSafeOp>::RowOp(A)();}
 
-/** Compute the weighted mean(s) value(s) of A. This give the same result
- *  than mean(A).
- *  @sa max, min, variance, varianceWithFixedMean, hidden::meanImpl.
- *  @param A the Array
- *  @param W the weights
+/** @ingroup StatDesc
+ *  Compute the weighted mean(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
+ *  @param w the weights
  *  @return the weighted mean(s) or NA if there is no available value
  **/
-template< class Array, class WColVector>
-typename hidden::StatOpSelector<Array, MeanOp>::result_type mean(Array const& A, WColVector W)
-{ return typename hidden::StatOpSelector<Array, MeanOp>::TypeOp(A)(W);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, SumSafeOp >::resultByColType
+sumSafe(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, SumSafeOp>::ColOp(A)(w);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, SumSafeOp >::resultByRowType
+sumSafeByRow(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, SumSafeOp>::RowOp(A)(w);}
 
-/** Compute the variance(s) value(s) of A. If A is a row-vector or a
+/** @ingroup StatDesc
+ *  Compute the mean(s) value(s) of A. If A is a row-vector or a
+ *  column-vector then the function will return the usual mean of the vector.
+ *  If A is a two-dimensional array, the function will return (by value) an
+ *  Array2DPoint with the mean values of each columns.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
+ *  @return the mean(s) or NA if there is no available value
+ **/
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, MeanOp >::resultByColType
+mean(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, MeanOp>::ColOp(A)();}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, MeanOp >::resultByRowType
+meanByRow(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, MeanOp>::RowOp(A)();}
+
+/** @ingroup StatDesc
+ *  Compute the weighted mean(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
+ *  @param w the weights
+ *  @return the weighted mean(s) or NA if there is no available value
+ **/
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, MeanOp >::resultByColType
+mean(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, MeanOp>::ColOp(A)(w);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, MeanOp >::resultByRowType
+meanByRow(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, MeanOp>::RowOp(A)(w);}
+
+/** @ingroup StatDesc
+ *  Compute safely the mean(s) value(s) of A. If A is a row-vector or a
+ *  column-vector then the function will return the usual mean of the vector.
+ *  If A is a two-dimensional array, the function will return (by value) an
+ *  Array2DPoint with the mean values of each columns.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
+ *  @return the mean(s) or NA if there is no available value
+ **/
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, MeanSafeOp >::resultByColType
+meanSafe(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, MeanSafeOp>::ColOp(A)();}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, MeanSafeOp >::resultByRowType
+meanSafeByRow(Derived const& A)
+{ return typename hidden::ApplyFunctorSelector<Derived, MeanSafeOp>::RowOp(A)();}
+
+/** @ingroup StatDesc
+ *  Compute safely the weighted mean(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
+ *  @param w the weights
+ *  @return the weighted mean(s) or NA if there is no available value
+ **/
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, MeanSafeOp >::resultByColType
+meanSafe(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, MeanSafeOp>::ColOp(A)(w);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, MeanSafeOp >::resultByRowType
+meanSafeByRow(Derived const& A, ExprBase<Weights> const& w)
+{ return typename hidden::ApplyFunctorSelector<Derived, MeanSafeOp>::RowOp(A)(w);}
+
+/** @ingroup StatDesc
+ *  Compute the variance(s) value(s) of A. If A is a row-vector or a
  *  column-vector then the function will return the usual variance of the vector.
  *  If A is a two-dimensional array, the function will return (by value) an
  *  Array2DPoint with the variance values of each columns.
- *  @sa meax, min, mean, varianceWithFixedMean, hidden::varianceImpl.
- *  @param A the Array
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
  *  @param unbiased the unbiased variance(s) if @c true or the Maximum-likelihood
  *  variance otherwise (the default)
  *  @return the variance(s) or NA if there is no available value
  **/
-template< class Array>
-typename hidden::StatOpSelector<Array, VarianceOp>::result_type variance(Array const& A, bool unbiased = false)
-{ return typename hidden::StatOpSelector<Array, VarianceOp>::TypeOp(A)(unbiased);}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, VarianceOp >::resultByColType
+variance(Derived const& A, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceOp>::ColOp(A)(unbiased);}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, VarianceOp >::resultByRowType
+varianceByRow(Derived const& A, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceOp>::RowOp(A)(unbiased);}
 
-/** Compute the weighted variance(s) value(s) of A. This give the same result
- *  than variance(A).
- *  @sa max, min, mean, varianceWithFixedMean, hidden::varianceImpl.
- *  @param A the Array
- *  @param W the weights
+/** @ingroup StatDesc
+ *  Compute the weighted variance(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
+ *  @param w the weights
  *  @param unbiased the unbiased variance(s) if @c true or the Maximum-likelihood
  *  variance otherwise (the default)
  *  @return the variance(s) or NA if there is no available value
  **/
-template< class Array, class WColVector>
-typename hidden::StatOpSelector<Array, VarianceOp>::result_type variance(Array const& A, WColVector W, bool unbiased = false)
-{ return typename hidden::StatOpSelector<Array, VarianceOp>::TypeOp(A)(W, unbiased);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, VarianceOp >::resultByColType
+variance(Derived const& A, ExprBase<Weights> const& w, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceOp>::ColOp(A)(w, unbiased);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, VarianceOp >::resultByRowType
+varianceByRow(Derived const& A, ExprBase<Weights> const& w, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceOp>::RowOp(A)(w, unbiased);}
 
-/** Compute the VarianceWithFixedMean(s) value(s) of A. If A is a row-vector or a
+/** @ingroup StatDesc
+ *  Compute safely the variance(s) value(s) of A. If A is a row-vector or a
  *  column-vector then the function will return the usual variance of the vector.
  *  If A is a two-dimensional array, the function will return (by value) an
  *  Array2DPoint with the variance values of each columns.
- *  @sa meax, min, mean, varianceWithFixedMean, hidden::varianceImpl.
- *  @param A the Array
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
+ *  @param unbiased the unbiased variance(s) if @c true or the Maximum-likelihood
+ *  variance otherwise (the default)
+ *  @return the variance(s) or NA if there is no available value
+ **/
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, VarianceSafeOp >::resultByColType
+varianceSafe(Derived const& A, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceSafeOp>::ColOp(A)(unbiased);}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, VarianceSafeOp >::resultByRowType
+varianceSafeByRow(Derived const& A, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceSafeOp>::RowOp(A)(unbiased);}
+
+/** @ingroup StatDesc
+ *  Compute safely the weighted variance(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
+ *  @param w the weights
+ *  @param unbiased the unbiased variance(s) if @c true or the Maximum-likelihood
+ *  variance otherwise (the default)
+ *  @return the variance(s) or NA if there is no available value
+ **/
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, VarianceSafeOp >::resultByColType
+varianceSafe(Derived const& A, ExprBase<Weights> const& w, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceSafeOp>::ColOp(A)(w, unbiased);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, VarianceSafeOp >::resultByRowType
+varianceSafeByRow(Derived const& A, ExprBase<Weights> const& w, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceSafeOp>::RowOp(A)(w, unbiased);}
+
+/** @ingroup StatDesc
+ *  Compute the VarianceWithFixedMean(s) value(s) of A. If A is a row-vector or a
+ *  column-vector then the function will return the usual variance of the vector.
+ *  If A is a two-dimensional array, the function will return (by value) an
+ *  Array2DPoint with the variance values of each columns.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
  *  @param mean The mean (s) to use
  *  @param unbiased the unbiased variance(s) if @c true or the Maximum-likelihood
  *  variance otherwise (the default)
  *  @return the variance(s) or NA if there is no available value
  **/
-template< class Array>
-typename hidden::StatOpSelector<Array, VarianceWithFixedMeanOp>::result_type
-  varianceWithFixedMean(Array const& A, typename hidden::StatOpSelector<Array, MeanOp >::result_type mean, bool unbiased = false)
-{ return typename hidden::StatOpSelector<Array, VarianceWithFixedMeanOp>::TypeOp(A, mean)(unbiased);}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanOp >::resultByColType
+  varianceWithFixedMean(Derived const& A, typename hidden::ApplyFunctorSelector<Derived, MeanOp >::resultByColType mean, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanOp>::ColOp(A)(mean, unbiased = false);}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanOp >::resultByRowType
+varianceWithFixedMeanByRow(Derived const& A, typename hidden::ApplyFunctorSelector<Derived, MeanOp >::resultByColType mean, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanOp>::RowOp(A)(mean, unbiased = false);}
 
-/** Compute the weighted VarianceWithFixedMean(s) value(s) of A. This give the same result
- *  than mean(A).
- *  @sa max, min, mean, varianceWithFixedMean, hidden::wvarianceWithFixedMeanImpl.
- *  @param A the Array
+/** @ingroup StatDesc
+ *  Compute Safely the VarianceWithFixedMean(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
  *  @param mean The mean (s) to use
- *  @param W the weights
+ *  @param w the weights
  *  @param unbiased the unbiased variance(s) if @c true or the Maximum-likelihood
  *  variance otherwise (the default)
  *  @return the variance(s) or NA if there is no available value
  **/
-template< class Array, class WColVector>
-typename hidden::StatOpSelector<Array, VarianceWithFixedMeanOp>::result_type
-  varianceWithFixedMean(Array const& A, WColVector W, typename hidden::StatOpSelector<Array, MeanOp >::result_type mean, bool unbiased = false)
-{ return typename hidden::StatOpSelector<Array, VarianceWithFixedMeanOp>::TypeOp(A, mean)(W, unbiased);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanOp >::resultByColType
+  varianceWithFixedMean(Derived const& A, ExprBase<Weights> const& w, typename hidden::ApplyFunctorSelector<Derived, MeanOp >::resultByColType mean, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanOp>::ColOp(A)(w, mean, unbiased = false);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanOp >::resultByRowType
+varianceWithFixedMeanByRow(Derived const& A, ExprBase<Weights> const& w, typename hidden::ApplyFunctorSelector<Derived, MeanOp >::resultByColType mean, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanOp>::RowOp(A)(w, mean, unbiased = false);}
+
+/** @ingroup StatDesc
+ *  Compute safely the VarianceWithFixedMean(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
+ *  @param mean The mean (s) to use
+ *  @param unbiased the unbiased variance(s) if @c true or the Maximum-likelihood
+ *  variance otherwise (the default)
+ *  @return the variance(s) or NA if there is no available value
+ **/
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanSafeOp >::resultByColType
+varianceWithFixedMeanSafe(Derived const& A, typename hidden::ApplyFunctorSelector<Derived, MeanSafeOp >::resultByColType mean, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanSafeOp>::ColOp(A)(mean, unbiased = false);}
+template< class Derived>
+typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanSafeOp >::resultByRowType
+  varianceWithFixedMeanSafeByRow(Derived const& A, typename hidden::ApplyFunctorSelector<Derived, MeanSafeOp >::resultByColType mean, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanSafeOp>::RowOp(A)(mean, unbiased = false);}
+
+/** @ingroup StatDesc
+ *  Compute safely the weighted VarianceWithFixedMean(s) value(s) of A.
+ *  @sa STK::Stat::mean, STK::Stat::max, STK::Stat::variance, STK::Stat::varianceWithFixedMean, STK::Stat::min, STK::Stat::sum.
+ *  @param A the data
+ *  @param mean The mean (s) to use
+ *  @param w the weights
+ *  @param unbiased the unbiased variance(s) if @c true or the Maximum-likelihood
+ *  variance otherwise (the default)
+ *  @return the variance(s) or NA if there is no available value
+ **/
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanSafeOp >::resultByColType
+varianceWithFixedMeanSafe(Derived const& A, ExprBase<Weights> const& w, typename hidden::ApplyFunctorSelector<Derived, MeanSafeOp >::resultByColType mean, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanSafeOp>::ColOp(A)(w, mean, unbiased);}
+template< class Derived, class Weights>
+typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanSafeOp >::resultByRowType
+  varianceWithFixedMeanSafeByRow(Derived const& A, ExprBase<Weights> const& w, typename hidden::ApplyFunctorSelector<Derived, MeanOp >::resultByColType mean, bool unbiased = false)
+{ return typename hidden::ApplyFunctorSelector<Derived, VarianceWithFixedMeanOp>::RowOp(A)(w, mean, unbiased);}
+
 
 }  // namespace Stat
 

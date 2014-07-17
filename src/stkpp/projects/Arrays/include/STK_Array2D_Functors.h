@@ -227,7 +227,7 @@ struct SumOp
   typedef typename hidden::Promote< typename hidden::Traits<Lhs>::Type, typename hidden::Traits<Rhs>::Type >::result_type Type;
   typedef BINARY_RETURN_TYPE(Lhs,Rhs) result_type;
 
-  inline SumOp( ArrayBase<Lhs> const& lhs, ArrayBase<Rhs> const& rhs )
+  inline SumOp( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
             : lhs_(lhs.asDerived()), rhs_(rhs.asDerived())
             , rows_(Range::inf(lhs_.rows(), rhs_.rows()))
             , cols_(Range::inf(lhs_.cols(), rhs_.cols()))
@@ -237,17 +237,17 @@ struct SumOp
   {
     res_.resize(rows_, cols_); res_ = Type();
     Range cols = Range::inf(cols_, lhs_.cols());
-    for (int j= cols.firstIdx(); j <= cols.lastIdx(); ++j)
+    for (int j= cols.begin(); j <= cols.lastIdx(); ++j)
     {
       Range rows = Range::inf(rows_, lhs_.rangeRowsInCol(j));
-      for (int i= rows.firstIdx(); i <= rows.lastIdx(); ++i)
+      for (int i= rows.begin(); i <= rows.lastIdx(); ++i)
       { res_(i,j) += lhs_(i,j);}
     }
     cols = Range::inf(cols_, rhs_.cols());
-    for (int j= cols.firstIdx(); j <= cols.lastIdx(); ++j)
+    for (int j= cols.begin(); j <= cols.lastIdx(); ++j)
     {
       Range rows = Range::inf(rows_, rhs_.rangeRowsInCol(j));
-      for (int i= rows.firstIdx(); i <= rows.lastIdx(); ++i)
+      for (int i= rows.begin(); i <= rows.lastIdx(); ++i)
       { res_(i,j) += rhs_(i,j);}
     }
     return res_;
@@ -274,7 +274,7 @@ struct DifferenceOp
   typedef typename hidden::Promote< typename hidden::Traits<Lhs>::Type, typename hidden::Traits<Rhs>::Type >::result_type Type;
   typedef BINARY_RETURN_TYPE(Lhs,Rhs) result_type;
 
-  inline DifferenceOp( ArrayBase<Lhs> const& lhs, ArrayBase<Rhs> const& rhs )
+  inline DifferenceOp( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
                   : lhs_(lhs.asDerived()), rhs_(rhs.asDerived())
                   , rows_(Range::inf(lhs_.rows(), rhs_.rows()))
                   , cols_(Range::inf(lhs_.cols(), rhs_.cols()))
@@ -284,17 +284,17 @@ struct DifferenceOp
   {
     res_.resize(rows_, cols_); res_ = Type();
     Range cols = Range::inf(cols_, lhs_.cols());
-    for (int j= cols.firstIdx(); j <= cols.lastIdx(); ++j)
+    for (int j= cols.begin(); j <= cols.lastIdx(); ++j)
     {
       Range rows = Range::inf(rows_, lhs_.rangeRowsInCol(j));
-      for (int i= rows.firstIdx(); i <= rows.lastIdx(); ++i)
+      for (int i= rows.begin(); i <= rows.lastIdx(); ++i)
       { res_(i,j) += lhs_(i,j);}
     }
     cols = Range::inf(cols_, rhs_.cols());
-    for (int j= cols.firstIdx(); j <= cols.lastIdx(); ++j)
+    for (int j= cols.begin(); j <= cols.lastIdx(); ++j)
     {
       Range rows = Range::inf(rows_, rhs_.rangeRowsInCol(j));
-      for (int i= rows.firstIdx(); i <= rows.lastIdx(); ++i)
+      for (int i= rows.begin(); i <= rows.lastIdx(); ++i)
       { res_(i,j) -= rhs_(i,j);}
     }
     return res_;
@@ -321,7 +321,7 @@ struct Product
   typedef typename hidden::Promote< typename hidden::Traits<Lhs>::Type, typename hidden::Traits<Rhs>::Type >::result_type Type;
   typedef BINARY_RETURN_TYPE(Lhs,Rhs) result_type;
 
-  inline Product( ArrayBase<Lhs> const& lhs, ArrayBase<Rhs> const& rhs )
+  inline Product( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
                 : lhs_(lhs.asDerived()), rhs_(rhs.asDerived())
                 , rows_(Range::inf(lhs_.rows(), rhs_.rows()))
                 , cols_(Range::inf(lhs_.cols(), rhs_.cols()))
@@ -330,10 +330,10 @@ struct Product
   inline result_type operator()()
   {
     res_.resize(rows_, cols_); res_ = Type();
-    for (int j= cols_.firstIdx(); j <= cols_.lastIdx(); ++j)
+    for (int j= cols_.begin(); j <= cols_.lastIdx(); ++j)
     {
       Range rows = Range::inf(lhs_.rangeRowsInCol(j), rhs_.rangeRowsInCol(j));
-      for (int i= rows.firstIdx(); i <= rows.lastIdx(); ++i)
+      for (int i= rows.begin(); i <= rows.lastIdx(); ++i)
       { res_(i,j) = lhs_(i,j) * rhs_(i,j);}
     }
     return res_;
@@ -361,7 +361,7 @@ struct DivOp
   typedef typename hidden::Promote< typename hidden::Traits<Lhs>::Type, typename hidden::Traits<Rhs>::Type >::result_type Type;
   typedef BINARY_RETURN_TYPE(Lhs,Rhs) result_type;
 
-  inline DivOp( ArrayBase<Lhs> const& lhs, ArrayBase<Rhs> const& rhs )
+  inline DivOp( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
             : lhs_(lhs.asDerived()), rhs_(rhs.asDerived())
             , rows_(Range::inf(lhs_.rows(), rhs_.rows()))
             , cols_(Range::inf(lhs_.cols(), rhs_.cols()))
@@ -370,10 +370,10 @@ struct DivOp
   inline result_type operator()()
   {
     res_.resize(rows_, cols_); res_ = Type();
-    for (int j= cols_.firstIdx(); j <= cols_.lastIdx(); ++j)
+    for (int j= cols_.begin(); j <= cols_.lastIdx(); ++j)
     {
       Range rows = Range::inf(lhs_.rangeRowsInCol(j), rhs_.rangeRowsInCol(j));
-      for (int i= rows.firstIdx(); i <= rows.lastIdx(); ++i)
+      for (int i= rows.begin(); i <= rows.lastIdx(); ++i)
       { res_(i,j) = lhs_(i,j) / rhs_(i,j);}
     }
     return res_;
@@ -399,7 +399,7 @@ struct MultOp
     typedef typename hidden::Promote< typename hidden::Traits<Lhs>::Type, typename hidden::Traits<Rhs>::Type >::result_type Type;
     typedef typename hidden::ProductArray2DReturnType<Type, Lhs::structure_, Rhs::structure_>::result_type result_type;
 
-   MultOp( ArrayBase<Lhs> const& lhs, ArrayBase<Rhs> const& rhs )
+   MultOp( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
        : lhs_(lhs.asDerived()), rhs_(rhs.asDerived())
        , rows_(lhs_.rows())
        , cols_(rhs_.cols())
@@ -413,20 +413,20 @@ struct MultOp
      for (int j=res_.firstIdxCols(); j<=res_.lastIdxCols(); j++)
      {
        Integer const last = res_.rangeRowsInCol(j).lastIdx();
-       for (int i=res_.rangeRowsInCol(j).firstIdx(); i<=last; i++)
+       for (int i=res_.rangeRowsInCol(j).begin(); i<=last; i++)
        { res_(i, j) = dot(lhs_.row(i), rhs_.col(j));}
      }
      return res_;
    }
    template<typename Weights>
-   inline result_type operator()(ArrayBase<Weights> const& weights)
+   inline result_type operator()(ExprBase<Weights> const& weights)
    {
      res_.resize(rows_, cols_);
      // for all cols and for all rows
      for (int j=res_.firstIdxCols(); j<=res_.lastIdxCols(); j++)
      {
        Integer const last = res_.rangeRowsInCol(j).lastIdx();
-       for (int i=res_.rangeRowsInCol(j).firstIdx(); i<=last; i++)
+       for (int i=res_.rangeRowsInCol(j).begin(); i<=last; i++)
        { res_(i, j) = weightedDot(lhs_.row(i), rhs_.col(j), weights);}
      }
      return res_;
@@ -453,7 +453,7 @@ struct MultLeftTransposeOp
     typedef typename hidden::Promote< typename hidden::Traits<Lhs>::Type, typename hidden::Traits<Rhs>::Type >::result_type Type;
     typedef typename hidden::ProductArray2DReturnType<Type, Lhs::structure_, Rhs::structure_>::result_type result_type;
 
-    MultLeftTransposeOp( ArrayBase<Lhs> const& lhs, ArrayBase<Rhs> const& rhs )
+    MultLeftTransposeOp( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
                        : lhs_(lhs.asDerived()), rhs_(rhs.asDerived())
                        , rows_(lhs_.cols())
                        , cols_(rhs_.cols())
@@ -466,19 +466,19 @@ struct MultLeftTransposeOp
      for (int j=res_.firstIdxCols(); j<=res_.lastIdxCols(); j++)
      {
        Integer const last = res_.rangeRowsInCol(j).lastIdx();
-       for (int i=res_.rangeRowsInCol(j).firstIdx(); i<=last; i++)
+       for (int i=res_.rangeRowsInCol(j).begin(); i<=last; i++)
        { res_(i, j) = dot(lhs_.col(i), rhs_.col(j));}
      }
      return res_;
    }
    template<typename Weights>
-   inline result_type operator()(ArrayBase<Weights> const& weights)
+   inline result_type operator()(ExprBase<Weights> const& weights)
    {
      res_.resize(rows_, cols_);
      for (int j=rhs_.firstIdxCols(); j<=rhs_.lastIdxCols(); j++)
      {
        Integer const last = res_.rangeRowsInCol(j).lastIdx();
-       for (int i=res_.rangeRowsInCol(j).firstIdx(); i<=last; i++)
+       for (int i=res_.rangeRowsInCol(j).begin(); i<=last; i++)
        { res_(i, j) = weightedDot(lhs_.col(i), rhs_.col(j), weights);}
      }
      return res_;
@@ -505,7 +505,7 @@ struct MultRightTransposeOp
     typedef typename hidden::Promote< typename hidden::Traits<Lhs>::Type, typename hidden::Traits<Rhs>::Type >::result_type Type;
     typedef typename hidden::ProductArray2DReturnType<Type, Lhs::structure_, Rhs::structure_>::result_type result_type;
 
-    MultRightTransposeOp( ArrayBase<Lhs> const& lhs, ArrayBase<Rhs> const& rhs )
+    MultRightTransposeOp( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
                         : lhs_(lhs.asDerived()), rhs_(rhs.asDerived())
                         , rows_(lhs_.rows())
                         , cols_(rhs_.rows())
@@ -518,19 +518,19 @@ struct MultRightTransposeOp
      for (int j=res_.firstIdxCols(); j<=res_.lastIdxCols(); j++)
      {
        Integer const last = res_.rangeRowsInCol(j).lastIdx();
-       for (int i=res_.rangeRowsInCol(j).firstIdx(); i<=last; i++)
+       for (int i=res_.rangeRowsInCol(j).begin(); i<=last; i++)
        { res_(i, j) = dot(lhs_.row(i), rhs_.row(j));}
      }
      return res_;
    }
    template<typename Weights>
-   inline result_type operator()(ArrayBase<Weights> const& weights)
+   inline result_type operator()(ExprBase<Weights> const& weights)
    {
      res_.resize(rows_, cols_);
      for (int j=res_.firstIdxCols(); j<=res_.lastIdxCols(); j++)
      {
        Integer const last = res_.rangeRowsInCol(j).lastIdx();
-       for (int i=res_.rangeRowsInCol(j).firstIdx(); i<=last; i++)
+       for (int i=res_.rangeRowsInCol(j).begin(); i<=last; i++)
        { res_(i, j) = weightedDot(lhs_.row(i), rhs_.row(j), weights);}
      }
      return res_;
@@ -634,7 +634,7 @@ Real dot( ITContainer< Container1D1> const& x
         )
 {
   // compute the valid range
-  const int first = std::max(x.firstIdx(), y.firstIdx()) , last = std::min(x.lastIdx(), y.lastIdx());
+  const int first = std::max(x.begin(), y.begin()) , last = std::min(x.lastIdx(), y.lastIdx());
   // compute the sum product
   Real sum=0.0;
   int i;
@@ -667,7 +667,7 @@ Real weightedDot( ITContainer< Container1D1> const& x
                 )
 {
   // compute the valid range
-  const int first = std::max(x.firstIdx(), y.firstIdx()) , last = std::min(x.lastIdx(), y.lastIdx());
+  const int first = std::max(x.begin(), y.begin()) , last = std::min(x.lastIdx(), y.lastIdx());
 #ifdef STK_DEBUG
   if (!Range(first,last).isIn(w.range()))
     throw runtime_error("In weightedDot(x, w) "
@@ -702,7 +702,7 @@ Real dist( ITContainer< Container1D1> const& x
          )
 {
   // compute the valid range
-  const int first = std::max(x.firstIdx(), y.firstIdx()) , last = std::min(x.lastIdx(), y.lastIdx());
+  const int first = std::max(x.begin(), y.begin()) , last = std::min(x.lastIdx(), y.lastIdx());
   // compute the std::maximal difference
   Real scale = 0.;
   for (int i = first; i<=last; i++)
@@ -742,7 +742,7 @@ Real weightedDist( ITContainer< Container1D1> const& x
                  )
 {
   // compute the valid range
-  const int first = std::max(x.firstIdx(), y.firstIdx()) , last = std::min(x.lastIdx(), y.lastIdx());
+  const int first = std::max(x.begin(), y.begin()) , last = std::min(x.lastIdx(), y.lastIdx());
 #ifdef STK_DEBUG
   if (!Range(first,last).isIn(w.range()))
     throw runtime_error("In weightedDist(x, w) "
@@ -773,7 +773,7 @@ Real weightedDist( ITContainer< Container1D1> const& x
  *  @param[in] A the matrix to multiply by itself
  **/
 template<typename Derived>
-Array2DSquare<typename Derived::Type> multLeftTranspose( ArrayBase<Derived> const& A)
+Array2DSquare<typename Derived::Type> multLeftTranspose( ExprBase<Derived> const& A)
 {
   typedef typename Derived::Type Type;
   Array2DSquare<Type> res(A.cols(), Type(0));
@@ -800,7 +800,7 @@ Array2DSquare<typename Derived::Type> multLeftTranspose( ArrayBase<Derived> cons
  *  @param[in] A the matrix to multiply by itself
  **/
 template<typename Derived>
-Array2DSquare<typename Derived::Type> multRightTranspose( ArrayBase<Derived> const& A)
+Array2DSquare<typename Derived::Type> multRightTranspose( ExprBase<Derived> const& A)
 {
   typedef typename Derived::Type Type;
   Array2DSquare<Type> res(A.rows(), Type(0));
@@ -830,7 +830,7 @@ Array2DSquare<typename Derived::Type> multRightTranspose( ArrayBase<Derived> con
  **/
 template<typename Derived, typename Weights>
 Array2DSquare<typename Derived::Type>
-  weightedMultLeftTranspose( ArrayBase<Derived> const& A, ArrayBase<Weights> const& weights)
+  weightedMultLeftTranspose( ExprBase<Derived> const& A, ExprBase<Weights> const& weights)
 {
   typedef typename Derived::Type Type;
   Array2DSquare<Type> res(A.cols(), Type(0));
@@ -860,7 +860,7 @@ Array2DSquare<typename Derived::Type>
  **/
 template<typename Derived, typename Weights>
 Array2DSquare<typename Derived::Type>
-  weightedMultRightTranspose( ArrayBase<Derived> const& A, ArrayBase<Weights> const& weights)
+  weightedMultRightTranspose( ExprBase<Derived> const& A, ExprBase<Weights> const& weights)
 {
   typedef typename Derived::Type Type;
   Array2DSquare<Type> res(A.cols(), Type(0));

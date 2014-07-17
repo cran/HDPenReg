@@ -37,8 +37,8 @@
 #define STK_IMODELBASE_H
 
 #include <cmath>
-#include "../../STKernel/include/STK_Real.h"
-#include "../../STKernel/include/STK_Integer.h"
+#include "STKernel/include/STK_Real.h"
+#include "STKernel/include/STK_Integer.h"
 
 namespace STK
 {
@@ -68,32 +68,32 @@ class IModelBase
                      : nbSample_(model.nbSample_)
                      , nbVar_(model.nbVar_)
                      , lnLikelihood_(model.lnLikelihood_)
-                     , nbFreeParameters_(model.nbFreeParameters_)
+                     , nbFreeParameter_(model.nbFreeParameter_)
     {}
     /** destructor */
     inline ~IModelBase() {}
 
   public:
     /** @return the total available observations */
-    inline int const& nbSample() const { return nbSample_;}
+    inline int nbSample() const { return nbSample_;}
     /** @return th Log of the total available observations */
     inline Real lnNbSample() const
     { return (nbSample_ <= 0) ? -Arithmetic<Real>::infinity() : std::log((Real)nbSample_);}
     /** @return the total available observations*/
-    inline int const& nbVar() const { return nbVar_;}
+    inline int nbVariable() const { return nbVar_;}
     /** @return The ln-likelihood */
     inline Real lnLikelihood() const { return lnLikelihood_;}
     /** @return The likelihood */
     inline Real likelihood() const
     { return (Arithmetic<Real>::isFinite(lnLikelihood_)) ? std::exp((Real)lnLikelihood_) : 0.;}
     /** @return the total number of free parameters */
-    inline int const& nbFreeParameters() const { return nbFreeParameters_;}
+    inline int nbFreeParameter() const { return nbFreeParameter_;}
 
   protected:
     /** set the number of free parameters of the model
-     *  @param nbFreeParameters number of free parameters of the model
+     *  @param nbFreeParameter number of free parameters of the model
      * */
-    inline void setNbFreeParameters( int const& nbFreeParameters) { nbFreeParameters_ = nbFreeParameters;}
+    inline void setNbFreeParameter( int const& nbFreeParameter) { nbFreeParameter_ = nbFreeParameter;}
     /** set the number of sample of the model
      *  @param nbSample number of sample of the model
      * */
@@ -101,7 +101,7 @@ class IModelBase
     /** set the number of variables of the model
      *  @param nbVar number of variables of the model
      * */
-    inline void setNbVar( int const& nbVar) { nbVar_ = nbVar;}
+    inline void setNbVariable( int const& nbVar) { nbVar_ = nbVar;}
     /** set the log-likelihood of the model
      *  @param lnLikelihood the log-likelihood of the model
      * */
@@ -115,7 +115,7 @@ class IModelBase
       nbSample_ = nbSample;
       nbVar_ = nbVar;
       lnLikelihood_ = -Arithmetic<Real>::infinity();
-      nbFreeParameters_ = 0;
+      nbFreeParameter_ = 0;
     }
 
   private:
@@ -126,7 +126,7 @@ class IModelBase
     /** likelihood of the sample */
     Real lnLikelihood_;
     /** number of free parameter of the model */
-    int nbFreeParameters_;
+    int nbFreeParameter_;
 };
 
 } // namespace STK

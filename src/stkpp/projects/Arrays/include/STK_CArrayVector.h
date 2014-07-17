@@ -28,27 +28,27 @@
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
-/** @file STK_CArray.h
+/** @file STK_CArrayVector.h
  *  @brief In this file we implement the final class CArrayVector.
  **/
 
 #ifndef STK_CARRAYVECTOR_H
 #define STK_CARRAYVECTOR_H
 
-#include "../../STKernel/include/STK_Constants.h"
-#include "../../STKernel/include/STK_MetaTemplate.h"
-#include "../../STKernel/include/STK_StaticAssert.h"
+#include "STKernel/include/STK_Constants.h"
 
-#include "../../Sdk/include/STK_Traits.h"
-
-#include "STK_Arrays_Util.h"
-#include "STK_CAllocator.h"
 #include "STK_ICArray.h"
 
 namespace STK
 {
+// forward declaration
 template< typename Type, int SizeRows_=UnknownSize, bool Orient_ = Arrays::by_col_>
 class CArrayVector;
+
+typedef CArrayVector<Real, UnknownSize, Arrays::by_col_>   CVectorX;
+typedef CArrayVector<Real, 2, Arrays::by_col_>             CVector2;
+typedef CArrayVector<Real, 3, Arrays::by_col_>             CVector3;
+
 
 template< typename Type, int SizeRows_, int SizeCols_, bool Orient_>
 class CArray;
@@ -58,10 +58,6 @@ template< typename Type, int SizeCols_, bool Orient_>
 class CArrayPoint;
 template< typename Type, int SizeRows_, int SizeCols_, bool Orient_>
 class CArrayNumber;
-
-typedef CArrayVector<Real, UnknownSize, Arrays::by_col_>   CVectorX;
-typedef CArrayVector<Real, 2, Arrays::by_col_>             CVector2;
-typedef CArrayVector<Real, 3, Arrays::by_col_>             CVector3;
 
 namespace hidden
 {
@@ -135,6 +131,12 @@ class CArrayVector : public ICArray < CArrayVector<Type, SizeRows_, Orient_> >
      *  @param ref true if T is wrapped
      **/
     inline CArrayVector( const CArrayVector &T, bool ref=false) : Base(T, ref) {}
+    /** wrapper constructor for 0 based C-Array.
+     *  @param q pointer on the array
+     *  @param nbRow number of rows
+     **/
+    inline CArrayVector( Type* const& q, int nbRow): Base(q, nbRow, 1)
+    {}
     /** constructor by reference.
      *  @param allocator the allocator to wrap
      **/

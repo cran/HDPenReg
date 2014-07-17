@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013 Vincent KUBICKI
+/*     Copyright (C) 2004-2013 Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -23,190 +23,146 @@
 */
 
 /*
- * Project:  stk++
+ * Project:  stkpp::Clustering
  * created on: Oct 24, 2013
- * Author:   Vincent KUBICKI
+ * Author:   Serge Iovleff
  **/
 
 /** @file STK_Gaussian_s.h
- *  @brief In this file we implement the Gaussian_p_s and Gaussian_p_s classes
+ *  @brief In this file we implement the Gaussian_s class
  **/
 
 #ifndef STK_GAUSSIAN_S_H
 #define STK_GAUSSIAN_S_H
 
-#include "../STK_IMixtureModel.h"
-#include "STK_DiagGaussianComponent.h"
-//#include "STK_Gaussian_sImpl.h"
+#include "STK_DiagGaussianBase.h"
 
 namespace STK
 {
 
 //forward declaration, to allow for recursive template
-template<class Array>class Gaussian_pk_s;
-template<class Array>class Gaussian_p_s;
+template<class Array>class Gaussian_s;
 
-namespace hidden
+namespace Clust
 {
-/** @ingroup hidden
- *  Traits class for the Gaussian_p_s traits policy. */
+/** @ingroup Clust
+ *  Traits class for the Gaussian_s traits policy. */
 template<class _Array>
-struct MixtureTraits< Gaussian_pk_s<_Array> >
+struct MixtureModelTraits< Gaussian_s<_Array> >
 {
   typedef _Array Array;
-  typedef DiagGaussianComponent<_Array, Gaussian_s_Parameters> Component;
-  typedef Gaussian_s_Parameters        Parameters;
-};
-/** @ingroup hidden
- *  Traits class for the Gaussian_p_s traits policy. */
-template<class _Array>
-struct MixtureTraits< Gaussian_p_s<_Array> >
-{
-  typedef _Array Array;
-  typedef DiagGaussianComponent<_Array, Gaussian_s_Parameters> Component;
-  typedef Gaussian_s_Parameters        Parameters;
+  typedef Gaussian_s_Parameters Parameters;
+  typedef MixtureComponent<_Array, Parameters> Component;
+  typedef Real ParamInfo;
 };
 
-} // namespace hidden
+} // namespace Clust
 
 /** @ingroup Clustering
- *  The diagonal Gaussian mixture model @c Gaussian_p_s is
- *  the most general diagonal Gaussian model and have a density function of the
- *  form
+ *  The diagonal Gaussian_s mixture model have a density function of the form
  * \f[
  *  f(\mathbf{x}|\theta) = \sum_{k=1}^K p_k \prod_{j=1}^d
  *    \frac{1}{\sqrt{2\pi}\sigma} \exp\left\{-\frac{(x^j-\mu^j_k)^2}{2\sigma^2}\right\}.
  * \f]
  **/
 template<class Array>
-class Gaussian_pk_s : public IMixtureModel<Gaussian_pk_s<Array> >
+class Gaussian_s : public DiagGaussianBase<Gaussian_s<Array> >
 {
   public:
-    typedef IMixtureModel<Gaussian_pk_s<Array> > Base;
-    using Base::p_data_;
-    using Base::components_;
+    typedef DiagGaussianBase<Gaussian_s<Array> > Base;
+    typedef typename Clust::MixtureModelTraits< Gaussian_s<Array> >::Component Component;
+    typedef typename Clust::MixtureModelTraits< Gaussian_s<Array> >::Parameters Parameters;
+
+    using Base::p_tik;
+    using Base::p_data;
+    using Base::p_param;
+    using Base::components;
 
     /** default constructor
      * @param nbCluster number of cluster in the model
      **/
-    Gaussian_pk_s( int nbCluster) : Base(nbCluster) {}
-    /** constructor. Create a model with a data set.
-     *  @param data the data set to process
-     *  @param nbCluster number of cluster in the model
-     **/
-    Gaussian_pk_s( int nbCluster, Array const& data) : Base(nbCluster, data) {}
-    /** constructor with a pointer on the data set
-     *  @param p_data a pointer on the data set to process
-     *  @param nbCluster number of cluster in the model
-     **/
-    Gaussian_pk_s( int nbCluster, Array const* p_data) : Base(nbCluster, p_data) {}
+    inline Gaussian_s( int nbCluster) : Base(nbCluster), sigma_(1) {}
     /** copy constructor
      *  @param model The model to copy
      **/
-    Gaussian_pk_s( Gaussian_pk_s const& model) : Base(model) {}
+    inline Gaussian_s( Gaussian_s const& model): Base(model), sigma_(model.sigma_) {}
     /** destructor */
-    virtual ~Gaussian_pk_s() {}
+    inline ~Gaussian_s() {}
     /** Initialize the component of the model.
      *  This function have to be called prior to any used of the class.
      *  In this interface, the @c initializeModel() method call the base
-     *  class IMixtureModelBase::initializeModel() and for all the
+     *  class IMixtureModel::initializeModel() and for all the
      *  components initialize the shared parameter sigma_.
      **/
-    virtual void initializeModel()
+    void initializeModel()
     {
-      scale_.resize(p_data_->cols());
-      IMixtureModelBase::initializeModel();
-      for (int k= components_.firstIdx(); k <= components_.lastIdx(); ++k)
-      { components_[k]->p_param()->p_sigma_ = &sigma_;}
+      Base::initializeModel();
+      sigma_ = 1.0;
+      for (int k= baseIdx; k <= components().lastIdx(); ++k)
+      { components()[k]->p_param()->p_sigma_ = &sigma_;}
     }
-    /** Write the parameters*/
-    virtual void writeParameters(ostream& os) const
-    {
-      stk_cout << _T("lnLikelihood = ") << this->lnLikelihood() << _T("\n";);
-      stk_cout << _T("proportions = ") << *this->p_prop() << _T("\n";);
-      for (int k= components_.firstIdx(); k <= components_.lastIdx(); ++k)
-      {
-        stk_cout << _T("---> Component ") << k << _T("\n";);
-        stk_cout << _T("mean_ = ") << components_[k]->p_param()->mean_;
-        stk_cout << _T("sigma_ = ") << sigma_ * Const::Point<Real>(this->nbVar());
-      }
-    }
+    /** Compute the inital weighted mean and the initial common variance. */
+    void initializeStep();
+    /** Initialize randomly the parameters of the Gaussian mixture. The centers
+     *  will be selected randomly among the data set and the standard-deviation
+     *  will be set to 1.
+     */
+    void randomInit();
+    /** Compute the weighted mean and the common variance. */
+    void mStep();
     /** @return the number of free parameters of the model */
     inline int computeNbFreeParameters() const
-    { return this->nbCluster()*this->nbVar();}
+    { return this->nbCluster()*this->nbVariable()+1;}
+
   protected:
     Real sigma_;
 };
 
-/** @ingroup Clustering
- *  The diagonal Gaussian mixture model @c Gaussian_p_s is
- *  the most general diagonal Gaussian model and have a density function of the
- *  form
- * \f[
- *  f(\mathbf{x}|\theta) = \sum_{k=1}^K p \prod_{j=1}^d
- *    \frac{1}{\sqrt{2\pi}\sigma} \exp\left\{-\frac{(x^j-\mu^j_k)^2}{2\sigma^2}\right\}.
- * \f]
- **/
+/* Compute the inital weighted mean and the initial common variance. */
 template<class Array>
-class Gaussian_p_s : public IMixtureModelFixedProp<Gaussian_p_s<Array> >
+void Gaussian_s<Array>::initializeStep()
 {
-  public:
-    typedef IMixtureModelFixedProp<Gaussian_p_s<Array> > Base;
-    using Base::p_data_;
-    using Base::components_;
+    this->initialMean();
+  Real variance = 0.0;
+  for (int k= baseIdx; k <= p_tik()->lastIdxCols(); ++k)
+  {
+    variance += ( p_tik()->col(k).transpose()
+                 *(*p_data() - (Const::Vector<Real>(p_data()->rows()) * p_param(k)->mean_)
+                  ).square()
+                ).sum();
+  }
+  if ((variance<=0)||Arithmetic<Real>::isNA(variance)) throw Clust::initializeStepFail_;
+  sigma_ = std::sqrt(variance/(this->nbSample()*this->nbVariable()));
+}
 
-    /** default constructor
-     * @param nbCluster number of cluster in the model
-     **/
-    Gaussian_p_s( int nbCluster) : Base(nbCluster) {}
-    /** constructor. Create a model with a data set.
-     *  @param data the data set to process
-     *  @param nbCluster number of cluster in the model
-     **/
-    Gaussian_p_s( int nbCluster, Array const& data) : Base(nbCluster, data) {}
-    /** constructor with a pointer on the data set
-     *  @param p_data a pointer on the data set to process
-     *  @param nbCluster number of cluster in the model
-     **/
-    Gaussian_p_s( int nbCluster, Array const* p_data) : Base(nbCluster, p_data) {}
-    /** copy constructor
-     *  @param model The model to copy
-     **/
-    Gaussian_p_s( Gaussian_p_s const& model) : Base(model) {}
-    /** destructor */
-    virtual ~Gaussian_p_s() {}
-    /** Initialize the component of the model.
-     *  This function have to be called prior to any used of the class.
-     *  In this interface, the @c initializeModel() method call the base
-     *  class IMixtureModelBase::initializeModel() and for all the
-     *  components initialize the shared parameter sigma_.
-     **/
-    virtual void initializeModel()
-    {
-      scale_.resize(p_data_->cols());
-      IMixtureModelBase::initializeModel();
-      for (int k= components_.firstIdx(); k <= components_.lastIdx(); ++k)
-      { components_[k]->p_param()->p_sigma_ = &sigma_;}
-    }
+/* Initialize randomly the parameters of the Gaussian mixture. The centers
+ *  will be selected randomly among the data set and the standard-deviation
+ *  will be set to 1.
+ */
+template<class Array>
+void Gaussian_s<Array>::randomInit()
+{
+  this->randomMean();
+  sigma_ = 1.;
+}
 
-    /** Write the parameters*/
-    virtual void writeParameters(ostream& os) const
-    {
-      stk_cout << _T("lnLikelihood = ") << this->lnLikelihood() << _T("\n";);
-      stk_cout << _T("proportions = ") << *this->p_prop() << _T("\n";);
-      for (int k= components_.firstIdx(); k <= components_.lastIdx(); ++k)
-      {
-        stk_cout << _T("---> Component ") << k << _T("\n";);
-        stk_cout << _T("mean_ = ") << components_[k]->p_param()->mean_;
-        stk_cout << _T("sigma_ = ") << sigma_ * Const::Point<Real>(this->nbVar());
-      }
-    }
-    /** @return the number of free parameters of the model */
-    inline int computeNbFreeParameters() const
-    { return this->nbCluster()*this->nbVar();}
-  protected:
-    Real sigma_;
-};
+/* Compute the weighted mean and the common variance. */
+template<class Array>
+void Gaussian_s<Array>::mStep()
+{
+  // compute the means
+  this->updateMean();
+  Real variance = 0.0;
+  for (int k= baseIdx; k <= p_tik()->lastIdxCols(); ++k)
+  {
+    variance += ( p_tik()->col(k).transpose()
+                 * (*p_data() - (Const::Vector<Real>(p_data()->rows()) * p_param(k)->mean_)
+                   ).square()
+                ).sum();
+  }
+  if ((variance<=0)||Arithmetic<Real>::isNA(variance)) throw Clust::mStepFail_;
+  sigma_ = std::sqrt(variance/(this->nbSample()*this->nbVariable()));
+}
 
 } // namespace STK
 

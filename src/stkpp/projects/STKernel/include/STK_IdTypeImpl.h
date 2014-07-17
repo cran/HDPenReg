@@ -53,7 +53,7 @@ namespace STK
  * 
  *  IdType is an enum for the type used in the statistical variables :
  *  - Char for letter variables
- *  - String for string (id) variables.
+ *  - String for string_ (id) variables.
  *  - Real for quantitative variables,
  *  - int for qualitative variables,
  *  - Binary for binary (0,1) variables,
@@ -62,12 +62,13 @@ namespace STK
  **/
 enum IdType
 {
-  character,   ///< character type
+  character_,   ///< character_ type
   real_,        ///< Quantitative type
   integer_,    ///< Qualitative type
   binary_,      ///< Binary type {0, 1}
-  signof,       ///< Sign type {-1, 1}
-  string,      ///< String type
+  sign_,       ///< Sign type {-1, 1}
+  string_,      ///< String type
+  range_,
   unknown_ =__INT_MAX__  ///< Unknown type
 };
 

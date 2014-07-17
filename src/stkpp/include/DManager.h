@@ -73,6 +73,7 @@
 
 /* main classes for managing Csv data. */
 #include "../projects/DManager/include/STK_ReadWriteCsv.h"
+#include "../projects/DManager/include/STK_DataHandler.h"
 
 /* Export or import data from one container to an other container */
 #include "../projects/DManager/include/STK_ImportFromCsv.h"

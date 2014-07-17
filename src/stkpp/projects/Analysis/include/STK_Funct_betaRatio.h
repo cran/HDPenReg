@@ -36,8 +36,8 @@
 #ifndef STK_FUNCT_BETARATIO_H
 #define STK_FUNCT_BETARATIO_H
 
-#include "../../STKernel/include/STK_Integer.h"
-#include "../../STKernel/include/STK_Real.h"
+#include "STKernel/include/STK_Integer.h"
+#include "STKernel/include/STK_Real.h"
 
 namespace STK
 {
@@ -45,11 +45,31 @@ namespace STK
 namespace Funct
 {
 /** @ingroup Analysis
+ *  @brief Compute the incomplete beta function ratio using the continued
+ *  fraction method.
+ **/
+Real betaRatio_cf( Real const& a, Real const& b, Real x, bool xm1
+                 , bool lower_tail = true
+                 );
+/** @ingroup Analysis
+ *  @brief Compute the incomplete beta function ratio I_x(a,b)
+ *  using the serie expansion method.
+ **/
+Real betaRatio_se( Real const& a, Real const& b, Real const& x
+                 , bool xm1, bool lower_tail
+                 );
+
+/** @ingroup Analysis
+ *  @brief Compute the incomplete beta function ratio I_x(a,b)
+ *  using the asymptotic expansion method.
+ **/
+Real betaRatio_ae( Real const& a, Real const& b, Real const& x
+                 , bool xm1, bool lower_tail
+                 );
+/** @ingroup Analysis
  *  @brief Compute the incomplete beta function ratio
  **/
-Real betaRatio( Real const& a, Real const& b, Real const& x
-              , bool lower_tail = true
-              );
+Real betaRatio( Real const& a, Real const& b, Real const& x, bool lower_tail = true);
 
 } // namespace Funct
 

@@ -36,7 +36,7 @@
 #ifndef STK_ARRAYBASEINITIALIZER_H
 #define STK_ARRAYBASEINITIALIZER_H
 
-#include "../../STKernel/include/STK_Macros.h"
+#include "Sdk/include/STK_Macros.h"
 
 namespace STK
 {
@@ -92,14 +92,14 @@ class ArrayInitializer
       { row_++;}
       if (row_ > array_.lastIdxRows())
       { STKRUNTIME_ERROR_NO_ARG(ArrayInitializer::toFirstElt,array is empty);}
-      col_ = array_.rangeColsInRow(row_).firstIdx();
+      col_ = array_.rangeColsInRow(row_).begin();
     }
     /** Computr the next element*/
     void toNextElt()
     {
       // for the current row go to first available column if necessary
-      if (col_ < array_.rangeColsInRow(row_).firstIdx())
-      { col_ = array_.rangeColsInRow(row_).firstIdx();}
+      if (col_ < array_.rangeColsInRow(row_).begin())
+      { col_ = array_.rangeColsInRow(row_).begin();}
       else // otherwise just increment
       { col_++;}
       // check if we need to go to next row
@@ -110,7 +110,7 @@ class ArrayInitializer
         { row_++;}
         if (row_ > array_.lastIdxRows())
         { STKRUNTIME_ERROR_NO_ARG(ArrayInitializer::toNextElt,Too many coefficients passed to operator<<);}
-        col_ = array_.rangeColsInRow(row_).firstIdx();
+        col_ = array_.rangeColsInRow(row_).begin();
       }
     }
   protected:

@@ -33,10 +33,10 @@
  *  @brief In this file we implement the classes ImportFromCsv.
  **/
 
-#include "../../STKernel/include/STK_Real.h"
+#include "STKernel/include/STK_Real.h"
 
 #include "../include/STK_ImportFromCsv.h"
-#include "../../STKernel/include/STK_Exceptions.h"
+#include "STKernel/include/STK_Exceptions.h"
 
 namespace STK
 {
@@ -89,7 +89,7 @@ bool ImportFromCsv::asNumeric()
   try
   {
     // for each field Try a numeric conversion
-    for (int j =import_.firstIdx(); j <=import_.lastIdx(); j++)
+    for (int j =import_.begin(); j <=import_.lastIdx(); j++)
     {
       Variable<Real>* pvReal = new Variable<Real>();
       // test number of successful conversion
@@ -120,7 +120,7 @@ bool ImportFromCsv::asOnlyNumeric()
   try
   {
     // for each field Try a numeric conversion
-    for (int j =import_.firstIdx(); j <=import_.lastIdx(); j++)
+    for (int j =import_.begin(); j <=import_.lastIdx(); j++)
     {
       Variable<Real>* pvReal = new Variable<Real>;
       // test number of successful conversion
@@ -146,7 +146,7 @@ bool ImportFromCsv::asString()
   try
   {
     // for each field Try a numeric conversion
-    for (int j =import_.firstIdx(); j <=import_.lastIdx(); j++)
+    for (int j =import_.begin(); j <=import_.lastIdx(); j++)
     {
       Variable<String>* pvString = import_.clone(j);
       p_dataFrame_->pushBackVariable(pvString);

@@ -35,9 +35,7 @@
 #ifndef STK_ALGO_H
 #define STK_ALGO_H
 
-#include "../../STKernel/include/STK_Integer.h"
-#include "../../STKernel/include/STK_Real.h"
-#include "../../STKernel/include/STK_Misc.h"
+#include "STKernel/include/STK_Misc.h"
 #include "STK_Const_Math.h"
 #include "STK_ISerie.h"
 #include "STK_IFunction.h"

@@ -41,7 +41,7 @@
 #ifndef STK_ICONTAINER2D_H
 #define STK_ICONTAINER2D_H
 
-#include "../../STKernel/include/STK_Range.h"
+#include "STKernel/include/STK_Range.h"
 
 namespace STK
 {
@@ -85,7 +85,7 @@ class TContainer2D
 
   public:
     /** @return the index of the first column */
-    inline int const& firstIdxCols() const { return cols_.firstIdx();}
+    inline int firstIdxCols() const { return cols_.begin();}
     /** @return the index of the last column */
     inline int lastIdxCols() const { return cols_.lastIdx();}
     /** @return the number of column */
@@ -93,7 +93,7 @@ class TContainer2D
     /** @return the range of the columns */
     inline Range cols() const { return  Range(firstIdxCols(), sizeColsImpl());}
     /** @return the index of the first row */
-    inline int const& firstIdxRows() const { return rows_.firstIdx();}
+    inline int firstIdxRows() const { return rows_.begin();}
     /** @return the index of the last row */
     inline int lastIdxRows() const { return rows_.lastIdx();}
     /** @return the number of rows */
@@ -108,7 +108,7 @@ class TContainer2D
      *  @param rbeg the first index of the rows
      *  @param cbeg the first index of the columns
      **/
-    inline void shift( int const& rbeg, int const& cbeg)
+    inline void shift( int rbeg, int const& cbeg)
     { rows_.shift(rbeg); cols_.shift(cbeg);}
     /** Set the ranges of the container.
      *  @param I the vertical range
@@ -123,27 +123,27 @@ class TContainer2D
     /** Set the first index of the rows.
      *  @param beg the first index of the rows
      **/
-    inline void shiftFirstIdxRows( int const& beg) { rows_.shift(beg);}
+    inline void shiftFirstIdxRows( int beg) { rows_.shift(beg);}
     /** Increment the range of the number of rows.
      *  @param inc the increment to apply
      **/
-    inline void incRangeRows( int const& inc) { rows_.inc(inc);}
+    inline void incRangeRows( int inc) { rows_.inc(inc);}
     /** Increment the first index of the number of rows.
      *  @param inc the increment to apply
      **/
-    inline void incFirstIdxRows( int const& inc) { rows_.incFirst(inc);}
+    inline void incFirstIdxRows( int inc) { rows_.incFirst(inc);}
     /** Decrement the first index of the number of rows.
      *  @param dec the decrement to apply
      **/
-    inline void decFirstIdxRows( int const& dec) { rows_.decFirst(dec);}
+    inline void decFirstIdxRows( int dec) { rows_.decFirst(dec);}
     /** Increment the end of the number of rows.
      *  @param inc the increment to apply
      **/
-    inline void incLastIdxRows( int const& inc) { rows_.incLast(inc);}
+    inline void incLastIdxRows( int inc) { rows_.incLast(inc);}
     /** Decrement the end of the number of rows.
      *  @param dec the decrement to apply
      **/
-    inline void decLastIdxRows( int const& dec) { rows_.decLast(dec);}
+    inline void decLastIdxRows( int dec) { rows_.decLast(dec);}
     /** Set the range of the columns.
      * @param J the range of the cols number
      **/
@@ -151,27 +151,27 @@ class TContainer2D
     /** Shift the first index of the columns to beg.
      *  @param beg the new first index
      **/
-    inline void shiftFirstIdxCols( int const& beg) { cols_.shift(beg);}
+    inline void shiftFirstIdxCols( int beg) { cols_.shift(beg);}
     /** Increment the range of the number of columns.
      *  @param inc the increment to apply
      **/
-    inline void incRangeCols( int const& inc) { cols_.inc(inc);}
+    inline void incRangeCols( int inc) { cols_.inc(inc);}
     /** increment the first index of the number of columns.
      *  @param inc the increment to apply
      **/
-    inline void incFirstIdxCols( int const& inc) { cols_.incFirst(inc);}
+    inline void incFirstIdxCols( int inc) { cols_.incFirst(inc);}
     /** Decrement the first index of the columns.
      *  @param dec the decrement to apply
      **/
-    inline void decFirstIdxCols( int const& dec) { cols_.decFirst(dec);}
+    inline void decFirstIdxCols( int dec) { cols_.decFirst(dec);}
     /** Increment the last index of the columns.
      *  @param inc the increment to apply
      **/
-    inline void incLastIdxCols( int const& inc)  { cols_.incLast(inc);}
+    inline void incLastIdxCols( int inc)  { cols_.incLast(inc);}
     /** Decrement the last index of the columns.
      *  @param dec the decrement to apply
      **/
-    inline void decLastIdxCols( int const& dec) { cols_.decLast(dec);}
+    inline void decLastIdxCols( int dec) { cols_.decLast(dec);}
     /** exchange this container with T
      * @param T the container to exchange with this
      **/

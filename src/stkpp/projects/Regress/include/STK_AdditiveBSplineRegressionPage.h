@@ -37,7 +37,7 @@
 #ifndef STK_ADDITIVEBSPLINEREGRESSIONPAGE_H
 #define STK_ADDITIVEBSPLINEREGRESSIONPAGE_H
 
-#include "../../DManager/include/STK_IPage.h"
+#include "DManager/include/STK_IPage.h"
 #include "STK_BSplineCoefficients.h"
 
 namespace STK
@@ -73,11 +73,11 @@ class AdditiveBSplineRegressionPage: public IPage
     /** number of control points
      * @return the number of control point
      **/
-    inline int const& nbControlPoints() const { return nbControlPoints_;}
+    inline int nbControlPoints() const { return nbControlPoints_;}
     /** degree of the BSpline
      * @return the degree of the spline
      **/
-    inline int const& degree() const { return degree_;}
+    inline int degree() const { return degree_;}
     /** get the method for positioning the knots.
      *  @return the method for positioning the knots
      */

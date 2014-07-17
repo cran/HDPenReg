@@ -102,7 +102,7 @@ struct vb
     int vSize = rhs.sizeRows() - nbInnerLoop * vectorSize;
     Type* p_lhs  = new Type[vectorSize];
     Type* p_rhs  = new Type[vectorSize];
-    for (int k = 0, iPos = lhs.firstIdx(); k<nbInnerLoop; ++k, iPos+=vectorSize)
+    for (int k = 0, iPos = lhs.begin(); k<nbInnerLoop; ++k, iPos+=vectorSize)
     {
       for (int j=0; j<vectorSize; ++j) p_lhs[j]  = lhs.elt(iPos+j);
       for (int j=rhs.firstIdxCols(); j<= rhs.lastIdxCols(); ++j)
@@ -111,7 +111,7 @@ struct vb
         res.elt(j) += Cmult::vectorByVector(p_lhs, p_rhs);
       }
     } // k loop
-    int iPos = lhs.firstIdx()+vectorSize*nbInnerLoop;
+    int iPos = lhs.begin()+vectorSize*nbInnerLoop;
     for (int j=0; j<vSize; ++j) p_lhs[j]  = lhs.elt(iPos+j);
     for (int j=rhs.firstIdxCols(); j<= rhs.lastIdxCols(); ++j)
     {

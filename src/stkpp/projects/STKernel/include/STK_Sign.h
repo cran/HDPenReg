@@ -36,7 +36,7 @@
 #ifndef STK_SIGN_H
 #define STK_SIGN_H
 
-#include "STK_String_Util.h"
+#include "STK_String.h"
 #include <map>
 
 namespace STK
@@ -51,6 +51,9 @@ namespace STK
    positive_ = 1, ///< positive sign
    signNA_ = __INT_MAX__  ///< Not Available value
  };
+
+template<> struct Arithmetic<Sign>;
+template<> struct IdTypeImpl<Sign>;
 
 /** @ingroup Arithmetic
  *  @brief Specialization for Sign.
@@ -87,26 +90,25 @@ template<>
 struct IdTypeImpl<Sign>
 {
   /** Give the IdType of the type Sign. */
-  static IdType returnType()
-  { return(signof);}
+  static IdType returnType() { return(sign_);}
 };
   
 /** @ingroup stream
  *  @brief Overloading of the ostream << for the type Sign.
  *  @param os the output stream
- *  @param output the value to send to the stream
+ *  @param value the value to send to the stream
  **/
-ostream& operator << (ostream& os, const Sign& output);
+ostream& operator << (ostream& os, const Sign& value);
 
 /** @ingroup stream
  *  @brief Overloading of the istream >> for the type Sign.
  *  @param is the input stream
- *  @param input the value to get from the stream
+ *  @param value the value to get from the stream
  **/
-istream& operator >> (istream& is, Sign& input);
+istream& operator >> (istream& is, Sign& value);
 
 /** @ingroup Base
- *  Convert a String to a Sign.
+ *  @brief Convert a String to a Sign.
  *  @param type the String we want to convert
  *  @return the Sign represented by the String @c type. if the string
  *  does not match any known name, the @c signNA_ value is returned.
@@ -114,7 +116,7 @@ istream& operator >> (istream& is, Sign& input);
 Sign stringToSign( String const& type);
 
 /** @ingroup Base
- *  Convert a String to a Sign using a map.
+ *  @brief Convert a String to a Sign using a map.
  *  @param type the String we want to convert
  *  @param mapping the mapping between the string and the Sign
  *  @return the Sign represented by the String @c type. if the string
@@ -123,19 +125,39 @@ Sign stringToSign( String const& type);
 Sign stringToSign( String const& type, std::map<String, Sign> const& mapping);
 
 /** @ingroup Base
- *  Convert a Sign to a String.
- *  @param type the type of Sign we want to convert
- *  @return the string associated to this type.
+ *  @brief Convert a Sign to a String.
+ *  @param value the Sign we want to convert
+ *  @param f format, by default write every number in decimal
+ *  @return the string associated to this value.
  **/
-String signToString( Sign const& type);
+String signToString( Sign const& value, std::ios_base& (*f)(std::ios_base&) = std::dec);
 
 /** @ingroup Base
- *  Convert a Sign to a String.
- *  @param type the type of Sign we want to convert
+ *  @brief Convert a Sign to a String.
+ *  @param value the Sign we want to convert
  *  @param mapping the mapping between the Sign and the String
  *  @return the string associated to this type.
  **/
-String signToString( Sign const& type, std::map<Sign, String> mapping);
+String signToString( Sign const& value, std::map<Sign, String> mapping);
+
+/** @ingroup Base
+ *  @brief specialization for Sign
+ *  @param str the String to convert
+ *  @return The value to get from the String
+ **/
+template<>
+inline Sign stringToType<Sign>( String const& str)
+{ return stringToSign(str);}
+
+/** @ingroup Base
+ *  @brief specialization for Sign
+ *  @param t The Sign to convert to String
+ *  @param f format, by default write every number in decimal
+ **/
+template<>
+inline String typeToString<Sign>( Sign const& t, std::ios_base& (*f)(std::ios_base&))
+{ return signToString(t);}
+
 
 } // namespace STK
 

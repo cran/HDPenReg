@@ -34,14 +34,15 @@
  *  @brief In this file we define the parameters class for the Gaussian mixture models
  **/
 
-#ifndef STK_GAUSSIANPARAMETERS_H
-#define STK_GAUSSIANPARAMETERS_H
+#ifndef STK_DIAGGAUSSIANPARAMETERS_H
+#define STK_DIAGGAUSSIANPARAMETERS_H
 
 #include <cmath>
 
 #include "../../../Arrays/include/STK_Const_Arrays.h"
 #include "../../../Arrays/include/STK_Display.h"
 #include "../../../StatModels/include/STK_IMultiParameters.h"
+#include "../../../STatistiK/include/STK_Law_Normal.h"
 
 namespace STK
 {
@@ -54,15 +55,17 @@ template<class Parameters>
 class DiagGaussianParametersBase : public IMultiParameters<Parameters>
 {
   protected:
+    typedef IMultiParameters<Parameters> Base;
     /** default constructor.*/
-    inline DiagGaussianParametersBase() : mean_() {}
+    inline DiagGaussianParametersBase() : Base(), mean_() {}
     /** constructor with specified range
      *  @param range the range of the variables
      **/
-    inline DiagGaussianParametersBase( Range const& range) : mean_(range, 0.)
+    inline DiagGaussianParametersBase( Range const& range): Base(range), mean_(range, 0.)
     {}
     /** copy constructor.*/
-    inline DiagGaussianParametersBase(DiagGaussianParametersBase const& param) : mean_(param.mean_)
+    inline DiagGaussianParametersBase( DiagGaussianParametersBase const& param)
+                                     : Base(param), mean_(param.mean_)
     {}
     /** destructor */
     inline ~DiagGaussianParametersBase() {}
@@ -74,6 +77,17 @@ class DiagGaussianParametersBase : public IMultiParameters<Parameters>
     inline Real sigma(int j) const {return this->asDerived().sigmaImpl(j);}
     /** vector of the mean */
     Array2DPoint<Real> mean_;
+    /** compute the log Likelihood of an observation.
+     *  @param rowData the observation
+     **/
+    template<class RowVector>
+    Real computeLnLikelihood( RowVector const& rowData) const
+    {
+      Real sum =0.;
+      for (Integer j= rowData.begin(); j <= rowData.lastIdx(); ++j)
+      { sum += Law::Normal::lpdf(rowData[j], mean(j), sigma(j));}
+      return sum;
+    }
 };
 
 
@@ -90,25 +104,25 @@ class Gaussian_sjk_Parameters: public DiagGaussianParametersBase<Gaussian_sjk_Pa
      *  @param range the range of the variables
      **/
     inline Gaussian_sjk_Parameters( Range const& range)
-                                      : Base(range), sigma_(range, 1.)
+                                  : Base(range), sigma_(range, 1.)
     {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gaussian_sjk_Parameters( Gaussian_sjk_Parameters const& param)
-                                      : Base(param), sigma_(param.sigma_)
+                                  : Base(param), sigma_(param.sigma_)
     {}
     /** destructor */
     inline ~Gaussian_sjk_Parameters() {}
     /** @return the j-th sigma value */
     inline Real sigmaImpl(int j) const {return sigma_[j];}
     /** resize the set of parameter
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resizeImpl(Range const& range)
     {
-      mean_.resize(size); mean_ = 0.;
-      sigma_.resize(size); sigma_ = 1.;
+      mean_.resize(range); mean_ = 0.;
+      sigma_.resize(range); sigma_ = 1.;
     }
     /** print the parameters.
      *  @param os the output stream for the parameters
@@ -126,27 +140,26 @@ class Gaussian_sj_Parameters: public DiagGaussianParametersBase<Gaussian_sj_Para
   public:
     typedef DiagGaussianParametersBase<Gaussian_sj_Parameters> Base;
     /** default constructor */
-    inline Gaussian_sj_Parameters() : mean_(), p_sigma_(0) {}
+    inline Gaussian_sj_Parameters() : Base(), p_sigma_(0) {}
     /** constructor with specified range
      *  @param range the range of the variables
      **/
-    inline Gaussian_sj_Parameters( Range const& range) : mean_(range, 1.), p_sigma_(0) {}
+    inline Gaussian_sj_Parameters( Range const& range) : Base(range), p_sigma_(0) {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gaussian_sj_Parameters( Gaussian_sj_Parameters const& param)
-                                     : mean_(param.mean_), p_sigma_(param.p_sigma_)
+                                 : Base(param), p_sigma_(param.p_sigma_)
     {}
     /** destructor */
     inline ~Gaussian_sj_Parameters() {}
-    /** @return the j-th mean value */
-    inline Real meanImpl(int j) const {return mean_[j];}
     /** @return the j-th sigma value */
-    inline Real sigmaImpl(int j) const {return p_sigma_->elt(j);}
+    inline Real sigmaImpl(int j) const { return p_sigma_->elt(j);}
     /** resize the set of parameter
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size) { mean_.resize(size); mean_= 0.;}
+    inline void resizeImpl(Range const& range)
+    { mean_.resize(range); mean_= 0.;}
     /** print the parameters mean_.
      *  @param os the output stream for the parameters
      **/
@@ -174,17 +187,17 @@ class Gaussian_sk_Parameters: public DiagGaussianParametersBase<Gaussian_sk_Para
      * @param param the parameters to copy.
      **/
     inline Gaussian_sk_Parameters( Gaussian_sk_Parameters const& param)
-                                     : Base(param), sigma_(param.sigma_)
+                                 : Base(param), sigma_(param.sigma_)
     {}
     /** destructor */
     inline ~Gaussian_sk_Parameters() {}
     /** @return the j-th sigma value */
     inline Real sigmaImpl(int j) const {return sigma_;}
     /** resize the set of parameter
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
-    { mean_.resize(size); mean_ = 0.; sigma_ = 1.;}
+    inline void resizeImpl(Range const& range)
+    { mean_.resize(range); mean_ = 0.; sigma_ = 1.;}
     /** print the parameters mean_.
      *  @param os the output stream for the parameters
      **/
@@ -207,23 +220,23 @@ class Gaussian_s_Parameters: public DiagGaussianParametersBase<Gaussian_s_Parame
      *  @param range the range of the variables
      **/
     inline Gaussian_s_Parameters( Range const& range)
-                                    : Base(range), p_sigma_(0)
+                                : Base(range), p_sigma_(0)
     {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gaussian_s_Parameters( Gaussian_s_Parameters const& param)
-                                    : Base(param), p_sigma_(param.p_sigma_)
+                                : Base(param), p_sigma_(param.p_sigma_)
     {}
     /** destructor */
     inline~Gaussian_s_Parameters() {}
     /** @return the j-th sigma value */
     inline Real sigmaImpl(int j) const {return *p_sigma_;}
     /** resize the set of parameter
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
-    { mean_.resize(size); mean_ = 0.;}
+    inline void resizeImpl(Range const& range)
+    { mean_.resize(range); mean_ = 0.;}
     /** print the parameters mean_.
      *  @param os the output stream for the parameters
      **/
@@ -233,7 +246,6 @@ class Gaussian_s_Parameters: public DiagGaussianParametersBase<Gaussian_s_Parame
     Real* p_sigma_;
 };
 
-
 } // namespace STK
 
-#endif /* STK_GAUSSIANPARAMETERS_H */
+#endif /* STK_DIAGGAUSSIANPARAMETERS_H */
