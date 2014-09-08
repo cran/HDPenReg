@@ -1,7 +1,7 @@
-047e93879944a96f5fdfed79dc7bb3ca *DESCRIPTION
+550aa9d620d4b3fb654c88105dce2072 *DESCRIPTION
 f1e2e66dcb0078b3db906f3f869f578a *NAMESPACE
 d6e754bab0996bf82a1b86e0b5f86692 *R/EM.R
-7de6f074512c593f17a32addbbd10dd7 *R/HDPenReg-package.R
+4b9856fabcb244259634e9154578523c *R/HDPenReg-package.R
 fd79290f49a7791f8dc1e08063720576 *R/LarsPath.R
 f406c95318fb661a00f28461ad536950 *R/cvEM.R
 da417ae4f18a6014e765dbfe00149928 *R/cvlars.R
@@ -12,12 +12,12 @@ a657352240793c8a1f066041b364cee7 *build/vignette.rds
 33c6124e9258550c7e5e5c46cb69c300 *cleanup
 ff15360dc7bc550941a32a3ea9363562 *inst/doc/vignette.R
 a3497e57733b79845a9fb4b67b2e061f *inst/doc/vignette.Rnw
-3aee7bc72732346a0b8b7e6c894de2a3 *inst/doc/vignette.pdf
+bdb7f126b5a9153b49b68f4b1ceb68a2 *inst/doc/vignette.pdf
 9c402c6a8a30a479f44e5aa715cce83e *man/EMcvfusedlasso.Rd
 0304f397b9a1acc63af21bebb504bbba *man/EMcvlasso.Rd
 2b5c955000ed4cf7614f7462757eb60f *man/EMfusedlasso.Rd
 ebd84e7fbeeb44696a763b03138712dd *man/EMlasso.Rd
-ddb735ee261b7a8d7720253ca0c54742 *man/HDPenReg-package.Rd
+3052ae04da7b9f59ed36c080320a0b4c *man/HDPenReg-package.Rd
 7fb1be8bce0e2baea8a7501b47a7d2c5 *man/HDcvlars.Rd
 0aed66bafa64dbd41b0aa4368bc15fe6 *man/HDfusion.Rd
 38b0942dcfa8ba404d425b7de3c62aeb *man/HDlars.Rd
@@ -105,7 +105,7 @@ be0c8a82e1a891717de62f99d37b8c0f *src/stkpp/include/STatistiK.h
 b1c14c28ae66d2509cc95dc15d9ba0cf *src/stkpp/include/Sdk.h
 323cfe1e5063293cc594e1100499e4e6 *src/stkpp/include/StatModels.h
 d41d8cd98f00b204e9800998ecf8427e *src/stkpp/lib/empty
-2439bebccd9eedf4a3b1aed77df69ea5 *src/stkpp/makefile
+42fa1d68eb1ea58643508cfa25dcc092 *src/stkpp/makefile
 50460238edd46bec600076a9b7c0d2c4 *src/stkpp/makevars
 6be6ef09989f83a1cd4e03108261c213 *src/stkpp/projects/AAModels/CMakeLists.txt
 dcf3abe1b6bbe42f77f92a46c77e37ea *src/stkpp/projects/AAModels/include/STK_GaussianAAModel.h
