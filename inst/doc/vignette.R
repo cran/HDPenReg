@@ -50,7 +50,7 @@ sort(reslars@variable[[16]])
 ###################################################
 ### code chunk number 8: cvlarsdef (eval = FALSE)
 ###################################################
-## # HDcvlars(X, y, nbFolds,index, maxSteps,intercept,eps)
+## # HDcvlars(X, y, nbFolds, index, mode, maxSteps, partition, intercept, eps)
 
 
 ###################################################
@@ -62,25 +62,25 @@ rescvlars=HDcvlars(data1$data, data1$response,5)
 ###################################################
 ### code chunk number 10: plotcvlars (eval = FALSE)
 ###################################################
-## plotCv(rescvlars)
+## plot(rescvlars)
 
 
 ###################################################
 ### code chunk number 11: plotcvlarsb
 ###################################################
-plotCv(rescvlars)
+plot(rescvlars)
 
 
 ###################################################
 ### code chunk number 12: coeff
 ###################################################
-coefficients=computeCoefficients(reslars, rescvlars$fraction, mode = "fraction")
+coefficients=computeCoefficients(reslars, rescvlars$minIndex, mode = "lambda")
 
 
 ###################################################
 ### code chunk number 13: pred (eval = FALSE)
 ###################################################
-## # yPred=HDpredict(reslars, rescvlars$fraction, mode = "fraction")
+## # yPred=predict(reslars, rescvlars$fraction, mode = "fraction")
 
 
 ###################################################
