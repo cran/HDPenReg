@@ -11,7 +11,7 @@
 #'   \item{lambda}{Vector of length "step+1", containing the lambda at each step.}
 #'   \item{dropIndex}{Vector of length "step" containing the index of the dropped variable at the i-th step, 0 means no variable has been dropped at this step.}
 #'   \item{addIndex}{Vector of length "step" containing the index of the added variable at the i-th step, 0 means no variable has been added at this step.}
-#'	 \item{mu}{Intercept.}
+#'   \item{mu}{Intercept.}
 #'   \item{meanX}{Mean of columns of X.}
 #'	 \item{ignored}{A vector containing index of ignored variables during the algorithm.}
 #'   \item{p}{Total number of covariates.}
@@ -19,10 +19,12 @@
 #'   \item{error}{Error message from lars.}
 #' }
 #'
-#'
+#' @aliases LarsPath
 #' @name LarsPath-class
 #' @rdname LarsPath-class
 #' @exportClass LarsPath
+#'
+#' @seealso \code{\link{HDlars}}
 #'
 setClass(
   Class="LarsPath",
@@ -59,6 +61,68 @@ setClass(
 )
 
 
+#' 
+#' create a matrix with all estimated coefficients from the output of \code{\link{HDlars}} or \code{\link{EMlasso}} functions. 
+#'
+#' @title List to sparse matrix conversion
+#'
+#' @param x a \code{\link{LarsPath}} or \code{EMlasso} object
+#' @param row if covariates, covariates are in row
+#'
+#' @return A sparse matrix containing the values of estimated coefficients for all penalty parameter and all covariates
+#' 
+#' @export
+#' 
+#' @seealso \code{\link{HDlars}} \code{\link{EMlasso}}
+#' 
+listToMatrix = function(x, row = c("covariates","lambda"))
+{
+  if(!(class(x)%in%c("LarsPath","EMlasso")))
+    stop("x must be a LarsPath or EM object")
+  row = match.arg(row)
+  
+  if(class(x)=="EMlasso")
+  {
+    p = x$p
+    coefficient = x$coefficient
+    variable = x$variable
+    lambda = x$lambda
+    l1norm = x$lambda
+  }
+  else
+  {
+    p = x@p
+    coefficient = x@coefficient
+    variable = x@variable
+    lambda = x@lambda
+    l1norm = x@l1norm
+  }
+  
+  if(row == "covariates")
+  {
+    bet = Matrix(0, nrow = p, ncol = length(l1norm))
+    for(i in 1:length(l1norm))
+    {
+      bet[variable[[i]], i] = bet[variable[[i]], i] + coefficient[[i]]
+    }
+    
+    return(bet)
+  }
+  else
+  {
+    bet = Matrix(0, nrow = length(l1norm), ncol = p)
+    for(i in 1:length(l1norm))
+    {
+      bet[i, variable[[i]]] = bet[i, variable[[i]]] + coefficient[[i]]
+      bet[i, variable[[i]]] = bet[i, variable[[i]]] + coefficient[[i]]
+    }
+    
+    return(bet)
+  }
+  
+}
+
+
 ###################################################################################
 #' 
 #'  plot the path of the lars algorithm.
@@ -68,85 +132,37 @@ setClass(
 #' @title plot methods for LarsPath object
 #' @param x LarsPath object
 #' @param sep.line If TRUE, print vertical dashed line when a variable is added or dropped in the path
+#' @param abscissa either "l1norm" or "lambda". If "lambda", regularization parameter is used as abscissa, else l1 norm of the solution is used.
+#' @param log.scale If TRUE, use logarithm scale on abscissa
 #' @param ... Other plot arguments
 #' @docType methods
 #' @rdname plot-methods
 #' @name plot-methods 
 #' @aliases plot,LarsPath-method plot-methods
 #'
+#' @seealso \code{\link{HDlars}} \code{\link{LarsPath}}
+#'
 #' @export
 setMethod(
   f="plot",
   signature="LarsPath",
-  definition=function(x,sep.line=TRUE,...)
+  definition=function(x, sep.line = FALSE, abscissa = c("l1norm", "lambda"), log.scale = FALSE, ...)
   {
-    miny=0
-    maxy=0
-#     miny=min(sapply(x@coefficient,min))
-#     maxy=max(sapply(x@coefficient,max))
-    for(i in 2:length(x@coefficient))
-    {
-      miny=min(miny,x@coefficient[[i]])
-      maxy=max(maxy,x@coefficient[[i]])
-    }
-    var=unique(unlist(x@variable))
+    #check arguments
+    abscissa = match.arg(abscissa)
+    if(!is.logical(sep.line))
+      stop("sep.line must be a boolean.")
+    if(!is.logical(log.scale))
+      stop("log.scale must be a boolean.")    
     
-    
-    plot(NA,xlim=c(min(x@l1norm),max(x@l1norm)),ylim=c(miny,maxy),main="Path",xlab="l1norm",ylab="coefficients") 
-    abline(h=0)
-    lines(x@l1norm[1:2],c(0,x@coefficient[[2]][1]),col=which(var==x@variable[[2]][1]))
-    
-    for(i in 2:(length(x@l1norm)-1))
-    {
-      if(length(x@dropIndex[[i]])==0)##plot add case 
-      {
-        for(j in 1:length(x@coefficient[[i]]))
-          lines(x@l1norm[i:(i+1)],c(x@coefficient[[i]][j],x@coefficient[[i+1]][j]),col=which(var==x@variable[[i]][j]))
-        
-        if(length(x@addIndex[[i]])!=0)
-        {
-          for(j in (length(x@coefficient[[i]])+1):(length(x@coefficient[[i]])+length(x@addIndex[[i]])) )
-            lines(x@l1norm[i:(i+1)],c(0,x@coefficient[[i+1]][j]),col=which(var==x@variable[[i+1]][j]))
-        }
-      }
-      else
-      {
-        j=1  
-        for(k in 1:length(x@dropIndex[[i]]))
-        {
-          #plot line for variables before a dropped variable
-          while(x@variable[[i]][j]!=x@dropIndex[[i]][k])
-          {
-            lines(x@l1norm[i:(i+1)],c(x@coefficient[[i]][j],x@coefficient[[i+1]][j]),col=which(var==x@variable[[i]][j]))
-            j=j+1
-          }
-          
-          #plot the line of the dropped variable
-          lines(x@l1norm[i:(i+1)],c(x@coefficient[[i]][j],0),col=which(var==x@variable[[i]][j]))
-          j=j+1
-          
-        }
-        
-        #plot the line of variables after every drop variable
-        while(j<=length(x@coefficient[[i]]))
-        {
-          lines(x@l1norm[i:(i+1)],c(x@coefficient[[i]][j],x@coefficient[[i+1]][j-1]),col=which(var==x@variable[[i]][j]))
-          j=j+1
-        }
-        
-        #plot the line for added variables
-        if(length(x@addIndex[[i]])!=0)
-        {         
-          for(j in length(x@coefficient[[i+1]]):(length(x@coefficient[[i+1]])-length(x@addIndex[[i]])+1) )
-            lines(x@l1norm[i:(i+1)],c(0,x@coefficient[[i+1]][j]),col=which(var==x@variable[[i+1]][j]))        
-        }
-      }
-    }
-    
-    if(sep.line)
-      abline(v=x@l1norm,col="blue",lty=2)
-    
-    axis(4, at=x@coefficient[[length(x@coefficient)]],labels=x@variable[[length(x@variable)]])
+    beta = listToMatrix(x, "lambda")
+    absciss = x@l1norm
+    if(abscissa != "l1norm")
+      absciss = c(x@lambda,0)
+    logs = ifelse(log.scale, "x", "")
+    xlabel = ifelse(abscissa == "l1norm", "l1 norm", "lambda")
+    xlabel = paste0(ifelse(log.scale,"Log ", ""), xlabel)
+    matplot(absciss, beta, type="l", main = "Lars path", log = logs, xlab = xlabel, ylab = "Coefficients")
   }
 )
 
@@ -165,6 +181,8 @@ setMethod(
 #' result=HDfusion(dataset$data,dataset$response) 
 #' plotCoefficient(result,result@@nbStep) #plot coefficients at the last step
 #' @export 
+#' 
+#' @seealso \code{\link{HDlars}} \code{\link{LarsPath}}
 #' 
 plotCoefficient=function(x,step,ylab="coefficients",xlab="variables",...)
 {
@@ -218,6 +236,8 @@ plotCoefficient=function(x,step,ylab="coefficients",xlab="variables",...)
 #' result=HDfusion(dataset$data,dataset$response)
 #' coefficient=coeff(result,result@@nbStep) #get the coefficients
 #' @export 
+#' 
+#' @seealso \code{\link{HDlars}}  \code{\link{HDfusion}} \code{\link{LarsPath}}
 #'
 coeff=function(x,step)
 {
@@ -273,6 +293,9 @@ coeff=function(x,step)
 #' result=HDlars(dataset$data[1:40,],dataset$response[1:40])
 #' coeff=coef(result,0.3,"fraction")
 #' @export
+#' 
+#' @seealso \code{\link{HDlars}} \code{\link{LarsPath}}
+#' 
 coef.LarsPath=function(object,index=NULL,mode=c("lambda","step","fraction","norm"),...)
 {
   mode <- match.arg(mode)

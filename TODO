@@ -1,0 +1,3 @@
+-corriger logistic lasso et fused (mesure + y (-1,1) ou (0,1)?)
+-doc en génral (sortie em fausse)
+-format matrice creuse en sortie lars et fusion : sortie + facilement utilisable + optim plot

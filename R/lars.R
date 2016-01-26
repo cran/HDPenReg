@@ -1,4 +1,5 @@
-#' lars algorithm
+#' It performs the lars algorithm for solving lasso problem. 
+#' It is a linear regression problem with a l1-penalty on the estimated coefficient. 
 #'
 #' @title Lars algorithm
 #' @author Quentin Grimonprez
@@ -7,11 +8,23 @@
 #' @param maxSteps Maximal number of steps for lars algorithm.
 #' @param intercept If TRUE, add an intercept to the model.
 #' @param eps Tolerance of the algorithm.
-#' @return An object of type LarsPath.
+#' @return An object of type \code{\link{LarsPath}}.
 #' @examples 
 #' dataset=simul(50,10000,0.4,10,50,matrix(c(0.1,0.8,0.02,0.02),nrow=2))
 #' result=HDlars(dataset$data,dataset$response)
+#' # Obtain estimated coefficient in matrix format
+#' coefficient = listToMatrix(result)
+#' 
 #' @export
+#' 
+#' @details
+#' The l1 penalty performs variable selection via shrinkage of the estimated coefficient. 
+#' It depends on a penalty parameter called lambda controlling the amount of regularization.
+#' The objective function of lasso is : \deqn{||y-X\beta||_2 + \lambda||\beta||_1}
+#' 
+#' @references Efron, Hastie, Johnstone and Tibshirani (2003) "Least Angle Regression" (with discussion) Annals of Statistics
+#' 
+#' @seealso \code{\link{LarsPath}} \code{\link{HDcvlars}} \code{\link{listToMatrix}}
 #' 
 HDlars <- function(X,y,maxSteps=3*min(dim(X)),intercept=TRUE,eps=.Machine$double.eps^0.5)
 {
@@ -31,7 +44,8 @@ HDlars <- function(X,y,maxSteps=3*min(dim(X)),intercept=TRUE,eps=.Machine$double
   return(path)
 }
 
-#' fusion algorithm
+#' It performs the lars algorithm for solving a special case of lasso problem. 
+#' It is a linear regression problem with a l1-penalty on the difference of two successive coefficients.
 #'
 #' @title Fusion algorithm
 #' @author Quentin Grimonprez
@@ -40,11 +54,15 @@ HDlars <- function(X,y,maxSteps=3*min(dim(X)),intercept=TRUE,eps=.Machine$double
 #' @param maxSteps Maximal number of steps for lars algorithm.
 #' @param intercept If TRUE, there is an intercept in the model.
 #' @param eps Tolerance of the algorithm.
-#' @return An object of type LarsPath.
+#' @return An object of type \code{\link{LarsPath}}. \code{\link{LarsPath-class}}.
 #' @examples  
 #' dataset=simul(50,10000,0.4,10,50,matrix(c(0.1,0.8,0.02,0.02),nrow=2))
 #' result=HDfusion(dataset$data,dataset$response)
-#' @export 
+#' @export
+#' 
+#' @references Efron, Hastie, Johnstone and Tibshirani (2003) "Least Angle Regression" (with discussion) Annals of Statistics
+#' 
+#' @seealso LarsPath HDlars
 #' 
 HDfusion <- function(X,y,maxSteps=3*min(dim(X)),intercept=TRUE,eps=.Machine$double.eps^0.5)
 {
@@ -86,7 +104,7 @@ HDfusion <- function(X,y,maxSteps=3*min(dim(X)),intercept=TRUE,eps=.Machine$doub
   
   ## eps
   if(!is.double(eps))
-    stop("eps must be a positive real")	
+    stop("eps must be a positive real")  
   if(eps<=0)
     stop("eps must be a positive real")	
   

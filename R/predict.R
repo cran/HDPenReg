@@ -42,7 +42,7 @@ predict.LarsPath=function(object,Xnew, lambda, mode=c("fraction","lambda","norm"
   {
     if(lambda==0)
     {
-      yPred=yPred + Xnew[,object@variable[[object@nbStep+1]]]%*%object@coefficient[[object@nbStep+1]]	- sum(object@meanX[object@variable[[object@nbStep+1]]]*object@coefficient[[object@nbStep+1]])
+      yPred=yPred + Xnew[,object@variable[[object@nbStep+1]]]%*%object@coefficient[[object@nbStep+1]]  - sum(object@meanX[object@variable[[object@nbStep+1]]]*object@coefficient[[object@nbStep+1]])
       return(yPred)
     }
     
