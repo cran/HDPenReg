@@ -71,11 +71,10 @@ setClass(
 #'
 #' @return A sparse matrix containing the values of estimated coefficients for all penalty parameter and all covariates
 #' 
-#' @export
-#' 
 #' @seealso \code{\link{HDlars}} \code{\link{EMlasso}}
 #' 
-listToMatrix = function(x, row = c("covariates","lambda"))
+#' @export
+listToMatrix <- function(x, row = c("covariates", "lambda"))
 {
   if(!(class(x)%in%c("LarsPath","EMlasso")))
     stop("x must be a LarsPath or EM object")
@@ -127,8 +126,6 @@ listToMatrix = function(x, row = c("covariates","lambda"))
 #' 
 #'  plot the path of the lars algorithm.
 #'  
-#' 
-#' 
 #' @title plot methods for LarsPath object
 #' @param x LarsPath object
 #' @param sep.line If TRUE, print vertical dashed line when a variable is added or dropped in the path
@@ -177,14 +174,14 @@ setMethod(
 #' @param xlab Name of the x axis.
 #' @param ... Other plot arguments.
 #' @examples 
-#' dataset=simul(50,1000,0.4,10,50,matrix(c(0.1,0.8,0.02,0.02),nrow=2))
-#' result=HDfusion(dataset$data,dataset$response) 
-#' plotCoefficient(result,result@@nbStep) #plot coefficients at the last step
-#' @export 
+#' dataset <- simul(50, 1000, 0.4, 10, 50, matrix(c(0.1,0.8,0.02,0.02), nrow = 2))
+#' result <- HDfusion(dataset$data, dataset$response) 
+#' plotCoefficient(result, result@@nbStep) #plot coefficients at the last step
 #' 
 #' @seealso \code{\link{HDlars}} \code{\link{LarsPath}}
 #' 
-plotCoefficient=function(x,step,ylab="coefficients",xlab="variables",...)
+#' @export
+plotCoefficient <- function(x, step, ylab = "coefficients", xlab = "variables",...)
 {
   if(missing(x))
     stop("x is missing.")
@@ -232,14 +229,14 @@ plotCoefficient=function(x,step,ylab="coefficients",xlab="variables",...)
 #' @param step The step at which you want to get the coefficients.
 #' @return a vector of size p containing the value of coefficients at the desired step.
 #' @examples 
-#' dataset=simul(50,1000,0.4,10,50,matrix(c(0.1,0.8,0.02,0.02),nrow=2))
-#' result=HDfusion(dataset$data,dataset$response)
-#' coefficient=coeff(result,result@@nbStep) #get the coefficients
-#' @export 
+#' dataset <- simul(50, 1000, 0.4, 10, 50, matrix(c(0.1,0.8,0.02,0.02), nrow = 2))
+#' result <- HDfusion(dataset$data, dataset$response)
+#' coefficient <- coeff(result, result@@nbStep) #get the coefficients
 #' 
 #' @seealso \code{\link{HDlars}}  \code{\link{HDfusion}} \code{\link{LarsPath}}
 #'
-coeff=function(x,step)
+#' @export
+coeff <- function(x, step)
 {
   if(missing(x))
     stop("x is missing.")
@@ -289,14 +286,14 @@ coeff=function(x,step)
 #' @return A vector containing the estimated coefficient for index
 #' @method coef LarsPath
 #' @examples 
-#' dataset=simul(50,10000,0.4,10,50,matrix(c(0.1,0.8,0.02,0.02),nrow=2))
-#' result=HDlars(dataset$data[1:40,],dataset$response[1:40])
-#' coeff=coef(result,0.3,"fraction")
-#' @export
+#' dataset <- simul(50, 10000, 0.4, 10, 50, matrix(c(0.1,0.8,0.02,0.02), nrow = 2))
+#' result <- HDlars(dataset$data[1:40,], dataset$response[1:40])
+#' coeff <- coef(result, 0.3, "fraction")
 #' 
 #' @seealso \code{\link{HDlars}} \code{\link{LarsPath}}
 #' 
-coef.LarsPath=function(object,index=NULL,mode=c("lambda","step","fraction","norm"),...)
+#' @export
+coef.LarsPath <- function(object, index = NULL, mode = c("lambda", "step", "fraction", "norm"), ...)
 {
   mode <- match.arg(mode)
   

@@ -110,6 +110,7 @@ plot(resfusion)
 ###################################################
 ### code chunk number 18: plotcoeff
 ###################################################
-plotCoefficient(resfusion,20)
+resfusion@nbStep
+plotCoefficient(resfusion,3)
 
 

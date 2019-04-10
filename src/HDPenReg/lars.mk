@@ -6,16 +6,16 @@ all:lib
 #-----------------------------------------------------------------------
 # Variables
 # 
-PKGLIB = ./lib/libHDPenReg.a
+LIB = ./lib/libEM.a
 
 #-----------------------------------------------------------------------
 # Sources files
 #
 SRCS =./lars/Lars.cpp \
-  		./lars/Path.cpp \
+			./lars/Path.cpp \
 			./lars/PathState.cpp \
 			./lars/functions.cpp \
-  		./lars/Fusion.cpp \
+ 			./lars/Fusion.cpp \
 			./lars/Cvlars.cpp \
 			./larsRmain.cpp
 
@@ -29,19 +29,21 @@ OBJS= $(SRCS:%.cpp=%.o)
 #-------------------------------------------------------------------------
 # rule for compiling the cpp files
 #
-%.o: %.cpp
-	$(CXX) $(HD_CPPFLAGS1) $(HD_CXXFLAGS)  $< -c -o $@
+%.o: %.cpp	
+	$(CXX) $(HD_CXXFLAGS)  $(HD_CPPFLAGS) -DSTKBASEARRAYS=1  $< -c -o $@
+#	$(CXX) $(HD_CXXFLAGS)  $(HD_CPPFLAGS) -DSTKBASEARRAYS=1 -DSTK_BOUNDS_CHECK -DFUSION_DEBUG -DCVLARS_DEBUG $< -c -o $@
+#	$(CXX) $(HD_CXXFLAGS)  $(HD_CPPFLAGS) -DSTKBASEARRAYS=0 -DSTK_BOUNDS_CHECK -DLARS_DEBUG -DFUSION_DEBUG -DCVLARS_DEBUG $< -c -o $@
 
 #-----------------------------------------------------------------------
 # The rule lib create the library 
 #
-lib: $(PKGLIB)
+lib: $(LIB)
 
-$(PKGLIB): $(OBJS)
+$(LIB): $(OBJS)
 	$(AR) -r $@ $?
   
 mostlyclean: clean
 
 clean:
-	@-rm -rf .libs _libs $(PKGLIB)
+	@-rm -rf .libs _libs $(LIB)
 	@-rm -f $(OBJS)

@@ -1,12 +1,11 @@
+// RegisteringDynamic Symbols
+
 #include <R.h>
 #include <Rinternals.h>
 #include <stdlib.h> // for NULL
 #include <R_ext/Rdynload.h>
 
-/* FIXME: 
-  Check these declarations against the C/Fortran source code.
-*/
-  
+
 /* .Call calls */
 extern SEXP cvEMfusedLasso1D(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP cvEMfusedLasso2D(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
