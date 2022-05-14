@@ -10,8 +10,10 @@
 \item{object}{a LarsParth object}
 
 \item{index}{If mode ="norm", index represents the l1-norm of the coefficients with which we want to predict.
-If mode="fraction", index represents the ratio (l1-norm of the coefficientswith which we want to predict)/(l1-norm maximal of the LarsPath object).
-If mode="lambda", index represents the value of the penalty parameter. If mode="step", index represents the numer of the step at which we want coefficients.}
+ If mode="fraction", index represents the ratio
+(l1-norm of the coefficients with which we want to predict)/(l1-norm maximal of the LarsPath object).
+ If mode="lambda", index represents the value of the penalty parameter. If mode="step", index represents the step number
+ at which we want coefficients.}
 
 \item{mode}{"fraction" or "norm" or "lambda" or "step".}
 

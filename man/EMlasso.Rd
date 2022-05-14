@@ -22,7 +22,8 @@ EMlasso(
 
 \item{y}{a vector of length n with the response.}
 
-\item{lambda}{a sequence of l1 penalty regularization term. If no sequence is provided, the function computes his own sequence.}
+\item{lambda}{a sequence of l1 penalty regularization term. If no sequence is provided,
+the function computes his own sequence.}
 
 \item{maxSteps}{Maximal number of steps for EM algorithm.}
 
@@ -42,8 +43,10 @@ EMlasso(
 A list containing :
 \describe{
   \item{step}{Vector containing the number of steps of the algorithm for every \code{lambda}.}
-  \item{variable}{List of vector of the same length as \code{lambda}. The i-th item contains the index of non-zero coefficients for the i-th \code{lambda} value.}
-  \item{coefficient}{List of vector of the same length as \code{lambda}. The i-th item contains the non-zero coefficients for the i-th \code{lambda} value.}
+  \item{variable}{List of vector of the same length as \code{lambda}. The i-th item contains the index of
+non-zero coefficients for the i-th \code{lambda} value.}
+  \item{coefficient}{List of vector of the same length as \code{lambda}. The i-th item contains the non-zero
+coefficients for the i-th \code{lambda} value.}
   \item{lambda}{Vector containing the \code{lambda} values.}
   \item{mu}{Intercept.}
 }

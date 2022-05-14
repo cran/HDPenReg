@@ -19,7 +19,8 @@
 
 \item{sep.line}{If TRUE, print vertical dashed line when a variable is added or dropped in the path}
 
-\item{abscissa}{either "l1norm" or "lambda". If "lambda", regularization parameter is used as abscissa, else l1 norm of the solution is used.}
+\item{abscissa}{either "l1norm" or "lambda". If "lambda", regularization parameter is used as abscissa,
+else l1 norm of the solution is used.}
 
 \item{log.scale}{If TRUE, use logarithm scale on abscissa}
 

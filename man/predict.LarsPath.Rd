@@ -11,7 +11,9 @@
 
 \item{Xnew}{a matrix (of size n*object@p) of covariates.}
 
-\item{lambda}{If mode ="norm", lambda represents the l1-norm of the coefficients with which we want to predict. If mode="fraction", lambda represents the ratio (l1-norm of the coefficientswith which we want to predict)/(l1-norm maximal of the LarsPath object).}
+\item{lambda}{If mode ="norm", lambda represents the l1-norm of the coefficients with which we want to predict.
+If mode="fraction", lambda represents the ratio
+(l1-norm of the coefficients with which we want to predict)/(l1-norm maximal of the LarsPath object).}
 
 \item{mode}{"fraction", "lambda" or "norm".}
 

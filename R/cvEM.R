@@ -23,65 +23,74 @@
 #' }
 #' @examples
 #' dataset <- simul(50, 100, 0.4, 1, 10, matrix(c(0.1, 0.8, 0.02, 0.02), nrow = 2))
-#' result <- EMcvlasso(X = dataset$data, y = dataset$response,
-#'                     lambda = 5:1, nbFolds = 5, intercept = FALSE)
+#' result <- EMcvlasso(
+#'   X = dataset$data, y = dataset$response,
+#'   lambda = 5:1, nbFolds = 5, intercept = FALSE
+#' )
 #' @export
-EMcvlasso <- function(X, y, lambda = NULL, nbFolds = 10, maxSteps = 1000, intercept = TRUE, model = c("linear", "logistic"), burn = 30, threshold = 1.e-08, eps = 1e-5, epsCG = 1e-8)
-{
+EMcvlasso <- function(X, y, lambda = NULL, nbFolds = 10, maxSteps = 1000, intercept = TRUE, model = c("linear", "logistic"),
+                      burn = 30, threshold = 1.e-08, eps = 1e-5, epsCG = 1e-8) {
   # check arguments
-  if (missing(X))
+  if (missing(X)) {
     stop("X is missing.")
-  if (missing(y))
-    stop("y is missing.")
-  if (is.null(lambda))
-  {
-    lambda = -1
   }
-  else
-  {
-    lambda = unique(lambda)
-    lambda = sort(lambda)
+  if (missing(y)) {
+    stop("y is missing.")
+  }
+  if (is.null(lambda)) {
+    lambda <- -1
+  } else {
+    lambda <- unique(lambda)
+    lambda <- sort(lambda)
   }
 
   ## threshold
-  if (!is.double(threshold))
+  if (!is.double(threshold)) {
     stop("threshold must be a positive real")
-  if (threshold <= 0)
+  }
+  if (threshold <= 0) {
     stop("threshold must be a positive real")
+  }
 
   ## epsCG
-  if (!is.double(epsCG))
+  if (!is.double(epsCG)) {
     stop("epsCG must be a positive real")
-  if (epsCG <= 0)
+  }
+  if (epsCG <= 0) {
     stop("epsCG must be a positive real")
+  }
 
   # check cv
   .checkcvlars(X, y, maxSteps, eps, nbFolds, c(0, 1), intercept, "lambda")
 
   ## maxSteps
-  if (!.is.wholenumber(burn))
+  if (!.is.wholenumber(burn)) {
     stop("burn must be a positive integer.")
-  if ((burn <= 0) || (burn > maxSteps))
+  }
+  if ((burn <= 0) || (burn > maxSteps)) {
     stop("burn must be a positive integer lesser than maxSteps.")
+  }
 
   # model
-  model = match.arg(model)
-  if (model == "logistic")
-  {
+  model <- match.arg(model)
+  if (model == "logistic") {
     # check if y contains 0 and 1
-    yb = as.factor(y)
-    if (nlevels(yb) != 2)
+    yb <- as.factor(y)
+    if (nlevels(yb) != 2) {
       stop("In the logistic case, y must contain 0 and 1.")
+    }
 
-    y = as.numeric(yb) - 1
+    y <- as.numeric(yb) - 1
   }
 
   # call cv for lasso
   val <- list()
-  if (model == "linear")
-    val = .Call("cvEMlasso", X, y, lambda, nbFolds, intercept, maxSteps, burn, threshold, eps, epsCG, PACKAGE = "HDPenReg")
-  else
-    val = .Call("cvEMlogisticLasso", X, y, lambda, nbFolds, intercept, maxSteps, burn, threshold, eps, epsCG, PACKAGE = "HDPenReg")
+  if (model == "linear") {
+    val <- .Call("cvEMlasso", X, y, lambda, nbFolds, intercept, maxSteps, burn, threshold, eps, epsCG, PACKAGE = "HDPenReg")
+  } else {
+    val <- .Call("cvEMlogisticLasso", X, y, lambda, nbFolds, intercept, maxSteps, burn, threshold,
+                 eps, epsCG, PACKAGE = "HDPenReg")
+  }
 
   # create the output object
   # cv=list(cv=val$cv,cvError=val$cvError,minCv=min(val$cv),lambda.optim=val$lambdaMin,fraction=index[which.min(val$cv)],lambda=val$lambda,maxSteps=maxSteps)
@@ -119,101 +128,111 @@ EMcvlasso <- function(X, y, lambda = NULL, nbFolds = 10, maxSteps = 1000, interc
 #' }
 #' @examples
 #' dataset <- simul(50, 100, 0.4, 1, 10, matrix(c(0.1, 0.8, 0.02, 0.02), nrow = 2))
-#' result <- EMcvfusedlasso(X = dataset$data, y = dataset$response, lambda1 = 3:1,
-#'                          lambda2 = 3:1, nbFolds = 5, intercept = FALSE)
+#' result <- EMcvfusedlasso(
+#'   X = dataset$data, y = dataset$response, lambda1 = 3:1,
+#'   lambda2 = 3:1, nbFolds = 5, intercept = FALSE
+#' )
 #' @export
-EMcvfusedlasso <- function(X, y, lambda1, lambda2, nbFolds = 10, maxSteps = 1000, burn = 50, intercept = TRUE, model = c("linear", "logistic"), eps = 1e-5, eps0 = 1e-8, epsCG = 1e-8)
-{
+EMcvfusedlasso <- function(X, y, lambda1, lambda2, nbFolds = 10, maxSteps = 1000, burn = 50, intercept = TRUE,
+                           model = c("linear", "logistic"), eps = 1e-5, eps0 = 1e-8, epsCG = 1e-8) {
   # check arguments
-  if (missing(X))
+  if (missing(X)) {
     stop("X is missing.")
-  if (missing(y))
+  }
+  if (missing(y)) {
     stop("y is missing.")
-  if (missing(lambda1))
+  }
+  if (missing(lambda1)) {
     stop("lambda1 is missing.")
-  if (missing(lambda2))
+  }
+  if (missing(lambda2)) {
     stop("lambda2 is missing.")
+  }
 
   ## threshold
-  if (!is.double(eps0))
+  if (!is.double(eps0)) {
     stop("eps0 must be a positive real")
-  if (eps0 <= 0)
+  }
+  if (eps0 <= 0) {
     stop("eps0 must be a positive real")
+  }
   ## epsCG
-  if (!is.double(epsCG))
+  if (!is.double(epsCG)) {
     stop("epsCG must be a positive real")
-  if (epsCG <= 0)
+  }
+  if (epsCG <= 0) {
     stop("epsCG must be a positive real")
+  }
 
   .checkcvlars(X, y, maxSteps, eps, nbFolds, c(0, 1), intercept, "lambda")
 
   ## maxSteps
-  if (!.is.wholenumber(burn))
+  if (!.is.wholenumber(burn)) {
     stop("burn must be a positive integer.")
-  if ((burn <= 0) || (burn > maxSteps))
+  }
+  if ((burn <= 0) || (burn > maxSteps)) {
     stop("burn must be a positive integer lesser than maxSteps.")
+  }
 
   # lambda1
   .check.lambda(lambda1)
-  lambda1 = sort(lambda1)
+  lambda1 <- sort(lambda1)
 
   # lambda
   .check.lambda(lambda2)
-  lambda2 = sort(lambda2)
+  lambda2 <- sort(lambda2)
 
   # model
-  model = match.arg(model)
-  if (model == "logistic")
-  {
+  model <- match.arg(model)
+  if (model == "logistic") {
     # check if y contains 0 and 1
-    yb = as.factor(y)
-    if (nlevels(yb) != 2)
+    yb <- as.factor(y)
+    if (nlevels(yb) != 2) {
       stop("In the logistic case, y must contain 0 and 1.")
-
-    y = as.numeric(yb) - 1
-  }
-
-  val = list()
-  if ((length(lambda1) == 1) && (length(lambda2) == 1))
-  {
-    val$lambda1 = lambda1
-    val$lambda2 = lambda2
-    val$lambda.optimal = c(lambda1, lambda2)
-  }
-  else
-  {
-    if (length(lambda1) == 1)
-    {
-      optimL1 = FALSE
-      if (model == "linear")
-      {
-        val = .Call("cvEMfusedLasso1D", X, y, lambda1, lambda2, optimL1, nbFolds, intercept, maxSteps, burn, eps0, eps, epsCG, PACKAGE = "HDPenReg")
-      }
-      else
-        val = .Call("cvEMlogisticFusedLasso1D", X, y, lambda1, lambda2, optimL1, nbFolds, intercept, maxSteps, burn, eps0, eps, epsCG, PACKAGE = "HDPenReg")
-      names(val)[1] = "lambda2"
-      val$lambda1 = lambda1
     }
-    else
-    {
-      if (length(lambda2) == 1)
-      {
-        optimL1 = TRUE
-        if (model == "linear")
-          val = .Call("cvEMfusedLasso1D", X, y, lambda1, lambda2, optimL1, nbFolds, intercept, maxSteps, burn, eps0, eps, epsCG, PACKAGE = "HDPenReg")
-        else
-          val = .Call("cvEMlogisticFusedLasso1D", X, y, lambda1, lambda2, optimL1, nbFolds, intercept, maxSteps, burn, eps0, eps, epsCG, PACKAGE = "HDPenReg")
-        names(val)[1] = "lambda1"
-        val$lambda2 = lambda2
+
+    y <- as.numeric(yb) - 1
+  }
+
+  val <- list()
+  if ((length(lambda1) == 1) && (length(lambda2) == 1)) {
+    val$lambda1 <- lambda1
+    val$lambda2 <- lambda2
+    val$lambda.optimal <- c(lambda1, lambda2)
+  } else {
+    if (length(lambda1) == 1) {
+      optimL1 <- FALSE
+      if (model == "linear") {
+        val <- .Call("cvEMfusedLasso1D", X, y, lambda1, lambda2, optimL1, nbFolds, intercept, maxSteps, burn, eps0,
+                     eps, epsCG, PACKAGE = "HDPenReg")
+      } else {
+        val <- .Call("cvEMlogisticFusedLasso1D", X, y, lambda1, lambda2, optimL1, nbFolds, intercept, maxSteps, burn,
+                     eps0, eps, epsCG, PACKAGE = "HDPenReg")
       }
-      else # 2D
-      {
-        if (model == "linear")
-          val = .Call("cvEMfusedLasso2D", X, y, lambda1, lambda2, nbFolds, intercept, maxSteps, burn, eps0, eps, epsCG, PACKAGE = "HDPenReg")
-        else
-          val = .Call("cvEMlogisticFusedLasso2D", X, y, lambda1, lambda2, nbFolds, intercept, maxSteps, burn, eps0, eps, epsCG, PACKAGE = "HDPenReg")
-        val$lambda1 = lambda1
-        val$lambda2 = lambda2
+      names(val)[1] <- "lambda2"
+      val$lambda1 <- lambda1
+    } else {
+      if (length(lambda2) == 1) {
+        optimL1 <- TRUE
+        if (model == "linear") {
+          val <- .Call("cvEMfusedLasso1D", X, y, lambda1, lambda2, optimL1, nbFolds, intercept, maxSteps, burn, eps0,
+                       eps, epsCG, PACKAGE = "HDPenReg")
+        } else {
+          val <- .Call("cvEMlogisticFusedLasso1D", X, y, lambda1, lambda2, optimL1, nbFolds, intercept, maxSteps, burn,
+                       eps0, eps, epsCG, PACKAGE = "HDPenReg")
+        }
+        names(val)[1] <- "lambda1"
+        val$lambda2 <- lambda2
+      } else { # 2D
+        if (model == "linear") {
+          val <- .Call("cvEMfusedLasso2D", X, y, lambda1, lambda2, nbFolds, intercept, maxSteps, burn, eps0, eps,
+                       epsCG, PACKAGE = "HDPenReg")
+        } else {
+          val <- .Call("cvEMlogisticFusedLasso2D", X, y, lambda1, lambda2, nbFolds, intercept, maxSteps, burn, eps0,
+                       eps, epsCG, PACKAGE = "HDPenReg")
+        }
+        val$lambda1 <- lambda1
+        val$lambda2 <- lambda2
       }
     }
   }

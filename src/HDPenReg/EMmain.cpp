@@ -46,7 +46,8 @@ RcppExport SEXP EMlassoMain( SEXP data, SEXP response
     lambdaC.resize(100);
     //corrMax is the first lambda value in the lars sequence
     STK::Real corrMax = (x.transpose() * y).abs().maxElt();
-    STK::Real gapLambda = (log(corrMax)-log(corrMax * (n<p) ? 0.01 : 0.0001))/99;
+    double ratio = (n<p) ? 0.01 : 0.0001;
+    STK::Real gapLambda = (log(corrMax)-log(corrMax * ratio))/99;
     lambdaC[99] = corrMax;
     for(int i = 99; i>0 ; i--)
       lambdaC[i-1] = exp(log(lambdaC[i]) - gapLambda);
@@ -176,7 +177,8 @@ RcppExport SEXP EMlogisticLassoMain( SEXP data, SEXP response
     lambdaC.resize(100);
     //corrMax is the first lambda value in the lars sequence
     STK::Real corrMax = (x.transpose() * y).abs().maxElt();
-    STK::Real gapLambda = (log(corrMax)-log(corrMax * (n<p) ? 0.01 : 0.0001))/99;
+    double ratio = (n<p) ? 0.01 : 0.0001;
+    STK::Real gapLambda = (log(corrMax)-log(corrMax * ratio))/99;
     lambdaC[99] = corrMax;
     for(int i = 99; i>0 ; i--)
       lambdaC[i-1] = exp(log(lambdaC[i]) - gapLambda);
@@ -265,5 +267,3 @@ RcppExport SEXP EMlogisticFusedLassoMain( SEXP data, SEXP response
                      , Named("step")=wrap(algo.step())
                      );
 }
-
-

@@ -1,6 +1,6 @@
 Package: HDPenReg
-Version: 0.94.7
-Date: 2020-10-03
+Version: 0.94.8
+Date: 2022-05-12
 Encoding: UTF-8
 Title: High-Dimensional Penalized Regression
 Authors@R: c(person("Quentin", "Grimonprez", role = c("aut","cre"), email = "quentingrim@yahoo.fr"), 
@@ -15,11 +15,11 @@ Description: Algorithms for lasso and fused-lasso problems: implementation of
 License: GPL (>= 2)
 LinkingTo: rtkore, Rcpp
 SystemRequirements: GNU make
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 NeedsCompilation: yes
-Packaged: 2020-10-03 16:23:37 UTC; grimonprez
+Packaged: 2022-05-12 15:42:07 UTC; quentin
 Author: Quentin Grimonprez [aut, cre],
   Serge Iovleff [aut]
 Maintainer: Quentin Grimonprez <quentingrim@yahoo.fr>
 Repository: CRAN
-Date/Publication: 2020-10-05 07:50:02 UTC
+Date/Publication: 2022-05-14 23:30:02 UTC

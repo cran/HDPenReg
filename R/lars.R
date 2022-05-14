@@ -24,21 +24,25 @@
 #' @seealso \code{\link{LarsPath}} \code{\link{HDcvlars}} \code{\link{listToMatrix}}
 #'
 #' @export
-HDlars <- function(X, y, maxSteps = 3 * min(dim(X)), intercept = TRUE, eps = .Machine$double.eps^0.5)
-{
+HDlars <- function(X, y, maxSteps = 3 * min(dim(X)), intercept = TRUE, eps = .Machine$double.eps^0.5) {
   # check arguments
-  if (missing(X))
+  if (missing(X)) {
     stop("X is missing.")
-  if (missing(y))
+  }
+  if (missing(y)) {
     stop("y is missing.")
+  }
   .check(X, y, maxSteps, eps, intercept)
 
   # call lars algorithm
-  val = .Call("lars", X, y, nrow(X), ncol(X), maxSteps, intercept, eps, PACKAGE = "HDPenReg")
+  val <- .Call("lars", X, y, nrow(X), ncol(X), maxSteps, intercept, eps, PACKAGE = "HDPenReg")
 
   # create the output object
-  path = new("LarsPath", variable = val$varIdx, coefficient = val$varCoeff, lambda = val$lambda, l1norm = val$l1norm, addIndex = val$evoAddIdx, dropIndex = val$evoDropIdx,
-           nbStep = val$step, mu = val$mu, ignored = val$ignored, p = ncol(X), error = val$error, meanX = val$muX)
+  path <- new("LarsPath",
+    variable = val$varIdx, coefficient = val$varCoeff, lambda = val$lambda, l1norm = val$l1norm,
+    addIndex = val$evoAddIdx, dropIndex = val$evoDropIdx,
+    nbStep = val$step, mu = val$mu, ignored = val$ignored, p = ncol(X), error = val$error, meanX = val$muX
+  )
   return(path)
 }
 
@@ -62,57 +66,67 @@ HDlars <- function(X, y, maxSteps = 3 * min(dim(X)), intercept = TRUE, eps = .Ma
 #' @seealso LarsPath HDlars
 #'
 #' @export
-HDfusion <- function(X, y, maxSteps = 3 * min(dim(X)), intercept = TRUE, eps = .Machine$double.eps^0.5)
-{
+HDfusion <- function(X, y, maxSteps = 3 * min(dim(X)), intercept = TRUE, eps = .Machine$double.eps^0.5) {
   # check arguments
-  if (missing(X))
+  if (missing(X)) {
     stop("X is missing.")
-  if (missing(y))
+  }
+  if (missing(y)) {
     stop("y is missing.")
+  }
   .check(X, y, maxSteps, eps, intercept)
 
   # call fusion algorithm
-  val = .Call("fusion", X, y, nrow(X), ncol(X), maxSteps, intercept, eps, PACKAGE = "HDPenReg")
+  val <- .Call("fusion", X, y, nrow(X), ncol(X), maxSteps, intercept, eps, PACKAGE = "HDPenReg")
 
   # create the output object
-  path = new("LarsPath", nbStep = val$step, variable = val$varIdx, coefficient = val$varCoeff, lambda = val$lambda, l1norm = val$l1norm, addIndex = val$evoAddIdx,
-           dropIndex = val$evoDropIdx, p = ncol(X), fusion = TRUE, error = val$error)
+  path <- new("LarsPath",
+    nbStep = val$step, variable = val$varIdx, coefficient = val$varCoeff, lambda = val$lambda,
+    l1norm = val$l1norm, addIndex = val$evoAddIdx,
+    dropIndex = val$evoDropIdx, p = ncol(X), fusion = TRUE, error = val$error
+  )
 
   return(path)
 }
 
 # check arguments from lars and fusion algorithm
-.check = function(X, y, maxSteps, eps, intercept)
-{
+.check <- function(X, y, maxSteps, eps, intercept) {
   ## X: matrix of real
-  if (!is.numeric(X) || !is.matrix(X))
+  if (!is.numeric(X) || !is.matrix(X)) {
     stop("X must be a matrix of real")
+  }
 
   ## y: vector of real
-  if (!is.numeric(y) || !is.vector(y))
+  if (!is.numeric(y) || !is.vector(y)) {
     stop("y must be a vector of real")
-  if (length(y) != nrow(X))
+  }
+  if (length(y) != nrow(X)) {
     stop("The number of rows of X doesn't match with the length of y")
+  }
 
   ## maxSteps
-  if (!.is.wholenumber(maxSteps))
+  if (!.is.wholenumber(maxSteps)) {
     stop("maxSteps must be a positive integer")
-  if (maxSteps <= 0)
+  }
+  if (maxSteps <= 0) {
     stop("maxSteps must be a positive integer")
+  }
 
   ## eps
-  if (!is.double(eps))
+  if (!is.double(eps)) {
     stop("eps must be a positive real")
-  if (eps <= 0)
+  }
+  if (eps <= 0) {
     stop("eps must be a positive real")
+  }
 
   ## intercept
-  if (!is.logical(intercept))
+  if (!is.logical(intercept)) {
     stop("intercept must be a boolean")
+  }
 }
 
 # check if a number is an integer
-.is.wholenumber = function(x, tol = .Machine$double.eps^0.5)
-{
+.is.wholenumber <- function(x, tol = .Machine$double.eps^0.5) {
   abs(x - round(x)) < tol
 }

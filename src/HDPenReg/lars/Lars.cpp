@@ -157,7 +157,7 @@ void Lars::computeAddSet(Real Cmax, vector<int>& newId ) const
     if(!isActive_[i])//update with only variable non active
     {
       //don't care about ignore variable
-      if( !toIgnore_[i] & (abs(c_[i]) >= Cmax-eps_) )
+      if( !toIgnore_[i] && (abs(c_[i]) >= Cmax-eps_) )
       { newId.push_back(i);}
     }
   }

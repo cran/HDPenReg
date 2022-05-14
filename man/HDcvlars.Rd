@@ -23,7 +23,8 @@ HDcvlars(
 
 \item{nbFolds}{the number of folds for the cross-validation.}
 
-\item{index}{Values at which prediction error should be computed. When mode = "fraction", this is the fraction of the saturated |beta|.
+\item{index}{Values at which prediction error should be computed. When mode = "fraction",
+this is the fraction of the saturated |beta|.
 The default value is seq(0,1,by=0.01). When mode="lambda", this is values of lambda.}
 
 \item{mode}{Either "fraction" or "lambda". Type of values containing in partition.}
@@ -43,7 +44,8 @@ A list containing
   \item{cvError}{Standard error of cv.}
   \item{minCv}{Minimal cv criterion.}
   \item{minIndex}{Value of index for which the cv criterion is minimal.}
-  \item{index}{Values at which prediction error should be computed. This is the fraction of the saturated |beta|. The default value is seq(0,1,by=0.01).}
+  \item{index}{Values at which prediction error should be computed. This is the fraction of the saturated |beta|.
+The default value is seq(0,1,by=0.01).}
   \item{maxSteps}{Maximum number of steps of the lars algorithm.}
 }
 }

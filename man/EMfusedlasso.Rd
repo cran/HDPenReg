@@ -45,7 +45,8 @@ EMfusedlasso(
 A list containing :
 \describe{
   \item{step}{Vector containing the number of steps of the algorithm for every lambda.}
-  \item{variable}{List of vector of size "step+1". The i+1-th item contains the index of non-zero coefficients at the i-th step.}
+  \item{variable}{List of vector of size "step+1". The i+1-th item contains the index of non-zero coefficients
+at the i-th step.}
   \item{coefficient}{List of vector of size "step+1". The i+1-th item contains the non-zero coefficients at the i-th step.}
   \item{lambda}{Vector of length "step+1", containing the lambda at each step.}
   \item{mu}{Intercept.}
