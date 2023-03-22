@@ -15,7 +15,7 @@ simul(n, nbSNP, probCas, nbSeg, meanSegmentSize, prob, alpha = 15)
 
 \item{nbSeg}{Number of causal segments.}
 
-\item{meanSegmentSize}{The mean size of anormal segment.}
+\item{meanSegmentSize}{The mean size of abnormal segment.}
 
 \item{prob}{A 2*2 matrix containing probabilities:
 

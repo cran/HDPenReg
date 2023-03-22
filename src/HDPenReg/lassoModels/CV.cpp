@@ -36,11 +36,14 @@
 #include "CV.h"
 #include <cstdlib>
 #include <algorithm>
+#include <random>
+#include <chrono>
+#include <iostream>
 
 namespace HD
 {
 
-  /*default cosntructor*/
+  /*default constructor*/
   CV::CV()
         : p_X_(0), p_y_(0), partition_()
         , sizePartition_(), index_()
@@ -85,8 +88,8 @@ namespace HD
       sizePartition_[i%nbFolds_]++;
     }
     //make a random rearrangement
-    srand(time(NULL));
-    random_shuffle(partition_.begin(),partition_.end());
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    shuffle(partition_.begin(), partition_.end(), std::default_random_engine(seed));
   }
 
   /*initialize containers and create partition*/

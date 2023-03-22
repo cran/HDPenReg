@@ -17,6 +17,9 @@ plotCoefficient(x, step, ylab = "coefficients", xlab = "variables", ...)
 
 \item{...}{Other plot arguments.}
 }
+\value{
+Plot of the coefficients of a step
+}
 \description{
 Plot of the coefficients of a step
 }

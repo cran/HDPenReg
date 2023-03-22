@@ -61,8 +61,7 @@ EMlasso <- function(X, y, lambda, maxSteps = 1000, intercept = TRUE, model = c("
 
   if (missing(lambda)) {
     lambda <- -1
-  } # lambda will be generated in C code
-  else {
+  } else { # lambda will be generated in C code
     .check.lambda(lambda)
     lambda <- sort(lambda)
     lambda <- lambda[lambda > 0]
@@ -127,7 +126,8 @@ EMlasso <- function(X, y, lambda, maxSteps = 1000, intercept = TRUE, model = c("
 #' @seealso \code{\link{EMcvfusedlasso}}
 #'
 #' @export
-EMfusedlasso <- function(X, y, lambda1, lambda2, maxSteps = 1000, burn = 50, intercept = TRUE, model = c("linear", "logistic"), eps = 1e-5, eps0 = 1e-8, epsCG = 1e-8) {
+EMfusedlasso <- function(X, y, lambda1, lambda2, maxSteps = 1000, burn = 50, intercept = TRUE, model = c("linear", "logistic"),
+                         eps = 1e-5, eps0 = 1e-8, epsCG = 1e-8) {
   # check arguments
   if (missing(X)) {
     stop("X is missing.")

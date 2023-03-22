@@ -11,6 +11,9 @@
 
 \item{...}{graphical parameters}
 }
+\value{
+cross validation mean square error plot
+}
 \description{
 plot cross validation mean square error
 }

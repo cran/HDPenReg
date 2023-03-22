@@ -4,7 +4,7 @@
 #' @param nbSNP Size of the DNA sequence.
 #' @param probCas Probability to be a case individual.
 #' @param nbSeg Number of causal segments.
-#' @param meanSegmentSize The mean size of anormal segment.
+#' @param meanSegmentSize The mean size of abnormal segment.
 #' @param prob A 2*2 matrix containing probabilities:
 #'
 #' prob[1,1]=probability to have an anomaly to a SNP given the person does not have the disease and the SNP is causal.
@@ -59,8 +59,7 @@ simul <- function(n, nbSNP, probCas, nbSeg, meanSegmentSize, prob, alpha = 15) {
   anoSNPcaus <- 2 * rbinom(nbSeg, 1, 0.5) + 0.5
 
   anomalie <- rep(0, nbSNP)
-  for (i in 1:n)
-  {
+  for (i in 1:n) {
     # where the individuals has an anomaly?
     anomalie[SNPcaus] <- rbinom(nbSeg, 1, prob[y[i] + 1, 1])
     anomalie[-SNPcaus] <- rbinom(nbSNP - nbSeg, 1, prob[y[i] + 1, 2])
@@ -70,8 +69,7 @@ simul <- function(n, nbSNP, probCas, nbSeg, meanSegmentSize, prob, alpha = 15) {
     segSize[segSize == 0] <- 1
 
     compteur <- 1
-    for (j in which(anomalie == 1))
-    {
+    for (j in which(anomalie == 1)) {
       sequence <- max(1, j - floor(segSize[compteur] / 2)):min(nbSNP, j + floor(segSize[compteur] / 2))
       if (j %in% SNPcaus) {
         X[i, sequence] <- anoSNPcaus[which(SNPcaus == j)] + rbeta(length(sequence), alpha, alpha)

@@ -48,11 +48,11 @@ namespace HD
 Fusion::Fusion(CArrayXX const& X, CVectorX const& y, bool intercept)
               : X_(X)
               , y_(y)
+              , maxSteps_(3 * min(X.sizeRows(), X.sizeCols()))
               , eps_(Arithmetic<Real>::epsilon())
               , path_(maxSteps_)
               , intercept_(intercept)
 {
-  maxSteps_ = 3*min(X.sizeRows(),X.sizeCols());
   computeZ();
 }
 
@@ -72,18 +72,18 @@ Fusion::Fusion( CArrayXX const& X, CVectorX const& y, int maxSteps, bool interce
               , intercept_(intercept)
 { computeZ();}
 
-  //methods
-  /*
-   * change X in Z=X*L^-1 (L^-1 = lower triangular matrix of 1)
-   */
+// methods
+/*
+ * change X in Z=X*L^-1 (L^-1 = lower triangular matrix of 1)
+ */
 void Fusion::computeZ()
 {
-  //int p=X_.sizeCols(), n=X_.sizeRows();
-  for(int i=X_.lastIdxCols()-1; i>=X_.beginCols(); i--)
+  // int p=X_.sizeCols(), n=X_.sizeRows();
+  for(int i = X_.lastIdxCols() - 1; i >= X_.beginCols(); i--)
   {
-    X_.col(i) += X_.col(i+1);
-//    for(int j=X_.beginRows(); j<X_.endRows(); j++ )
-//      X_(j,i) += X_(j,i+1);
+    X_.col(i) += X_.col(i + 1);
+   // for(int j=X_.beginRows(); j<X_.endRows(); j++ )
+   //   X_(j,i) += X_(j,i+1);
   }
 }
 
@@ -92,17 +92,17 @@ void Fusion::computeZ()
  */
 void Fusion::run()
 {
-  //run lars algorithm on Z
+  // run lars algorithm on Z
   Lars lars(X_, y_, maxSteps_, intercept_, eps_);
   lars.run();
 
-  //get the solution path
-  path_     =lars.path();
-  step_     =lars.step();
-  mu_       =lars.mu();
-  muX_      =lars.muX();
-  toIgnore_ =lars.toIgnore();
-  msg_error_=lars.msg_error();
+  // get the solution path
+  path_      = lars.path();
+  step_      = lars.step();
+  mu_        = lars.mu();
+  muX_       = lars.muX();
+  toIgnore_  = lars.toIgnore();
+  msg_error_ = lars.msg_error();
 }
 
 }//end namespace

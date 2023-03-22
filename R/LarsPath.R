@@ -99,16 +99,14 @@ listToMatrix <- function(x, row = c("covariates", "lambda")) {
 
   if (row == "covariates") {
     bet <- Matrix(0, nrow = p, ncol = length(l1norm))
-    for (i in 1:length(l1norm))
-    {
+    for (i in seq_along(l1norm)) {
       bet[variable[[i]], i] <- bet[variable[[i]], i] + coefficient[[i]]
     }
 
     return(bet)
   } else {
     bet <- Matrix(0, nrow = length(l1norm), ncol = p)
-    for (i in 1:length(l1norm))
-    {
+    for (i in seq_along(l1norm)) {
       bet[i, variable[[i]]] <- bet[i, variable[[i]]] + coefficient[[i]]
       bet[i, variable[[i]]] <- bet[i, variable[[i]]] + coefficient[[i]]
     }
@@ -172,6 +170,7 @@ setMethod(
 #' @param ylab Name of the y axis.
 #' @param xlab Name of the x axis.
 #' @param ... Other plot arguments.
+#' @return Plot of the coefficients of a step 
 #' @examples
 #' dataset <- simul(50, 1000, 0.4, 10, 50, matrix(c(0.1, 0.8, 0.02, 0.02), nrow = 2))
 #' result <- HDfusion(dataset$data, dataset$response)
@@ -210,8 +209,7 @@ plotCoefficient <- function(x, step, ylab = "coefficients", xlab = "variables", 
 
     a <- 0
     if (length(x@variable[[step + 1]]) > 1) {
-      for (i in 1:(length(x@variable[[step + 1]]) - 1))
-      {
+      for (i in 1:(length(x@variable[[step + 1]]) - 1)) {
         a <- a + x@coefficient[[step + 1]][index[i]]
         lines(c(x@variable[[step + 1]][index[i]], x@variable[[step + 1]][index[i + 1]] - 1), rep(a, 2))
       }
@@ -325,8 +323,7 @@ coef.LarsPath <- function(object, index = NULL, mode = c("lambda", "step", "frac
     if (object@fusion) {
       a <- 0
       ind <- sort(object@variable[[index + 1]], index.return = TRUE)$ix
-      for (i in 1:(length(object@variable[[index + 1]]) - 1))
-      {
+      for (i in 1:(length(object@variable[[index + 1]]) - 1)) {
         a <- a + object@coefficient[[index + 1]][ind[i]]
         beta[object@variable[[index + 1]][ind[i]]:(object@variable[[index + 1]][ind[i + 1]] - 1)] <- rep(a, object@variable[[index + 1]][ind[i + 1]] - object@variable[[index + 1]][ind[i]])
       }

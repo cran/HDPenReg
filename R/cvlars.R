@@ -56,7 +56,7 @@ HDcvlars <- function(X, y, nbFolds = 10, index = seq(0, 1, by = 0.01), mode = c(
     }
 
     nam <- as.numeric(names(part))
-    for (i in 1:length(nam)) {
+    for (i in seq_along(nam)) {
       if (!(nam[i] == i)) {
         stop("check the number in the partition vector.")
       }
@@ -158,6 +158,7 @@ HDcvlars <- function(X, y, nbFolds = 10, index = seq(0, 1, by = 0.01), mode = c(
 #' @author Quentin Grimonprez
 #' @param x Output from HDcvlars function.
 #' @param ... graphical parameters
+#' @return cross validation mean square error plot
 #' @aliases plot.HDcvlars
 #' @method plot HDcvlars
 #' @examples

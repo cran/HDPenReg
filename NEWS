@@ -1,3 +1,19 @@
+Version 0.94.9 (19-03-2023)
+- linting
+- remove c++11 standard
+
+Version 0.94.8 (12-05-2022)
+- fix c++ warnings (bitwise operator)
+- run styler
+- use inherits
+
+Version 0.94.7 (05-10-2020)
+- change maintainer's email
+- beautify code
+
+Version 0.94.6 (10-04-2019)
+- add missing exported functions
+
 Version 0.94.5 (29-03-2019)
 - clean code in for HDlars
 

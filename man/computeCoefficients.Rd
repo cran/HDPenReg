@@ -9,7 +9,9 @@ computeCoefficients(x, lambda, mode = "fraction")
 \arguments{
 \item{x}{a LarsParth object}
 
-\item{lambda}{If mode ="norm", lambda represents the l1-norm of the coefficients with which we want to predict. If mode="fraction", lambda represents the ratio (l1-norm of the coefficientswith which we want to predict)/(l1-norm maximal of the LarsPath object).}
+\item{lambda}{If mode ="norm", lambda represents the l1-norm of the coefficients with which we want to predict.
+If mode="fraction", lambda represents the ratio l1-norm/(l1-norm maximal) of the LarsPath object of the coefficients
+with which we want to predict).}
 
 \item{mode}{"fraction" or "norm" or "lambda".}
 }

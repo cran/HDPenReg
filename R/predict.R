@@ -88,7 +88,9 @@ predict.LarsPath <- function(object, Xnew, lambda, mode = c("fraction", "lambda"
 #' @title Compute coefficients
 #' @author Quentin Grimonprez
 #' @param x a LarsParth object
-#' @param lambda If mode ="norm", lambda represents the l1-norm of the coefficients with which we want to predict. If mode="fraction", lambda represents the ratio (l1-norm of the coefficientswith which we want to predict)/(l1-norm maximal of the LarsPath object).
+#' @param lambda If mode ="norm", lambda represents the l1-norm of the coefficients with which we want to predict.
+#' If mode="fraction", lambda represents the ratio l1-norm/(l1-norm maximal) of the LarsPath object of the coefficients
+#' with which we want to predict).
 #' @param mode "fraction" or "norm" or "lambda".
 #' @return A list containing
 #' \describe{
@@ -159,27 +161,22 @@ computeCoefficients <- function(x, lambda, mode = "fraction") {
   index <- index - 1
 
   addId <- c()
-  if (length(x@addIndex[[index]]) != 0) {
-    for (i in 1:length(x@addIndex[[index]])) {
-      addId <- c(addId, which(x@variable[[index + 1]] == x@addIndex[[index]][i]))
-    }
+  for (i in seq_along(x@addIndex[[index]])) {
+    addId <- c(addId, which(x@variable[[index + 1]] == x@addIndex[[index]][i]))
   }
 
   dropId <- c()
-  if (length(x@dropIndex[[index]]) != 0) {
-    for (i in 1:length(x@dropIndex[[index]])) {
-      dropId <- c(dropId, which(x@variable[[index]] == x@dropIndex[[index]][i]))
-    }
+  for (i in seq_along(x@dropIndex[[index]])) {
+    dropId <- c(dropId, which(x@variable[[index]] == x@dropIndex[[index]][i]))
   }
 
   normalId <- c()
-  if (length(x@variable[[index]]) > 0) {
-    for (i in 1:length(x@variable[[index]])) {
-      if (!(x@variable[[index]][i] %in% x@dropIndex[[index]])) {
-        normalId <- c(normalId, i)
-      }
+  for (i in seq_along(x@variable[[index]])) {
+    if (!(x@variable[[index]][i] %in% x@dropIndex[[index]])) {
+      normalId <- c(normalId, i)
     }
   }
+
 
   coeff <- c()
   if (length(addId) != 0) {

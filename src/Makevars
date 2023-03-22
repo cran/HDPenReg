@@ -16,8 +16,6 @@ PKG_CPPFLAGS = `${R_HOME}/bin/Rscript -e "rtkore:::CppFlags()"`
 PKG_LIBS = $(PKGLIBHD) $(PKGLIBEM) `$(R_HOME)/bin/Rscript -e "rtkore:::LdFlags()"` \
            $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 
-CXX_STD = CXX11
-
 ## Define HD_CPPFLAGS flags and HD_CXXFLAGS here
 HD_CPPFLAGS = $(ALL_CPPFLAGS) # -DHD_DEBUG #-DHD_CVDEBUG # -DHD_DEBUG
 HD_CXXFLAGS = $(ALL_CXXFLAGS)

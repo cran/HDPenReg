@@ -37,6 +37,11 @@
 using namespace STK;
 using namespace std;
 
+#include <algorithm>
+#include <random>
+#include <chrono>
+#include <iostream>
+
 
 namespace HD
 {
@@ -117,8 +122,8 @@ void Cvlars::partition()
     sizePartition_[i%nbFolds_]++;
   }
   //make a random rearrangement
-  srand(time(NULL));
-  random_shuffle(partition_.begin(),partition_.end());
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  shuffle(partition_.begin(),partition_.end(), std::default_random_engine(seed));
 }
 
 void Cvlars::setPartition(std::vector<int> const& partition)
